@@ -63,4 +63,5 @@ app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.MapAdditionalIdentityEndpoints();
 app.MapIdentityApi<User>();
 
+// TODO: Wrap in a try... catch
 await app.RunAsync();

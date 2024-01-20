@@ -42,12 +42,12 @@ public static class ConfigureServices
             options.KeyName = "data-protection:keys";
         });
 
-        // TODO: Not that this isn't actually being used until
+        // TODO: Note that this isn't actually being used until
         // NRedisStack update their version to 0.10.2
         services.ConfigureRedisJson(options =>
         {
             options.Serializer.Converters.Add(new JsonStringEnumConverter());
-            options.Serializer.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
+            options.Serializer.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             options.Serializer.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
         });
 

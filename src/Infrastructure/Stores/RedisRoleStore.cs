@@ -5,6 +5,7 @@ using NRedisKit;
 using NRedisKit.DependencyInjection.Abstractions;
 
 using BlazorAdminDashboard.Domain.Identity;
+using BlazorAdminDashboard.Domain.Documents.v1;
 
 namespace BlazorAdminDashboard.Infrastructure.Stores;
 
@@ -38,9 +39,21 @@ public class RedisRoleStore(
         throw new NotImplementedException();
     }
 
-    public override Task<Role?> FindByNameAsync(string normalizedName, CancellationToken cancellationToken = default)
+    public override async Task<Role?> FindByNameAsync(string normalizedName, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        // TODO: There has got to be a better way to achieve this... must be an existing library or helper?
+        normalizedName = normalizedName.Replace(".", "\\.");
+        normalizedName = normalizedName.Replace("@", "\\@");
+        normalizedName = normalizedName.Replace("-", "\\-");
+
+        RoleDocumentV1? document = await _redis.SearchSingleAsync<RoleDocumentV1>("idx:roles", "@name:{" + normalizedName + "}");
+        if (document is null) return null;
+
+        // Note: This is where we would be doing any neccessary conversions between v1 and v2+ etc. of the document.
+
+        // This 'could' be made to an implicit conversion to be slightly nicer on the eye...
+        // but I have become a fan of more 'explicitness' where appropriate.
+        return (Role)document;
     }
 
     public override Task<IList<Claim>> GetClaimsAsync(Role role, CancellationToken cancellationToken = default)

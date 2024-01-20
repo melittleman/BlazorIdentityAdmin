@@ -23,19 +23,31 @@ public class User : IdentityUser<Ulid>
         LastModifiedAt = now;
     }
 
+    public User(string username) : this()
+    {
+        UserName = username;
+    }
+
     public static explicit operator User(UserDocumentV1 doc)
     {
         return new User()
         {
             Id = doc.Id,
+
             FirstName = doc.FirstName,
             LastName = doc.LastName,
             UserName = doc.Username,
+
             Email = doc.EmailAddresses.First().Email,
             EmailConfirmed = doc.EmailAddresses.First().IsConfirmed,
+
+            PhoneNumber = doc.PhoneNumbers?.First().Number,
+            PhoneNumberConfirmed = doc.PhoneNumbers?.First().IsConfirmed ?? false,
+
             PasswordHash = doc.PasswordHash,
             ConcurrencyStamp = doc.ConcurrencyStamp,
             SecurityStamp = doc.SecurityStamp,
+
             CreatedAt = doc.CreatedAt,
             LastModifiedAt = doc.LastModifiedAt
         };
