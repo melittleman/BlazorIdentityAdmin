@@ -21,6 +21,8 @@ public sealed class UserDocumentV1
     [JsonPropertyName("last_name")]
     public string? LastName { get; set; }
 
+    // TOOD: I think we need a 'TenantId' or even an array also adding here?
+
     [JsonPropertyName("avatar_url")]
     public string? AvatarUrl { get; set; }
 
