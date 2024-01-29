@@ -2,12 +2,11 @@
 using System.Security.Claims;
 
 using NRedisKit;
+using NRedisKit.Extensions;
 using NRedisKit.DependencyInjection.Abstractions;
 
 using BlazorAdminDashboard.Domain.Identity;
 using BlazorAdminDashboard.Domain.Documents.v1;
-using System.Text.Json.Serialization;
-using System.Text.Json;
 
 namespace BlazorAdminDashboard.Infrastructure.Stores;
 
@@ -88,14 +87,11 @@ public class RedisUserStore(
 
     public override async Task<User?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken = default)
     {
-        // TODO: There has got to be a better way to achieve this... must be an existing library or helper?
-        normalizedEmail = normalizedEmail.Replace(".", "\\.");
-        normalizedEmail = normalizedEmail.Replace("@", "\\@");
-        normalizedEmail = normalizedEmail.Replace("-", "\\-");
+        string email = normalizedEmail.EscapeSpecialCharacters();
 
         // TODO: Constant for Redis index name
         // TODO: Why doesn't $ string interpolation seem to work for 'normalizedEmail'?
-        UserDocumentV1? document = await _redis.SearchSingleAsync<UserDocumentV1>("idx:users", "@email:{" + normalizedEmail + "}");
+        UserDocumentV1? document = await _redis.SearchSingleAsync<UserDocumentV1>("idx:users", "@email:{" + email + "}");
         if (document is null) return null;
 
         // Note: This is where we would be doing any neccessary conversions between v1 and v2+ etc. of the document.
@@ -105,16 +101,11 @@ public class RedisUserStore(
         return (User)document;
     }
 
-
-
     public override async Task<User?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
     {
-        // TODO: There has got to be a better way to achieve this... must be an existing library or helper?
-        normalizedUserName = normalizedUserName.Replace(".", "\\.");
-        normalizedUserName = normalizedUserName.Replace("@", "\\@");
-        normalizedUserName = normalizedUserName.Replace("-", "\\-");
+        string username = normalizedUserName.EscapeSpecialCharacters();
 
-        UserDocumentV1? document = await _redis.SearchSingleAsync<UserDocumentV1>("idx:users", "@username:{" + normalizedUserName + "}");
+        UserDocumentV1? document = await _redis.SearchSingleAsync<UserDocumentV1>("idx:users", "@username:{" + username + "}");
         if (document is null) return null;
 
         // Note: This is where we would be doing any neccessary conversions between v1 and v2+ etc. of the document.

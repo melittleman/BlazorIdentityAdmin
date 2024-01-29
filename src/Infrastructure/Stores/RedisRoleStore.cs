@@ -2,6 +2,7 @@
 using System.Security.Claims;
 
 using NRedisKit;
+using NRedisKit.Extensions;
 using NRedisKit.DependencyInjection.Abstractions;
 
 using BlazorAdminDashboard.Domain.Identity;
@@ -41,12 +42,9 @@ public class RedisRoleStore(
 
     public override async Task<Role?> FindByNameAsync(string normalizedName, CancellationToken cancellationToken = default)
     {
-        // TODO: There has got to be a better way to achieve this... must be an existing library or helper?
-        normalizedName = normalizedName.Replace(".", "\\.");
-        normalizedName = normalizedName.Replace("@", "\\@");
-        normalizedName = normalizedName.Replace("-", "\\-");
+        string name = normalizedName.EscapeSpecialCharacters();
 
-        RoleDocumentV1? document = await _redis.SearchSingleAsync<RoleDocumentV1>("idx:roles", "@name:{" + normalizedName + "}");
+        RoleDocumentV1? document = await _redis.SearchSingleAsync<RoleDocumentV1>("idx:roles", "@name:{" + name + "}");
         if (document is null) return null;
 
         // Note: This is where we would be doing any neccessary conversions between v1 and v2+ etc. of the document.
