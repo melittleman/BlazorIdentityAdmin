@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 
-using NRedisKit;
-using NRedisKit.Extensions;
-using NRedisKit.DependencyInjection.Abstractions;
+using RedisKit.Extensions;
+using RedisKit.Abstractions;
+using RedisKit.Querying.Extensions;
+using RedisKit.DependencyInjection.Abstractions;
+
+using NRedisStack.RedisStackCommands;
 
 using BlazorAdminDashboard.Domain.Identity;
 using BlazorAdminDashboard.Domain.Documents.v1;
@@ -11,10 +14,10 @@ using BlazorAdminDashboard.Domain.Documents.v1;
 namespace BlazorAdminDashboard.Infrastructure.Stores;
 
 public class RedisRoleStore(
-    IRedisClientFactory redisFactory,
+    IRedisConnectionProvider redisProvider,
     IdentityErrorDescriber errorDescriber) : RoleStoreBase<Role, Ulid, UserRole, RoleClaim>(errorDescriber)
 {
-    private readonly RedisClient _redis = redisFactory.CreateClient("persistent-db");
+    private readonly IRedisConnection _redis = redisProvider.GetRequiredConnection("persistent-db");
 
     // I don't believe this is actually required for any of the .NET Identity boilerplate.
     // However, because this is an abstract property, we really have no choice but to override.
@@ -44,7 +47,7 @@ public class RedisRoleStore(
     {
         string name = normalizedName.EscapeSpecialCharacters();
 
-        RoleDocumentV1? document = await _redis.SearchSingleAsync<RoleDocumentV1>("idx:roles", "@name:{" + name + "}");
+        RoleDocumentV1? document = await _redis.Db.FT().SearchSingleAsync<RoleDocumentV1>("idx:roles", "@name:{" + name + "}");
         if (document is null) return null;
 
         // Note: This is where we would be doing any neccessary conversions between v1 and v2+ etc. of the document.

@@ -9,6 +9,12 @@ public class User : IdentityUser<Ulid>
 
     public string? LastName { get; set; }
 
+    public string? AvatarUrl { get; set; }
+    
+    public string CultureName { get; set; } = "en-US"; // TODO: Constant
+
+    public string TimezoneId { get; set; } = "UTC"; // TODO: Constant
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset LastModifiedAt { get; set; }
@@ -30,6 +36,8 @@ public class User : IdentityUser<Ulid>
 
     public static explicit operator User(UserDocumentV1 doc)
     {
+        EmailAddressDocumentV1? email = doc.EmailAddresses.SingleOrDefault(e => e.IsPrimary);
+
         return new User()
         {
             Id = doc.Id,
@@ -38,8 +46,12 @@ public class User : IdentityUser<Ulid>
             LastName = doc.LastName,
             UserName = doc.Username,
 
-            Email = doc.EmailAddresses.First().Email,
-            EmailConfirmed = doc.EmailAddresses.First().IsConfirmed,
+            AvatarUrl = doc.AvatarUrl,
+            CultureName = doc.CultureName,
+            TimezoneId = doc.TimezoneId,
+
+            Email = email?.Email,
+            EmailConfirmed = email?.IsConfirmed ?? false,
 
             PhoneNumber = doc.PhoneNumbers?.First().Number,
             PhoneNumberConfirmed = doc.PhoneNumbers?.First().IsConfirmed ?? false,

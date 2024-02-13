@@ -1,5 +1,8 @@
-﻿namespace BlazorAdminDashboard.Domain.Enums;
+﻿using System.Text.Json.Serialization;
 
+namespace BlazorAdminDashboard.Domain.Enums;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum EmailAddressType
 {
     NotSet = 0,

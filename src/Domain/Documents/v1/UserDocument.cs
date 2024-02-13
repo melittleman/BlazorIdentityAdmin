@@ -1,9 +1,17 @@
-﻿using BlazorAdminDashboard.Domain.Identity;
+﻿using System.Text.Json.Serialization;
+
+using BlazorAdminDashboard.Domain.Identity;
 using BlazorAdminDashboard.Domain.Enums;
-using System.Text.Json.Serialization;
 
 namespace BlazorAdminDashboard.Domain.Documents.v1;
 
+// TODO: Need further testing of Redis.OM as it doesn't yet seem
+// to support JSON pathing via the JsonPropertyName attributes.
+
+//[Document(
+//    IndexName = "idx:users",
+//    Prefixes = [ "dashboard:users:" ],
+//    StorageType = StorageType.Json)]
 public sealed class UserDocumentV1
 {
     [JsonPropertyName("id")]
@@ -73,8 +81,8 @@ public sealed class UserDocumentV1
 
     public static explicit operator UserDocumentV1(User user)
     {
-        if (user.UserName is null) throw new InvalidOperationException("Username cannot be null.");
-        if (user.Email is null) throw new InvalidOperationException("Email address cannot be null.");
+        ArgumentException.ThrowIfNullOrWhiteSpace(user.Email, nameof(user));
+        ArgumentException.ThrowIfNullOrWhiteSpace(user.UserName, nameof(user));
 
         return new UserDocumentV1()
         {
@@ -82,15 +90,16 @@ public sealed class UserDocumentV1
             Username = user.UserName,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            EmailAddresses = new List<EmailAddressDocumentV1>()
-            {
-                new()
+            EmailAddresses = [
+            
+                new EmailAddressDocumentV1()
                 {
                     Email = user.Email,
                     Type = EmailAddressType.School,
                     IsConfirmed = user.EmailConfirmed,
+                    IsPrimary = true // TODO: We can fix this once 'User' has been updated to have multiple emails.
                 }
-            },
+            ],
             PasswordHash = user.PasswordHash,
             CreatedAt = user.CreatedAt,
             LastModifiedAt = user.LastModifiedAt,

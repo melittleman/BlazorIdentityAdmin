@@ -2,11 +2,14 @@
 using System.Text.Json.Serialization;
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-using NRedisKit.DependencyInjection.Extensions;
+using RedisKit.DependencyInjection.Extensions;
+using OpenIddict.Abstractions;
+using SendGrid;
 
 using BlazorAdminDashboard.Domain.Identity;
 using BlazorAdminDashboard.Infrastructure.Email;
@@ -14,7 +17,6 @@ using BlazorAdminDashboard.Infrastructure.Stores;
 using BlazorAdminDashboard.Infrastructure.Configuration;
 using BlazorAdminDashboard.Infrastructure.Hosted;
 using BlazorAdminDashboard.Application.Identity;
-using SendGrid;
 
 namespace BlazorAdminDashboard.Infrastructure;
 
@@ -40,12 +42,20 @@ public static class ConfigureServices
         }).AddRedisDataProtection(env, options =>
         {
             options.KeyName = "data-protection:keys";
-        });
 
-        // TODO: Note that this isn't actually being used until
-        // NRedisStack update their version to 0.10.2
-        services.ConfigureRedisJson(options =>
+        }).AddRedisTicketStore(options =>
         {
+            options.KeyPrefix = "dashboard:auth-tickets:";
+
+            // Why is the ticket store not working...?!
+            options.CookieSchemeName = IdentityConstants.ApplicationScheme;
+
+        }).ConfigureRedisJson(options =>
+        {
+            // These serialization options are specific to this Redis connection.
+            // We can use IServiceCollection.ConfigureRedisJson to configure them
+            // globally, however it would be nice to have a single way to configure both?
+
             options.Serializer.Converters.Add(new JsonStringEnumConverter());
             options.Serializer.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             options.Serializer.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
@@ -55,26 +65,109 @@ public static class ConfigureServices
 
         // Authentication
 
-        services.AddAuthentication(options =>
+        AuthenticationBuilder builder = services.AddAuthentication(options =>
         {
             options.DefaultScheme = IdentityConstants.ApplicationScheme;
             options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+        });
 
-        }).AddIdentityCookies();
+        builder.AddIdentityCookies();
+
+        string? gitHubclientId = configuration["Authentication:GitHub:ClientId"];
+        string? gitHubclientSecret = configuration["Authentication:GitHub:ClientSecret"];
+
+        if (string.IsNullOrEmpty(gitHubclientId) is false && string.IsNullOrEmpty(gitHubclientSecret) is false)
+        {
+            builder.AddGitHub(options =>
+            {
+                // TODO: Move into user secrets...
+                options.ClientId = gitHubclientId;
+                options.ClientSecret = gitHubclientSecret;
+                options.CallbackPath = "/connect/callback/signin-github";
+
+                // TODO: Save AvatarUrl from www.github.com/<username>.png
+                // What else do we want to save in our own claims?
+
+                options.Scope.Add("read:user");
+                options.SaveTokens = true;
+            });
+        }
 
         services.AddIdentityCore<User>(options =>
         {
-            options.Stores.MaxLengthForKeys = 128;
+            options.ClaimsIdentity.UserNameClaimType = OpenIddictConstants.Claims.Name;
+            options.ClaimsIdentity.UserIdClaimType = OpenIddictConstants.Claims.Subject;
+            options.ClaimsIdentity.RoleClaimType = OpenIddictConstants.Claims.Role;
+
+            options.SignIn.RequireConfirmedEmail = true;
             options.SignIn.RequireConfirmedAccount = true;
+
+            options.Password.RequiredLength = 8;
+            options.Password.RequiredUniqueChars = 4;
+            options.Password.RequireNonAlphanumeric = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireDigit = true;
+
+            options.Stores.MaxLengthForKeys = 128;
         })
         .AddRoles<Role>()
+        .AddClaimsPrincipalFactory<CustomClaimsPrincipalFactory>()
         .AddUserManager<CustomUserManager>()
         .AddRoleManager<CustomRoleManager>()
         .AddUserStore<RedisUserStore>()
         .AddRoleStore<RedisRoleStore>()
         .AddDefaultTokenProviders()
         .AddSignInManager()
-        .AddApiEndpoints();
+        .AddApiEndpoints(); // TODO: This should be removed as well as .MapIdentityApi once we're happy everything has been moved across.
+
+        // OpenIddict
+        services.AddOpenIddict().AddServer(options =>
+        {
+            // Enable the authorization, logout, token and userinfo endpoints.
+            options.SetCryptographyEndpointUris(".well-known/jwks.json")
+                .SetAuthorizationEndpointUris("connect/authorize")
+                .SetLogoutEndpointUris("connect/logout")
+                .SetTokenEndpointUris("connect/token")
+                .SetUserinfoEndpointUris("connect/userinfo")
+                .SetIntrospectionEndpointUris("connect/introspect")
+                .SetDeviceEndpointUris("connect/device")
+                .SetVerificationEndpointUris("connect/verify");
+
+            // When integration with third-party APIs/resource servers is desired.
+            options.DisableAccessTokenEncryption();
+            options.DisableScopeValidation();
+
+            options.UseAspNetCore()
+                .EnableAuthorizationEndpointPassthrough()
+                .EnableLogoutEndpointPassthrough()
+                .EnableTokenEndpointPassthrough()
+                .EnableUserinfoEndpointPassthrough()
+                .EnableVerificationEndpointPassthrough()
+                .EnableStatusCodePagesIntegration();
+
+            options.AllowAuthorizationCodeFlow()
+                .AllowDeviceCodeFlow()
+                .AllowRefreshTokenFlow()
+                .AllowClientCredentialsFlow();
+
+            if (env.IsDevelopment())
+            {
+                options.AddDevelopmentEncryptionCertificate();
+                options.AddDevelopmentSigningCertificate();
+            }
+            else
+            {
+                // TODO...
+            }
+
+        }).AddValidation(options =>
+        {
+            options.UseLocalServer();
+            options.UseAspNetCore();
+        });
+
+        // TODO: Need to register all the custom Store implementations that the OpenIddict.UseEntityFrameworkCore extension otherwise does.
 
         return services;
     }

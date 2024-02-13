@@ -1,21 +1,30 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 
-using NRedisKit;
-using NRedisKit.Extensions;
-using NRedisKit.DependencyInjection.Abstractions;
+using RedisKit.Extensions;
+using RedisKit.Abstractions;
+using RedisKit.Querying.Extensions;
+using RedisKit.DependencyInjection.Abstractions;
+
+using NRedisStack.RedisStackCommands;
 
 using BlazorAdminDashboard.Domain.Identity;
 using BlazorAdminDashboard.Domain.Documents.v1;
+using Microsoft.Extensions.Options;
+using RedisKit.DependencyInjection.Options;
+using IdentityModel;
+using OpenIddict.Abstractions;
 
 namespace BlazorAdminDashboard.Infrastructure.Stores;
 
 public class RedisUserStore(
-    IRedisClientFactory redisFactory,
+    IRedisConnectionProvider redisProvider,
+    IOptions<RedisJsonOptions> options,
     IdentityErrorDescriber errorDescriber) : UserStoreBase<User, Ulid, UserClaim, UserLogin, UserToken>(errorDescriber)
 {
     // TODO: Constant Redis client name
-    private readonly RedisClient _redis = redisFactory.CreateClient("persistent-db");
+    private readonly IRedisConnection _redis = redisProvider.GetRequiredConnection("persistent-db");
+    private readonly RedisJsonOptions _jsonOptions = options.Value;
 
     // I don't believe this is actually required for any of the .NET Identity boilerplate.
     // However, because this is an abstract property, we really have no choice but to override.
@@ -27,28 +36,9 @@ public class RedisUserStore(
         throw new NotImplementedException();
     }
 
-    public override async Task AddLoginAsync(User user, UserLoginInfo info, CancellationToken cancellationToken = default)
-    {
-        // TODO: Create a 'Document'.
-        UserLogin login = new()
-        {
-            UserId = user.Id,
-            ProviderKey = info.ProviderKey,
-            LoginProvider = info.LoginProvider,
-            ProviderDisplayName = info.ProviderDisplayName
-        };
-
-        if (await _redis.SetAsJsonAsync($"dashboard:users:{user.Id}", login, "$.logins[0]") is false)
-        {
-            // TODO: Log error
-
-            throw new InvalidOperationException($"Unable to add login to User {user.Id}");
-        }
-    }
-
     public override async Task<IdentityResult> CreateAsync(User user, CancellationToken cancellationToken)
     {
-        if (await _redis.SetAsJsonAsync($"dashboard:users:{user.Id}", (UserDocumentV1)user))
+        if (await _redis.Db.JSON().SetAsync($"dashboard:users:{user.Id}", "$", (UserDocumentV1)user, serializerOptions: _jsonOptions.Serializer))
         {
             return IdentityResult.Success;
         }
@@ -74,7 +64,7 @@ public class RedisUserStore(
     // TODO: Why on earth do they make us implement both of these?
     public override async Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken)
     {
-        UserDocumentV1? document = await _redis.GetFromJsonAsync<UserDocumentV1>($"dashboard:users:{userId}");
+        UserDocumentV1? document = await _redis.Db.JSON().GetAsync<UserDocumentV1>($"dashboard:users:{userId}");
 
         if (document is null)
         {
@@ -91,7 +81,8 @@ public class RedisUserStore(
 
         // TODO: Constant for Redis index name
         // TODO: Why doesn't $ string interpolation seem to work for 'normalizedEmail'?
-        UserDocumentV1? document = await _redis.SearchSingleAsync<UserDocumentV1>("idx:users", "@email:{" + email + "}");
+        // TODO: Are we able to use Redis.OM for this querying despite not actually using it for index creation?
+        UserDocumentV1? document = await _redis.Db.FT().SearchSingleAsync<UserDocumentV1>("idx:users", "@email:{" + email + "}");
         if (document is null) return null;
 
         // Note: This is where we would be doing any neccessary conversions between v1 and v2+ etc. of the document.
@@ -105,7 +96,7 @@ public class RedisUserStore(
     {
         string username = normalizedUserName.EscapeSpecialCharacters();
 
-        UserDocumentV1? document = await _redis.SearchSingleAsync<UserDocumentV1>("idx:users", "@username:{" + username + "}");
+        UserDocumentV1? document = await _redis.Db.FT().SearchSingleAsync<UserDocumentV1>("idx:users", "@username:{" + username + "}");
         if (document is null) return null;
 
         // Note: This is where we would be doing any neccessary conversions between v1 and v2+ etc. of the document.
@@ -117,17 +108,22 @@ public class RedisUserStore(
 
     public override Task<IList<Claim>> GetClaimsAsync(User user, CancellationToken cancellationToken)
     {
-        IList<Claim> claims = new List<Claim>()
+        IList<Claim> claims =
+        [
+            new Claim(JwtClaimTypes.SessionId, CryptoRandom.CreateUniqueId(16, CryptoRandom.OutputFormat.Hex)),
+        ];
+
+        if (string.IsNullOrWhiteSpace(user.FirstName) is false)
         {
-            new("tenant", "123")
-        };
+            claims.Add(new Claim(OpenIddictConstants.Claims.GivenName, user.FirstName));
+        }
+
+        if (string.IsNullOrWhiteSpace(user.LastName) is false)
+        {
+            claims.Add(new Claim(OpenIddictConstants.Claims.FamilyName, user.LastName));
+        }
 
         return Task.FromResult(claims);
-    }
-
-    public override Task<IList<UserLoginInfo>> GetLoginsAsync(User user, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
     }
 
     public override Task<IList<User>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken = default)
@@ -140,32 +136,85 @@ public class RedisUserStore(
         throw new NotImplementedException();
     }
 
-    public override Task RemoveLoginAsync(User user, string loginProvider, string providerKey, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
     public override Task ReplaceClaimAsync(User user, Claim claim, Claim newClaim, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
 
-    public override async Task<IdentityResult> UpdateAsync(User user, CancellationToken cancellationToken)
+    public override async Task<IdentityResult> UpdateAsync(User user, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(user);
+        ArgumentException.ThrowIfNullOrWhiteSpace(user.UserName, nameof(user));
+        ArgumentException.ThrowIfNullOrWhiteSpace(user.SecurityStamp, nameof(user));
+        ArgumentException.ThrowIfNullOrWhiteSpace(user.ConcurrencyStamp, nameof(user)); // When does this need to be checked for concurrent access?
 
-        cancellationToken.ThrowIfCancellationRequested();
+        ct.ThrowIfCancellationRequested();
 
-        // TODO: Can we pass in the cancellation token?
-        // TODO: This is too dangerous, as we could be overwriting unexpected properties
-        // because 'User' does not contain everything that the 'Document' needs...
-        // Need to first read it out of the database, and update each one by one.
-        if (await _redis.SetAsJsonAsync($"dashboard:users:{user.Id}", (UserDocumentV1)user))
+        string key = $"dashboard:users:{user.Id}";
+
+        UserDocumentV1? doc = await _redis.Db.JSON().GetAsync<UserDocumentV1>(key);
+        if (doc is null) return IdentityResult.Failed(new IdentityError { Description = $"key {key} does not exist." });
+
+        // TODO: How are we going to update more emails here as we are only provided one by default?
+        EmailAddressDocumentV1? email = doc.EmailAddresses.SingleOrDefault(e => e.Email == user.Email);
+        if (email is not null)
         {
-            return IdentityResult.Success;
+            email.IsConfirmed = user.EmailConfirmed;
         }
 
-        return new IdentityResult();
+        doc.Username = user.UserName;
+        doc.FirstName = user.FirstName;
+        doc.LastName = user.LastName;
+        doc.AvatarUrl = user.AvatarUrl;
+
+        doc.CultureName = user.CultureName;
+        doc.TimezoneId = user.TimezoneId;
+        doc.PasswordHash = user.PasswordHash;
+
+        doc.SecurityStamp = user.SecurityStamp;
+        doc.ConcurrencyStamp = user.ConcurrencyStamp;
+        doc.LastModifiedAt = user.LastModifiedAt; // TODO: Does this also need updating whenever the security stamp changes?
+
+        doc.IsMultiFactorEnabled = user.TwoFactorEnabled;
+        doc.IsLockoutEnabled = user.LockoutEnabled;
+        doc.LockoutEndsAt = user.LockoutEnd;
+
+        // TODO: Can we pass in the cancellation token?
+        if (await _redis.Db.JSON().SetAsync(key, "$", doc)) return IdentityResult.Success;
+
+        return IdentityResult.Failed(new IdentityError { Description = $"Unable to update Redis user document at {key}." });
+
+        // TODO: All this serialization is pretty horrible...
+        // If we can find a better way to achieve this then I think this could work well.
+
+        // OR
+
+        // We could look to use the new JSON.MERGE e.g. _redis.Json.MergeAsync(key, "$", doc)
+
+        //List<KeyPathValue> values = 
+        //[
+        //    new KeyPathValue(key, "$.username", JsonSerializer.Serialize(user.UserName)),
+        //    new KeyPathValue(key, "$.culture_name", JsonSerializer.Serialize(user.CultureName)),
+        //    new KeyPathValue(key, "$.timezone_id", JsonSerializer.Serialize(user.TimezoneId)),
+        //    new KeyPathValue(key, "$.security_stamp", JsonSerializer.Serialize(user.SecurityStamp)),
+        //    new KeyPathValue(key, "$.concurrency_stamp", JsonSerializer.Serialize(user.ConcurrencyStamp)),
+        //    new KeyPathValue(key, "$.last_modified_at", JsonSerializer.Serialize(user.LastModifiedAt)),
+        //    new KeyPathValue(key, "$.is_mfa_enabled", JsonSerializer.Serialize(user.TwoFactorEnabled)),
+        //    new KeyPathValue(key, "$.is_lockout_enabled", JsonSerializer.Serialize(user.LockoutEnabled))
+        //];
+
+        //// TODO: Neeed to add Email and Phone Numbers to these...
+        //if (user.FirstName != null) values.Add(new KeyPathValue(key, "$.first_name", JsonSerializer.Serialize(user.FirstName)));
+        //if (user.LastName != null) values.Add(new KeyPathValue(key, "$.last_name", JsonSerializer.Serialize(user.LastName)));
+        //if (user.AvatarUrl != null) values.Add(new KeyPathValue(key, "$.avatar_url", JsonSerializer.Serialize(user.AvatarUrl)));
+        //if (user.PasswordHash != null) values.Add(new KeyPathValue(key, "$.password_hash", JsonSerializer.Serialize(user.PasswordHash)));
+        //if (user.LockoutEnd != null) values.Add(new KeyPathValue(key, "$.lockout_ends_at", JsonSerializer.Serialize(user.LockoutEnd)));
+
+        //bool result = await _redis.Json.MSetAsync([.. values]);
+
+        //return result 
+        //    ? IdentityResult.Success 
+        //    : IdentityResult.Failed(new IdentityError { Description = $"Unable to update Redis document for user {user.Id}." });
     }
 
     protected override async Task AddUserTokenAsync(UserToken token)
@@ -181,17 +230,17 @@ public class RedisUserStore(
 
         // TODO: This could be further simplified if we store an empty array as default in the document, then we can use
         // the JSON.ARRAPPEND command to add to this existing array without the need to first read it from the database.
-        IEnumerable<MultiFactorTokenDocumentV1?> tokens = await _redis.Json.GetEnumerableAsync<MultiFactorTokenDocumentV1>(key, "$.mfa_tokens[*]");
-
+        IEnumerable<MultiFactorTokenDocumentV1?> tokens = await _redis.Db.JSON().GetEnumerableAsync<MultiFactorTokenDocumentV1>(key, "$.mfa_tokens[*]");
+        
         tokens ??= [];
-        tokens.ToList().Add(new MultiFactorTokenDocumentV1()
+        tokens = tokens.Append(new MultiFactorTokenDocumentV1()
         { 
             IdentityProvider = token.LoginProvider,
             Name = token.Name,
             Value = token.Value
         });
 
-        if (await _redis.SetAsJsonAsync(key, tokens, "$.mfa_tokens") is false)
+        if (await _redis.Db.JSON().SetAsync(key, "$.mfa_tokens", tokens) is false)
         {
             // Log error...
         }
@@ -205,8 +254,7 @@ public class RedisUserStore(
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        // TODO: We potentially don't even need the Redis index on "mfa_tokens" if we are just going to load the entire document path anyway.
-        IEnumerable<MultiFactorTokenDocumentV1?> tokens = await _redis.Json.GetEnumerableAsync<MultiFactorTokenDocumentV1>($"dashboard:users:{user.Id}", "$.mfa_tokens[*]");
+        IEnumerable<MultiFactorTokenDocumentV1?> tokens = await _redis.Db.JSON().GetEnumerableAsync<MultiFactorTokenDocumentV1>($"dashboard:users:{user.Id}", "$.mfa_tokens[*]");
 
         MultiFactorTokenDocumentV1? token = tokens.ToList()?.SingleOrDefault(t => t?.IdentityProvider == loginProvider && t?.Name == name);
 
@@ -219,19 +267,117 @@ public class RedisUserStore(
         return CreateUserToken(user, loginProvider, name, token.Value);
     }
 
-    protected override Task<UserLogin?> FindUserLoginAsync(Ulid userId, string loginProvider, string providerKey, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override Task<UserLogin?> FindUserLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
     protected override Task RemoveUserTokenAsync(UserToken token)
     {
         throw new NotImplementedException();
     }
+
+    #region Logins
+
+    public override async Task<IList<UserLoginInfo>> GetLoginsAsync(User user, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+
+        ct.ThrowIfCancellationRequested();
+
+        string key = $"dashboard:users:{user.Id}";
+
+        // TODO: This could be further simplified if we store an empty array as default in the document, then we can use
+        // the JSON.ARRAPPEND command to add to this existing array without the need to first read it from the database.
+        IEnumerable<ExternalLoginDocumentV1?> logins = await _redis.Db.JSON().GetEnumerableAsync<ExternalLoginDocumentV1>(key, "$.external_logins[*]");
+
+        return logins.Where(l => l is not null).Select(l =>
+        {
+            return new UserLoginInfo(l!.Issuer, l.Subject, l.DisplayName);
+
+        }).ToList();
+    }
+
+    public override async Task AddLoginAsync(User user, UserLoginInfo info, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        ArgumentNullException.ThrowIfNull(info);
+
+        ct.ThrowIfCancellationRequested();
+
+        ExternalLoginDocumentV1 externalLogin = new()
+        {
+            Issuer = info.LoginProvider,
+            Subject = info.ProviderKey,
+            DisplayName = info.ProviderDisplayName ?? info.LoginProvider
+        };
+
+        string key = $"dashboard:users:{user.Id}";
+
+        // TODO: This could be further simplified if we store an empty array as default in the document, then we can use
+        // the JSON.ARRAPPEND command to add to this existing array without the need to first read it from the database.
+        IEnumerable<ExternalLoginDocumentV1?> logins = await _redis.Db.JSON().GetEnumerableAsync<ExternalLoginDocumentV1>(key, "$.external_logins[*]");
+
+        logins ??= [];
+        logins = logins.Append(externalLogin);
+
+        if (await _redis.Db.JSON().SetAsync(key, "$.external_logins", logins) is false)
+        {
+            // Log error...
+            throw new InvalidOperationException($"Unable to add login to User {user.Id}");
+        }
+    }
+
+    protected override async Task<UserLogin?> FindUserLoginAsync(Ulid userId, string loginProvider, string providerKey, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(userId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(loginProvider);
+        ArgumentException.ThrowIfNullOrWhiteSpace(providerKey);
+
+        ct.ThrowIfCancellationRequested();
+
+        string key = $"dashboard:users:{userId}";
+
+        // TODO: This could be further simplified if we store an empty array as default in the document, then we can use
+        // the JSON.ARRAPPEND command to add to this existing array without the need to first read it from the database.
+        IEnumerable<ExternalLoginDocumentV1?> logins = await _redis.Db.JSON().GetEnumerableAsync<ExternalLoginDocumentV1>(key, "$.external_logins[*]");
+
+        ExternalLoginDocumentV1? login = logins
+            .Where(l => l is not null)
+            .SingleOrDefault(l => l!.Issuer == loginProvider && l.Subject == providerKey);
+
+        return login is null ? null : new UserLogin()
+        {
+            LoginProvider = login.Issuer,
+            ProviderKey = login.Subject,
+            ProviderDisplayName = login.DisplayName,
+        };
+    }
+
+    protected override async Task<UserLogin?> FindUserLoginAsync(string loginProvider, string providerKey, CancellationToken ct)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(loginProvider);
+        ArgumentException.ThrowIfNullOrWhiteSpace(providerKey);
+
+        ct.ThrowIfCancellationRequested();
+
+        string issuer = loginProvider.EscapeSpecialCharacters();
+        string subject = providerKey.EscapeSpecialCharacters();
+
+        UserDocumentV1? document = await _redis.Db.FT().SearchSingleAsync<UserDocumentV1>("idx:users", "@login_provider:{" + issuer + "} @login_key:{" + subject + "}");
+        if (document is null) return null;
+
+        ExternalLoginDocumentV1? login = document.ExternalLogins?.SingleOrDefault(l => l.Issuer == loginProvider && l.Subject == providerKey);
+        if (login is null) return null;
+
+        return new UserLogin()
+        {
+            LoginProvider = login.Issuer,
+            ProviderKey = login.Subject,
+            ProviderDisplayName = login.DisplayName,
+        };
+    }
+
+    public override Task RemoveLoginAsync(User user, string loginProvider, string providerKey, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
 }
 

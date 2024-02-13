@@ -6,6 +6,10 @@
 @using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
 
+@using ZXing;
+@using MudBlazor;
+@using MudExtensions;
+
 @inject UserManager<User> UserManager
 @inject IdentityUserAccessor UserAccessor
 @inject UrlEncoder UrlEncoder
@@ -36,6 +40,17 @@ else
                 </p>
             </li>
             <li>
+                <MudItem xs="12" sm="8" Class="d-flex justify-center">
+                    <MudBarcode @bind-Value="authenticatorUri"
+                        Width="200" 
+                        Height="200" 
+                        BarcodeFormat="BarcodeFormat.QR_CODE" 
+                        Clickable="false"
+                        Color="black"
+                        BackgroundColor="white" 
+                        StrokeWidth="0" />
+                </MudItem>
+
                 <p>Scan the QR Code or enter this key <kbd>@sharedKey</kbd> into your two factor authenticator app. Spaces and casing do not matter.</p>
                 <div class="alert alert-info">Learn how to <a href="https://go.microsoft.com/fwlink/?Linkid=852423">enable QR code generation</a>.</div>
                 <div></div>

@@ -1,21 +1,49 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
-using NRedisKit;
-using NRedisKit.DependencyInjection.Abstractions;
+using RedisKit.Abstractions;
+using RedisKit.DependencyInjection.Abstractions;
 
 using NRedisStack.Search;
 using NRedisStack.Search.Literals.Enums;
+using NRedisStack.RedisStackCommands;
+
+using RedisKit.DependencyInjection.Options;
+using RedisKit.Querying.Extensions;
 
 namespace BlazorAdminDashboard.Infrastructure.Hosted;
 
-internal sealed class RedisIndexCreationService(IRedisClientFactory redisFactory, ILogger<RedisIndexCreationService> logger) : BackgroundService
+internal sealed class RedisIndexCreationService : BackgroundService
 {
-    private readonly RedisClient _redis = redisFactory.CreateClient("persistent-db");
+    private readonly IRedisConnection _connection;
+    private readonly RedisJsonOptions _jsonOptions;
+    private readonly ILogger<RedisIndexCreationService> _logger;
+
+    public RedisIndexCreationService(
+        IRedisConnectionProvider redisProvider,
+        ILogger<RedisIndexCreationService> logger,
+        IOptionsMonitor<RedisJsonOptions> options)
+    {
+        // TODO: Name constant. Is there an easier / better way to sync this up as we are nearly
+        // always going to want  the JSON options at the same time as the connection itself?
+        _connection = redisProvider.GetRequiredConnection("persistent-db");
+        _jsonOptions = options.Get("persistent-db");
+
+        // TODO: The clashing of class names between Redis.OM and RedisKit here could become confusing,
+        // e.g. both libraries have 'IRedisConnection' and 'IRedisConnectionProvider' so we should
+        // probably think of a better alternative, maybe 'factory' or 'accessor'?
+
+        // We aren't able to use Redis.OM yet anyway due to the lack of support
+        // for JsonPropertyName attributes when creating the indexes.
+        // _provider = new RedisConnectionProvider(_connection.Multiplexer);
+
+        _logger = logger;
+    }
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        logger.LogInformation("RedisIndexCreationService is executing on startup.");
+        _logger.LogInformation("RedisIndexCreationService is executing on startup.");
 
         Task[] indexTasks =
         [
@@ -27,12 +55,12 @@ internal sealed class RedisIndexCreationService(IRedisClientFactory redisFactory
 
         await Task.WhenAll(indexTasks);
 
-        logger.LogInformation("RedisIndexCreationService has successfully finished executing on startup.");
+        _logger.LogInformation("RedisIndexCreationService has successfully finished executing on startup.");
     }
 
     private async Task<bool> CreateUserIndex()
     {
-        logger.LogDebug("User index is being created in Redis.");
+        _logger.LogDebug("User index is being created in Redis.");
 
         Schema schema = new();
 
@@ -45,9 +73,6 @@ internal sealed class RedisIndexCreationService(IRedisClientFactory redisFactory
 
         schema.AddTagField(new FieldName("$.created_at", "created_at"), sortable: true, noIndex: true);
 
-        schema.AddTagField(new FieldName("$.mfa_tokens[*].idp", "token_provider"));
-        schema.AddTagField(new FieldName("$.mfa_tokens[*].name", "token_name"));
-
         schema.AddTagField(new FieldName("$.external_logins[*].iss", "login_provider"));
         schema.AddTagField(new FieldName("$.external_logins[*].sub", "login_key"));
 
@@ -55,19 +80,18 @@ internal sealed class RedisIndexCreationService(IRedisClientFactory redisFactory
             .On(IndexDataType.JSON)
             .Prefix("dashboard:users:");
 
-        // TODO: Remove 'forceRecreate'...
-        if (await _redis.CreateIndex("idx:users", schema, createParams, forceRecreate: true) is false)
+        if (await _connection.Db.FT().CreateIndexAsync("idx:users", createParams, schema) is false)
         {
             throw new InvalidOperationException("Unable to create idx:users Index in Redis!");
         }
 
-        logger.LogDebug("User index has been created in Redis.");
+        _logger.LogDebug("User index has been created in Redis.");
         return true;
     }
 
     private async Task<bool> CreateRoleIndex()
     {
-        logger.LogDebug("Role index is being created in Redis.");
+        _logger.LogDebug("Role index is being created in Redis.");
 
         Schema schema = new();
 
@@ -78,13 +102,12 @@ internal sealed class RedisIndexCreationService(IRedisClientFactory redisFactory
             .On(IndexDataType.JSON)
             .Prefix("dashboard:roles:");
 
-        // TODO: forceRecreate only works when the index already exists... I think this should be changed to ignore it?
-        if (await _redis.CreateIndex("idx:roles", schema, createParams) is false)
+        if (await _connection.Db.FT().CreateIndexAsync("idx:roles", createParams, schema) is false)
         {
-            throw new InvalidOperationException("Unable to create idx:roles Index in Redis!");
+            throw new InvalidOperationException("Unable to create idx:users Index in Redis!");
         }
 
-        logger.LogDebug("Role index has been created in Redis.");
+        _logger.LogDebug("Role index has been created in Redis.");
         return true;
     }
 }
