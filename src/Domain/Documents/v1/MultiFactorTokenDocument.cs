@@ -1,11 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Security.Claims;
+using System.Text.Json.Serialization;
 
 namespace BlazorAdminDashboard.Domain.Documents.v1;
 
 public sealed class MultiFactorTokenDocumentV1
 {
     [JsonPropertyName("idp")]
-    public string IdentityProvider { get; set; } = "LOCAL_AUTHORITY";
+    public string IdentityProvider { get; set; } = ClaimsIdentity.DefaultIssuer;
 
     [JsonPropertyName("name")]
     public required string Name { get; set; }

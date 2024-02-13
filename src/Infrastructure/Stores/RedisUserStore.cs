@@ -19,12 +19,12 @@ namespace BlazorAdminDashboard.Infrastructure.Stores;
 
 public class RedisUserStore(
     IRedisConnectionProvider redisProvider,
-    IOptions<RedisJsonOptions> options,
+    IOptionsMonitor<RedisJsonOptions> options,
     IdentityErrorDescriber errorDescriber) : UserStoreBase<User, Ulid, UserClaim, UserLogin, UserToken>(errorDescriber)
 {
     // TODO: Constant Redis client name
     private readonly IRedisConnection _redis = redisProvider.GetRequiredConnection("persistent-db");
-    private readonly RedisJsonOptions _jsonOptions = options.Value;
+    private readonly RedisJsonOptions _jsonOptions = options.Get("persistent-db");
 
     // I don't believe this is actually required for any of the .NET Identity boilerplate.
     // However, because this is an abstract property, we really have no choice but to override.
@@ -64,7 +64,7 @@ public class RedisUserStore(
     // TODO: Why on earth do they make us implement both of these?
     public override async Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken)
     {
-        UserDocumentV1? document = await _redis.Db.JSON().GetAsync<UserDocumentV1>($"dashboard:users:{userId}");
+        UserDocumentV1? document = await _redis.Db.JSON().GetAsync<UserDocumentV1>($"dashboard:users:{userId}", serializerOptions: _jsonOptions.Serializer);
 
         if (document is null)
         {
@@ -108,6 +108,10 @@ public class RedisUserStore(
 
     public override Task<IList<Claim>> GetClaimsAsync(User user, CancellationToken cancellationToken)
     {
+        // TODO: I hate this hard-coded approach to a SessionId... we need to investigate what other providers
+        // like Pixel, IdentityServer or OrchardCore actually do here because I don't think that a 'Store' should
+        // just keep a static list of Claims defined for a User?
+
         IList<Claim> claims =
         [
             new Claim(JwtClaimTypes.SessionId, CryptoRandom.CreateUniqueId(16, CryptoRandom.OutputFormat.Hex)),
@@ -152,7 +156,7 @@ public class RedisUserStore(
 
         string key = $"dashboard:users:{user.Id}";
 
-        UserDocumentV1? doc = await _redis.Db.JSON().GetAsync<UserDocumentV1>(key);
+        UserDocumentV1? doc = await _redis.Db.JSON().GetAsync<UserDocumentV1>(key, serializerOptions: _jsonOptions.Serializer);
         if (doc is null) return IdentityResult.Failed(new IdentityError { Description = $"key {key} does not exist." });
 
         // TODO: How are we going to update more emails here as we are only provided one by default?
@@ -180,7 +184,7 @@ public class RedisUserStore(
         doc.LockoutEndsAt = user.LockoutEnd;
 
         // TODO: Can we pass in the cancellation token?
-        if (await _redis.Db.JSON().SetAsync(key, "$", doc)) return IdentityResult.Success;
+        if (await _redis.Db.JSON().SetAsync(key, "$", doc, serializerOptions: _jsonOptions.Serializer)) return IdentityResult.Success;
 
         return IdentityResult.Failed(new IdentityError { Description = $"Unable to update Redis user document at {key}." });
 
