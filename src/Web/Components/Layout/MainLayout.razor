@@ -1,23 +1,59 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="4" Dense="false" Fixed="true">
+        <MudToolBar DisableGutters="true">
+
+            <!-- TODO: Logo? -->
+            @* <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" OnClick="DrawerToggle" /> *@
+        </MudToolBar>
+        <MudHidden Breakpoint="Breakpoint.Xs">
+            <MudText Typo="Typo.h6" Class="ml-4">Blazor Admin Dashboard</MudText>
+        </MudHidden>
+        <MudHidden Breakpoint="Breakpoint.Xs" Invert="true">
+            <MudText Typo="Typo.subtitle2">Identity Provider</MudText>
+        </MudHidden>
+        <MudSpacer />
+
+       <!-- Authentication UI -->
+        <LoginDisplay />
+    </MudAppBar>
+    <MudDrawer @bind-Open="@_drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always" Variant="@DrawerVariant.Responsive">
+
+        <!-- Side navigation bar -->
         <NavMenu />
-    </div>
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.False" class="mt-8">
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
+            <!-- Page content -->
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+
+    public bool _drawerOpen = true;
+
+    // TODO: We can't actually implement the drawer 'toggle' right now because
+    // it requires an InteractiveServer render mode which is then inherited by
+    // all child components via the @Body and causes certain things to break.
+
+    // We need to figure out a way of nesting the draw and it's own
+    // toggling functionality further down the DOM tree.
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}

@@ -1,44 +1,31 @@
-using System.Reflection;
-
 using BlazorAdminDashboard.Application;
 using BlazorAdminDashboard.Domain.Identity;
 using BlazorAdminDashboard.Infrastructure;
+using BlazorAdminDashboard.Web;
 using BlazorAdminDashboard.Web.Components;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorComponents().AddInteractiveServerComponents();
-builder.Services.AddCascadingAuthenticationState();
-
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);
-
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(options =>
-    {
-        string xmlPath = Path.Combine(
-            AppContext.BaseDirectory,
-            $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
-
-        options.IncludeXmlComments(xmlPath);
-    });
-}
+builder.Services.AddWebServices(builder.Environment);
 
 WebApplication app = builder.Build();
+
+// TODO: Move WebApplication configuring into extensions also?
+
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
+
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
         options.DocumentTitle = "Blazor Admin Dashboard | Swagger UI";
     });
-
-    app.UseDeveloperExceptionPage();
 }
 else
 {
@@ -57,6 +44,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 
+app.MapRazorPages();
+app.MapControllers();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 // Add additional endpoints required by the Identity /Account Razor components.

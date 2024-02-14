@@ -1,11 +1,19 @@
 ﻿@using BlazorAdminDashboard.Web.Components.Account.Shared
+
 <Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
+
         <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
             <NotAuthorized>
                 <RedirectToLogin />
             </NotAuthorized>
         </AuthorizeRouteView>
+
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(Layout.MainLayout)">
+            <h1>404: Page Not Found</h1>
+        </LayoutView>
+    </NotFound>
 </Router>

@@ -1,0 +1,95 @@
+﻿@implements IDisposable
+
+@inject NavigationManager Navigation
+
+@using Microsoft.AspNetCore.Components.Authorization
+
+<AuthorizeView>
+    <Authorized>
+        <MudMenu id="signedInMenu" AnchorOrigin="Origin.CenterCenter">
+            <ActivatorContent>
+                <MudAvatar>@context.User.Identity.Name.First()</MudAvatar>
+            </ActivatorContent>
+            <ChildContent>
+                <MudMenuItem id="profileMenuItem" Href="./authentication/profile">Profile</MudMenuItem>
+                <MudMenuItem id="signOutMenuItem" @onclick="BeginSignOut">Sign Out</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+    </Authorized>
+    <NotAuthorized>
+        <MudToolBar Spacing="5">
+            <MudButton id="registerPageLink" Href="authentication/register"                      
+                       Variant="Variant.Outlined"
+                       Color="Color.Tertiary" Class="mr-5">
+                Register
+            </MudButton>
+            <MudButton id="loginPageLink" Href="authentication/login"
+                       Variant="Variant.Outlined"
+                       Color="Color.Tertiary" Class="mr-5">
+                Login
+            </MudButton>
+        </MudToolBar>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+    @* <AuthorizeView>
+    <Authorized>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="Account/Manage">
+                <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <form action="Account/Logout" method="post">
+                <AntiforgeryToken />
+                <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                <button type="submit" class="nav-link">
+                    <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                </button>
+            </form>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="Account/Register">
+                <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="Account/Login">
+                <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
+            </NavLink>
+        </div>
+    </NotAuthorized>
+</AuthorizeView> *@
+
+
+
+@code{
+
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = Navigation.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    private void BeginSignOut(MouseEventArgs args)
+    {
+        // TODO: This was a WebAssembly extension, so we probably just need to redirect to /logout ?
+        // Navigation.NavigateToLogout("authentication/logout");
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}

@@ -1,92 +1,41 @@
-﻿@implements IDisposable
+﻿<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.House">Home</MudNavLink>
+    <MudNavLink Href="/counter" Icon="@Icons.Material.Filled.PlusOne">Counter</MudNavLink>
+    <MudNavLink Href="/weather" Icon="@Icons.Material.Filled.Cloud">Weather</MudNavLink>
+    <MudNavLink Href="/auth" Icon="@Icons.Material.Filled.Lock">Protected</MudNavLink>
 
-@inject NavigationManager NavigationManager
+    <AuthorizeView>
+        <MudNavGroup Title="Account" Expanded="false" Icon="@Icons.Material.Filled.Dashboard">
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Blazor Admin Dashboard</a>
-    </div>
-</div>
+            <MudNavLink Href="/account/profile">Profile</MudNavLink>
+            <MudNavLink Href="/account/logins">Logins</MudNavLink>
+            <MudNavLink Href="/account/authenticator/manage">Authenticator</MudNavLink>
+        </MudNavGroup>
+    </AuthorizeView>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+    @* TODO: Fix up the Authorization Policies... *@
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+    <AuthorizeView>
+        @* <AuthorizeView Policy="@Policies.CanManageUsers"> *@
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
+        <MudNavLink Href="/users/list" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Users</MudNavLink>
+    </AuthorizeView>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
+    <AuthorizeView>
+        @* <AuthorizeView Policy="@Policies.CanManageRoles"> *@
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="auth">
-                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
-            </NavLink>
-        </div>
+        <MudNavLink Href="/roles/list" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Roles</MudNavLink>
+    </AuthorizeView>
 
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <form action="Account/Logout" method="post">
-                        <AntiforgeryToken />
-                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                        <button type="submit" class="nav-link">
-                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                        </button>
-                    </form>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Register">
-                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
-                    </NavLink>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
-    </nav>
-</div>
+    <AuthorizeView>
+        @* <AuthorizeView Policy="@Policies.CanManageApplications"> *@
 
-@code {
-    private string? currentUrl;
+        <MudNavLink Href="/applications/list" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Applications</MudNavLink>
+    </AuthorizeView>
 
-    protected override void OnInitialized()
-    {
-        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.LocationChanged += OnLocationChanged;
-    }
+    <AuthorizeView>
+        @* <AuthorizeView Policy="@Policies.CanManageScopes"> *@
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-        StateHasChanged();
-    }
-
-    public void Dispose()
-    {
-        NavigationManager.LocationChanged -= OnLocationChanged;
-    }
-}
-
+        <MudNavLink Href="/scopes/list" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Scopes</MudNavLink>
+    </AuthorizeView>
+</MudNavMenu>

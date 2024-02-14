@@ -5,21 +5,18 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{848E3E43-EEF6-4D9F-8004-8CFEF8AFA7CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorAdminDashboard.Application", "src\Application\BlazorAdminDashboard.Application.csproj", "{38485AF2-EA82-45BD-AC1D-7733BEECD5CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorAdminDashboard.Application", "src\Application\BlazorAdminDashboard.Application.csproj", "{38485AF2-EA82-45BD-AC1D-7733BEECD5CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorAdminDashboard.Infrastructure", "src\Infrastructure\BlazorAdminDashboard.Infrastructure.csproj", "{2E909677-3875-4C26-9787-A24525DF7389}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorAdminDashboard.Infrastructure", "src\Infrastructure\BlazorAdminDashboard.Infrastructure.csproj", "{2E909677-3875-4C26-9787-A24525DF7389}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorAdminDashboard.Domain", "src\Domain\BlazorAdminDashboard.Domain.csproj", "{01BC97B7-1005-4969-B278-3A6E4F74B769}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorAdminDashboard.Domain", "src\Domain\BlazorAdminDashboard.Domain.csproj", "{01BC97B7-1005-4969-B278-3A6E4F74B769}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorAdminDashboard.Web", "src\Web\BlazorAdminDashboard.Web.csproj", "{305F0417-53DE-44F0-8DD9-01B3216EF89D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorAdminDashboard.Web", "src\Web\BlazorAdminDashboard.Web.csproj", "{305F0417-53DE-44F0-8DD9-01B3216EF89D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{38485AF2-EA82-45BD-AC1D-7733BEECD5CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -39,10 +36,16 @@ Global
 		{305F0417-53DE-44F0-8DD9-01B3216EF89D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{305F0417-53DE-44F0-8DD9-01B3216EF89D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{38485AF2-EA82-45BD-AC1D-7733BEECD5CF} = {848E3E43-EEF6-4D9F-8004-8CFEF8AFA7CA}
 		{2E909677-3875-4C26-9787-A24525DF7389} = {848E3E43-EEF6-4D9F-8004-8CFEF8AFA7CA}
 		{01BC97B7-1005-4969-B278-3A6E4F74B769} = {848E3E43-EEF6-4D9F-8004-8CFEF8AFA7CA}
 		{305F0417-53DE-44F0-8DD9-01B3216EF89D} = {848E3E43-EEF6-4D9F-8004-8CFEF8AFA7CA}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9AE76F6D-298D-4C34-A157-2D66C060AE01}
 	EndGlobalSection
 EndGlobal
