@@ -11,6 +11,10 @@
 
 @code {
 
+    // I'm still not 100% convinced we actually need this Layout component
+    // because technically we should be able to just put these providers
+    // on the MainLayout as it won't actually affect the child render modes.
+
     protected override void OnInitialized()
     {
         Snackbar.Clear();

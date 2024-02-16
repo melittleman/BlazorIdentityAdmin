@@ -1,0 +1,31 @@
+﻿@rendermode RenderMode.InteractiveServer
+
+<MudDrawer @bind-Open="_drawerOpen"
+    Elevation="2"
+    Class="mud-drawer-fixed"
+    ClipMode="DrawerClipMode.Never"
+    Variant="@DrawerVariant.Mini"
+    OpenMiniOnHover="true">
+
+    <MudDrawerHeader LinkToIndex="true" Dense="true" Style="padding: 10px">
+
+        <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Size="Size.Large"></MudIcon>
+    </MudDrawerHeader>        
+
+    <NavMenu />
+
+</MudDrawer>
+
+@code {
+
+    public bool _drawerOpen = false;
+
+    // TODO: whilst this does technically work if we wire up a button,
+    // it only stays 'toggled' for as long as the mouse is hovering.
+    // As soon as the mouse blurs, it collapses again so would be good
+    // to figure out how to actually make this 'pin' the drawer open?
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}

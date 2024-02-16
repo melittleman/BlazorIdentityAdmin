@@ -4,19 +4,15 @@
 
 <MudLayout>
     <MudAppBar Elevation="0" Dense="true">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudSpacer />
         <MudIconButton Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Href="https://mudblazor.com/" Target="_blank" />
         <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" />
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
-        <MudDrawerHeader>
-            <MudText Typo="Typo.h6">BlazorAdminDashboard</MudText>
-        </MudDrawerHeader>
-        <NavMenu />
-    </MudDrawer>
-    <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-2 pt-2">
+
+    <MiniDrawer />
+
+    <MudMainContent Class="pt-16 px-16">
+        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mt-6">
             @Body
         </MudContainer>
     </MudMainContent>
@@ -60,18 +56,4 @@
     <a class="dismiss">🗙</a>
 </div>
 
-@code {
 
-    public bool _drawerOpen = true;
-
-    // TODO: We can't actually implement the drawer 'toggle' right now because
-    // it requires an InteractiveServer render mode which is then inherited by
-    // all child components via the @Body and causes certain things to break.
-
-    // We need to figure out a way of nesting the draw and it's own
-    // toggling functionality further down the DOM tree.
-    void DrawerToggle()
-    {
-        _drawerOpen = !_drawerOpen;
-    }
-}
