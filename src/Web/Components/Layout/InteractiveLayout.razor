@@ -1,0 +1,22 @@
+﻿@inherits LayoutComponentBase
+@layout MainLayout
+
+@inject ISnackbar Snackbar
+
+<MudPopoverProvider @rendermode="RenderMode.InteractiveServer" />
+<MudDialogProvider @rendermode="RenderMode.InteractiveServer" />
+<MudSnackbarProvider @rendermode="RenderMode.InteractiveServer" />
+
+@Body
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        Snackbar.Clear();
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+        Snackbar.Configuration.MaxDisplayedSnackbars = 5;
+        Snackbar.Configuration.SnackbarVariant = Variant.Filled;
+        Snackbar.Configuration.PreventDuplicates = true;
+    }
+}

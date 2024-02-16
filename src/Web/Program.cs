@@ -1,5 +1,4 @@
 using BlazorAdminDashboard.Application;
-using BlazorAdminDashboard.Domain.Identity;
 using BlazorAdminDashboard.Infrastructure;
 using BlazorAdminDashboard.Web;
 using BlazorAdminDashboard.Web.Components;
@@ -38,19 +37,16 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 
-app.MapRazorPages();
 app.MapControllers();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
-app.MapIdentityApi<User>();
 
 // TODO: Wrap in a try... catch
 await app.RunAsync();

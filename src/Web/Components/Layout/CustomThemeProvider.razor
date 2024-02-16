@@ -1,0 +1,22 @@
+﻿<CascadingValue Value=false Name="UsePopoverProvider">
+
+    <MudThemeProvider Theme="Theme" />
+</CascadingValue>
+
+@code {
+
+    // TODO: Where do we want to get this from?
+    public static MudTheme Theme => new()
+    {
+        Palette = new PaletteLight()
+        {
+            Primary = "#594AE2",
+            AppbarBackground = "#594AE2"
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = "#594AE2",
+            AppbarBackground = "#594AE2"
+        }
+    };
+}

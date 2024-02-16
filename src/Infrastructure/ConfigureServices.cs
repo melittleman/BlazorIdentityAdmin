@@ -71,8 +71,6 @@ public static class ConfigureServices
             options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
         });
 
-        builder.AddIdentityCookies();
-
         string? gitHubclientId = configuration["Authentication:GitHub:ClientId"];
         string? gitHubclientSecret = configuration["Authentication:GitHub:ClientSecret"];
 
@@ -92,6 +90,8 @@ public static class ConfigureServices
                 options.SaveTokens = true;
             });
         }
+
+        builder.AddIdentityCookies();
 
         services.AddIdentityCore<User>(options =>
         {
@@ -120,8 +120,7 @@ public static class ConfigureServices
         .AddUserStore<RedisUserStore>()
         .AddRoleStore<RedisRoleStore>()
         .AddDefaultTokenProviders()
-        .AddSignInManager()
-        .AddApiEndpoints(); // TODO: This should be removed as well as .MapIdentityApi once we're happy everything has been moved across.
+        .AddSignInManager();
 
         // OpenIddict
         services.AddOpenIddict().AddServer(options =>
