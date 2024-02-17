@@ -1,59 +1,21 @@
 ﻿@inherits LayoutComponentBase
+@layout StaticLayout
 
-<CustomThemeProvider />
+<MudAppBar Elevation="0" Dense="true" Fixed="true">
+    <MudToolBar DisableGutters="false">
 
-<MudLayout>
-    <MudAppBar Elevation="0" Dense="true">
-        <MudSpacer />
-        <MudIconButton Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Href="https://mudblazor.com/" Target="_blank" />
-        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" />
-    </MudAppBar>
+        <!-- TODO -->
 
-    <MiniDrawer />
+    </MudToolBar>
 
-    <MudMainContent Class="pt-16 px-16">
-        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mt-6">
-            @Body
-        </MudContainer>
-    </MudMainContent>
-</MudLayout>
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" />
 
-@* <MudLayout>
-    <MudAppBar Elevation="4" Dense="false" Fixed="true">
-        <MudToolBar DisableGutters="true">
+    <LoginDisplay />
+</MudAppBar>
 
-            <!-- TODO: Logo? -->
-            <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" OnClick="DrawerToggle" />
-        </MudToolBar>
-        <MudHidden Breakpoint="Breakpoint.Xs">
-            <MudText Typo="Typo.h6" Class="ml-4">Blazor Admin Dashboard</MudText>
-        </MudHidden>
-        <MudHidden Breakpoint="Breakpoint.Xs" Invert="true">
-            <MudText Typo="Typo.subtitle2">Identity Provider</MudText>
-        </MudHidden>
-        <MudSpacer />
-
-       <!-- Authentication UI -->
-        <LoginDisplay />
-    </MudAppBar>
-    <MudDrawer @bind-Open="@_drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always" Variant="@DrawerVariant.Responsive">
-
-        <!-- Side navigation bar -->
-        <NavMenu />
-    </MudDrawer>
-    <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.False" class="mt-8">
-
-            <!-- Page content -->
-            @Body
-        </MudContainer>
-    </MudMainContent>
-</MudLayout> *@
-
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
-</div>
-
-
+<MudMainContent Class="pt-12 px-14">
+    <MudContainer MaxWidth="MaxWidth.False" Class="mt-6">
+        @Body
+    </MudContainer>
+</MudMainContent>

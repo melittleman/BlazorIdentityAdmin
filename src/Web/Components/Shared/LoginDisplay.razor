@@ -6,6 +6,22 @@
 
 <AuthorizeView>
     <Authorized>
+
+
+        @*         <MudMenu Direction="Direction.Left" OffsetX="true" Dense="true" Class="mt-1 ml-4">
+            <ActivatorContent>
+                <MudAvatar Image="https://media-exp1.licdn.com/dms/image/C4D03AQGNO7uV7fRi7Q/profile-displayphoto-shrink_200_200/0/1531753989819?e=1614816000&v=beta&t=t2IEQlTyem3aFB1sQXFHrDGt0yMsNkPu7jDmMPoEbLg" />
+            </ActivatorContent>
+            <ChildContent>
+                <PersonCard Class="mt-n2" />
+                <MudDivider Class="mb-2" />
+                <MudListItem Text="Account" Icon="@Icons.Material.Outlined.Person" Href="/personal/account" />
+                <MudListItem Text="Logout" Icon="@Icons.Material.Outlined.Login" Href="/pages/authentication/login" />
+            </ChildContent>
+        </MudMenu> *@
+
+
+
         <MudMenu id="signedInMenu" AnchorOrigin="Origin.CenterCenter">
             <ActivatorContent>
                 <MudAvatar>@context.User.Identity.Name.First()</MudAvatar>

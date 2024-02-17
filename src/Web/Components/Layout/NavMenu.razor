@@ -1,17 +1,17 @@
 ﻿<MudNavMenu>
     @* <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink> *@
-    <MudNavLink Href="counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Add" IconColor="Color.Secondary">Counter</MudNavLink>
-    <MudNavLink Href="weather" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Cloud" IconColor="Color.Secondary">Weather</MudNavLink>
-    <MudNavLink Href="auth" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Lock" IconColor="Color.Secondary">Restricted</MudNavLink>
+    <MudNavLink Href="counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Add">Counter</MudNavLink>
+    <MudNavLink Href="weather" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Cloud">Weather</MudNavLink>
+    <MudNavLink Href="auth" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Lock">Restricted</MudNavLink>
 
     @* TODO: De-deplicate the below as we don't need both these Authorized Views... *@
     <AuthorizeView>
         <Authorized>
-            <MudNavLink Href="Account/Manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person" IconColor="Color.Secondary">@context.User.Identity?.Name</MudNavLink>
+            <MudNavLink Href="Account/Manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Person">@context.User.Identity?.Name</MudNavLink>
         </Authorized>
         <NotAuthorized>
-                <MudNavLink Href="Account/Register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AppRegistration" IconColor="Color.Secondary">Register</MudNavLink>
-                <MudNavLink Href="Account/Login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Login" IconColor="Color.Secondary">Login</MudNavLink>
+                <MudNavLink Href="Account/Register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.AppRegistration">Register</MudNavLink>
+                <MudNavLink Href="Account/Login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Login">Login</MudNavLink>
         </NotAuthorized>
     </AuthorizeView>
 

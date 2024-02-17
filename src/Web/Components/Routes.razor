@@ -1,7 +1,7 @@
 ﻿<Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
 
-        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(DefaultLayout)">
             <NotAuthorized>
                 <RedirectToLogin />
             </NotAuthorized>
@@ -10,7 +10,7 @@
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
     <NotFound>
-        <LayoutView Layout="@typeof(MainLayout)">
+        <LayoutView Layout="@typeof(DefaultLayout)">
             <h1>404: Page Not Found</h1>
         </LayoutView>
     </NotFound>

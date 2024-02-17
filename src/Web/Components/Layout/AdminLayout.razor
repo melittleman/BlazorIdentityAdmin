@@ -1,0 +1,40 @@
+﻿@inherits LayoutComponentBase
+@layout StaticLayout
+
+@* TODO: Need to differentiate between the 'Admin' theme and the normal one. *@
+
+<MudAppBar Elevation="0" Dense="true" Fixed="true">
+
+    <!-- TODO: Search input to go into the middle? -->
+
+    <MudSpacer />
+
+    <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" />
+
+    <LoginDisplay />
+</MudAppBar>
+
+    <MiniDrawer />
+
+    <MudMainContent Class="pt-12 px-14">
+        
+        <!-- TODO: Need to figure out how to properly wire up the breadcrumbs..? -->
+@*         <MudToolBar DisableGutters="true">
+            <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Class="ml-3" />
+            <MudBreadcrumbs Items="_items"></MudBreadcrumbs>
+        </MudToolBar> *@
+
+        <MudContainer MaxWidth="MaxWidth.False" Class="mt-6">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+
+
+@code {
+
+    private List<BreadcrumbItem> _items = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Admin", href: "/admin"),
+    };
+}

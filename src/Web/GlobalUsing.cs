@@ -3,6 +3,7 @@ global using System.IO;
 global using System.Linq;
 global using System.Text.Json;
 global using System.Reflection;
+global using System.Threading.Tasks;
 global using System.Security.Claims;
 global using System.Collections.Generic;
 
@@ -13,6 +14,7 @@ global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Http.Extensions;
 global using Microsoft.AspNetCore.HttpOverrides;
 global using Microsoft.AspNetCore.Identity;
+global using Microsoft.AspNetCore.Authorization;
 global using Microsoft.AspNetCore.Authentication;
 global using Microsoft.AspNetCore.Components.Authorization;
 

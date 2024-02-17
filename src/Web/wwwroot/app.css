@@ -18,3 +18,10 @@
     --bs-nav-link-color: var(--mud-palette-primary) !important;
     --bs-nav-link-hover-color: var(--mud-palette-primary-darken) !important;
 }
+
+.mini-drawer-toggle {
+    z-index: 1300;
+    position: absolute;
+    left: 10px;
+    top: 10px
+}

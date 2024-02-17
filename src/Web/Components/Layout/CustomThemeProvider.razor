@@ -1,28 +1,35 @@
-﻿<CascadingValue Value=false Name="UsePopoverProvider">
+﻿<CascadingValue Value="false" Name="UsePopoverProvider">
 
-    <MudThemeProvider Theme="Theme" DefaultScrollbar="false"/>
+    <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="CustomTheme" DefaultScrollbar="false" />
 </CascadingValue>
+
+@*
+    TODO: How are we going to pass this in? Ideally this component needs to be 'InteractiveServer'?
+    <MudSwitch @bind-Value="@_isDarkMode" Color="Color.Primary" Class="ma-4" T="bool" Label="Toggle Light/Dark Mode" /> 
+*@
 
 @code {
 
+    private bool _isDarkMode = true;
+
     // TODO: Where do we want to get this from?
-    public static MudTheme Theme => new()
+    public static MudTheme CustomTheme => new()
     {
         Palette = new PaletteLight()
         {
             Primary = "#262937",
             Secondary = "#f4b43a",
             DrawerBackground = "#262937",
-            AppbarBackground = "#9e9e9e",
-            DrawerText = "#f4b43a"
+            AppbarBackground = "#32333d",
+            DrawerText = "#b2b0bf"
         },
         PaletteDark = new PaletteDark()
         {
             Primary = "#262937",
             Secondary = "#f4b43a",
             DrawerBackground = "#262937",
-            AppbarBackground = "#9e9e9e",
-            DrawerText = "#f4b43a"
+            AppbarBackground = "#32333d",
+            DrawerText = "#b2b0bf"
         },
         ZIndex = new ZIndex()
         {

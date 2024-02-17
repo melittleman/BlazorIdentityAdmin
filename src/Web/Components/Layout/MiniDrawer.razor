@@ -1,31 +1,116 @@
 ﻿@rendermode RenderMode.InteractiveServer
 
-<MudDrawer @bind-Open="_drawerOpen"
-    Elevation="2"
-    Class="mud-drawer-fixed"
-    ClipMode="DrawerClipMode.Never"
-    Variant="@DrawerVariant.Mini"
-    OpenMiniOnHover="true">
+<MudHidden Breakpoint="Breakpoint.Xs" Invert="true">
 
-    <MudDrawerHeader LinkToIndex="true" Dense="true" Style="padding: 10px">
+    <MudDrawer @bind-Open="_drawerOpen"
+               Class="mud-drawer-fixed"
+               Elevation="1"
+               ClipMode="DrawerClipMode.Never"
+               Variant="@DrawerVariant.Temporary"
+               DisableOverlay="true">
 
-        <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Size="Size.Large"></MudIcon>
-    </MudDrawerHeader>        
+        <MudDrawerHeader Dense="true" Style="padding: 10px">
+            
+            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Size="Size.Large" />
+            <MudSpacer />
 
-    <NavMenu />
+            <MudIconButton Title="Close menu" Size="Size.Small" Icon="@Icons.Material.Outlined.Close" OnClick="(() => _drawerOpen = false)" />
+        </MudDrawerHeader>
 
-</MudDrawer>
+        <NavMenu />
+
+    </MudDrawer>
+
+</MudHidden>
+<MudHidden Breakpoint="Breakpoint.Xs">
+
+    <!--
+        Yes, this is a hack. But it works! Seems like the 'least bad' option to achieve the goal of having the drawer 'pin' to the left when it's toggled.
+        We could also have used JsInterop to change the CSS class or variable value applied to the main content but this is the quickest and easiest.
+    -->
+    <style>
+        .mud-main-content {
+            margin-left: @_marginLeftCss !important;
+        }
+    </style>
+
+    <MudDrawer Open="_drawerOpen"
+               Class="mud-drawer-fixed"
+               Elevation="1"
+               ClipMode="DrawerClipMode.Never"
+               Variant="@DrawerVariant.Mini"
+               OpenMiniOnHover="true"
+               DisableOverlay="true"
+               OpenChanged="OnOpenChanged">
+
+        <MudDrawerHeader LinkToIndex="true" Dense="true" Style="padding: 10px">
+
+            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Inherit" Size="Size.Large" />
+        </MudDrawerHeader>
+
+        <NavMenu />
+
+    </MudDrawer>
+
+</MudHidden>
+<MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+
+    <div class="mini-drawer-toggle">
+        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Menu" OnClick="@(() => _drawerOpen = !_drawerOpen)">Toggle</MudIconButton>
+    </div>
+
+</MudHidden>
+<MudHidden Breakpoint="Breakpoint.SmAndDown">
+
+    <div class="mini-drawer-toggle">
+
+        @if (_drawerOpen || _isPinned)
+        {
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.ChevronLeft" OnClick="@DrawerToggle">Collapse</MudIconButton>
+        }
+        else
+        {
+            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.ChevronRight" OnClick="@DrawerToggle">Expand</MudIconButton>
+        }
+
+    </div>
+
+</MudHidden>
 
 @code {
+    
+    // TODO: Get this initial value from local storage so the user can save it
+    private bool _isPinned = false;
+    private bool _drawerOpen = false;
 
-    public bool _drawerOpen = false;
+    private string _marginLeftCss => _isPinned && _drawerOpen ? "var(--mud-drawer-width-left)" : "var(--mud-drawer-width-mini-left)";
 
-    // TODO: whilst this does technically work if we wire up a button,
-    // it only stays 'toggled' for as long as the mouse is hovering.
-    // As soon as the mouse blurs, it collapses again so would be good
-    // to figure out how to actually make this 'pin' the drawer open?
-    void DrawerToggle()
+    private void DrawerToggle()
     {
-        _drawerOpen = !_drawerOpen;
+        _isPinned = !_isPinned;
+
+        if (_drawerOpen && _isPinned)
+        {
+            // We can only end up in this situation when we manually pinned
+            // the draw, but then a brower resize cause the drawer to open.
+            // So we actually need to force close the drawer now.
+            _drawerOpen = false;
+        }
+        else 
+        {
+            _drawerOpen = _isPinned;
+        }
+    }
+
+    private void OnOpenChanged(bool isOpen)
+    {
+        _drawerOpen = isOpen;
+
+        // This is for when we have 'pinned' the drawer
+        // but a browser resize has forced it to change.
+        if (isOpen is false && _isPinned)
+        {
+            _isPinned = false;
+        }
     }
 }
