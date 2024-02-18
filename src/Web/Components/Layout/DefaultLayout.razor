@@ -1,17 +1,55 @@
 ﻿@inherits LayoutComponentBase
 
-@* TODO: We probably also need to understand the difference between a 'Public' and 'Private' layout, so maybe the default one should be public? *@
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
 
-<CustomThemeProvider />
+<MudPopoverProvider @rendermode="RenderMode.InteractiveServer" />
+<MudDialogProvider @rendermode="RenderMode.InteractiveServer" />
+<MudSnackbarProvider @rendermode="RenderMode.InteractiveServer" />
 
-<MudLayout>
+@if (HttpContext is null)
+{
+    <MudProgressCircular @rendermode="RenderMode.InteractiveServer" 
+        Color="Color.Default"
+        Indeterminate="true" />
+}
+else
+{
+    <MudLayout>
 
-    @Body
+        @Body
 
-</MudLayout>
+    </MudLayout>
+}
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Snackbar.Clear();
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+        Snackbar.Configuration.MaxDisplayedSnackbars = 5;
+        Snackbar.Configuration.SnackbarVariant = Variant.Filled;
+        Snackbar.Configuration.PreventDuplicates = true;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (HttpContext is null)
+        {
+            // If this code runs, we're currently rendering in interactive mode, so there is no HttpContext.
+            // The identity pages need to set cookies, so they require an HttpContext. To achieve this we
+            // must transition back from interactive mode to a static server-rendered (SSR) page.
+            Navigation.Refresh(forceReload: true);
+        }
+    }
+}

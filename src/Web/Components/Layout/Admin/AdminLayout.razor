@@ -1,0 +1,31 @@
+﻿@inherits LayoutComponentBase
+
+@layout DefaultLayout
+
+<HeaderBar />
+
+<MiniDrawer />
+
+<MudMainContent Class="pt-12 px-14">
+        
+    <!-- TODO: Need to figure out how to properly wire up the breadcrumbs..? -->
+@*         <MudToolBar DisableGutters="true">
+        <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" Class="ml-3" />
+        <MudBreadcrumbs Items="_items"></MudBreadcrumbs>
+    </MudToolBar> *@
+
+    <MudContainer MaxWidth="MaxWidth.False" Class="mt-6">
+
+        @Body
+
+    </MudContainer>
+</MudMainContent>
+
+@code {
+
+    private List<BreadcrumbItem> _items = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Admin", href: "/admin"),
+    };
+}

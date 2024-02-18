@@ -1,35 +1,52 @@
-﻿<CascadingValue Value="false" Name="UsePopoverProvider">
+﻿@rendermode RenderMode.InteractiveServer
+
+@* Prevents double popovers! *@
+<CascadingValue Value="false" Name="UsePopoverProvider">
 
     <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="CustomTheme" DefaultScrollbar="false" />
 </CascadingValue>
 
-@*
-    TODO: How are we going to pass this in? Ideally this component needs to be 'InteractiveServer'?
-    <MudSwitch @bind-Value="@_isDarkMode" Color="Color.Primary" Class="ma-4" T="bool" Label="Toggle Light/Dark Mode" /> 
-*@
+@if (_isDarkMode)
+{
+    <MudTooltip Text="Enable light mode" Color="Color.Primary" Placement="Placement.Bottom" Delay="750" Arrow="true">
+        <MudIconButton aria-label="Enable light mode" Icon="@Icons.Material.Outlined.LightMode" Color="Color.Inherit" OnClick="(() => _isDarkMode = false)" />
+    </MudTooltip>
+}
+else
+{
+    <MudTooltip Text="Enable dark mode" Color="Color.Primary" Placement="Placement.Bottom" Delay="750" Arrow="true">
+        <MudIconButton aria-label="Enable dark mode" Icon="@Icons.Material.Outlined.DarkMode" Color="Color.Inherit" OnClick="(() => _isDarkMode = true)" />
+    </MudTooltip>
+}
 
 @code {
 
+    // TODO: We should initially load this from local storage / cookie.
     private bool _isDarkMode = true;
 
-    // TODO: Where do we want to get this from?
+    // TODO: Where do we want to get this from? Likely want to pass a 'tenant' Parameter in that contains the theme.
     public static MudTheme CustomTheme => new()
     {
+        // TODO: This theme is currently only for the 'Admin' pages,
+        // so we need to create another static one for the main layout.
+
         Palette = new PaletteLight()
         {
             Primary = "#262937",
             Secondary = "#f4b43a",
             DrawerBackground = "#262937",
-            AppbarBackground = "#32333d",
-            DrawerText = "#b2b0bf"
+            DrawerText = "#b2b0bf",
+            AppbarBackground = Colors.Shades.White,
+            AppbarText = Colors.Grey.Darken3
         },
         PaletteDark = new PaletteDark()
         {
             Primary = "#262937",
             Secondary = "#f4b43a",
             DrawerBackground = "#262937",
+            DrawerText = "#b2b0bf",
             AppbarBackground = "#32333d",
-            DrawerText = "#b2b0bf"
+            AppbarText = "rgba(255,255,255, 0.70)"
         },
         ZIndex = new ZIndex()
         {

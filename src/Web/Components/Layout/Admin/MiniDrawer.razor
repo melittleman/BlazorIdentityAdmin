@@ -56,7 +56,7 @@
 <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
 
     <div class="mini-drawer-toggle">
-        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Menu" OnClick="@(() => _drawerOpen = !_drawerOpen)">Toggle</MudIconButton>
+        <MudIconButton Size="Size.Small" Color="Color.Inherit" Icon="@Icons.Material.Outlined.Menu" OnClick="@(() => _drawerOpen = !_drawerOpen)">Toggle</MudIconButton>
     </div>
 
 </MudHidden>
@@ -66,11 +66,11 @@
 
         @if (_drawerOpen || _isPinned)
         {
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.ChevronLeft" OnClick="@DrawerToggle">Collapse</MudIconButton>
+            <MudIconButton Size="Size.Small" Color="Color.Inherit" Icon="@Icons.Material.Outlined.ChevronLeft" OnClick="@DrawerToggle">Collapse</MudIconButton>
         }
         else
         {
-            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.ChevronRight" OnClick="@DrawerToggle">Expand</MudIconButton>
+            <MudIconButton Size="Size.Small" Color="Color.Inherit" Icon="@Icons.Material.Outlined.ChevronRight" OnClick="@DrawerToggle">Expand</MudIconButton>
         }
 
     </div>
