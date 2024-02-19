@@ -35,6 +35,7 @@ else
     app.UseExceptionHandler("/error", createScopeForErrors: true);
 }
 
+app.UseStatusCodePagesWithRedirects("/error?code={0}");
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
