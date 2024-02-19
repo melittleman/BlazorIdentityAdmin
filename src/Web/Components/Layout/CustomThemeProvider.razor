@@ -1,9 +1,12 @@
-﻿@rendermode RenderMode.InteractiveServer
+﻿@using BlazorAdminDashboard.Domain.Theming
+@using BlazorAdminDashboard.Web.Theming
+
+@rendermode RenderMode.InteractiveServer
 
 @* Prevents double popovers! *@
-<CascadingValue Value="false" Name="UsePopoverProvider">
+<CascadingValue Name="UsePopoverProvider" Value="false">
 
-    <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="CustomTheme" DefaultScrollbar="false" />
+    <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" DefaultScrollbar="false" />
 </CascadingValue>
 
 @if (_isDarkMode)
@@ -23,36 +26,31 @@ else
 
     // TODO: We should initially load this from local storage / cookie.
     private bool _isDarkMode = true;
+    private static MudTheme? _theme;
 
-    // TODO: Where do we want to get this from? Likely want to pass a 'tenant' Parameter in that contains the theme.
-    public static MudTheme CustomTheme => new()
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    protected override void OnInitialized()
     {
-        // TODO: This theme is currently only for the 'Admin' pages,
-        // so we need to create another static one for the main layout.
+        // TODO: Need to either go and load the custom theme parameters from the
+        // tenant or introduce a 'fixed' CascadingValue that can be picked up here.
+        CustomTheme theme = new();
 
-        Palette = new PaletteLight()
+        if (HttpContext is not null)
         {
-            Primary = "#262937",
-            Secondary = "#f4b43a",
-            DrawerBackground = "#262937",
-            DrawerText = "#b2b0bf",
-            AppbarBackground = Colors.Shades.White,
-            AppbarText = Colors.Grey.Darken3
-        },
-        PaletteDark = new PaletteDark()
-        {
-            Primary = "#262937",
-            Secondary = "#f4b43a",
-            DrawerBackground = "#262937",
-            DrawerText = "#b2b0bf",
-            AppbarBackground = "#32333d",
-            AppbarText = "rgba(255,255,255, 0.70)"
-        },
-        ZIndex = new ZIndex()
-        {
-            // This forces the Drawer to open over the top off 
-            // everything else including the app header bar.
-            Drawer = 9999
+            // We are in static SSR mode.
+
+            if (HttpContext.Request.Path.StartsWithSegments("/admin"))
+            {
+                _theme = new AdminTheme(theme);
+            }
+            else
+            {
+                _theme = new MainTheme(theme);
+            }
         }
-    };
+
+        base.OnInitialized();
+    }
 }
