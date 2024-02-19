@@ -1,39 +1,56 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 using RedisKit.Extensions;
 using RedisKit.Abstractions;
 using RedisKit.Querying.Extensions;
+using RedisKit.DependencyInjection.Options;
 using RedisKit.DependencyInjection.Abstractions;
 
 using NRedisStack.RedisStackCommands;
 
-using BlazorAdminDashboard.Domain.Identity;
-using BlazorAdminDashboard.Domain.Documents.v1;
-using Microsoft.Extensions.Options;
-using RedisKit.DependencyInjection.Options;
 using IdentityModel;
 using OpenIddict.Abstractions;
+
+using BlazorAdminDashboard.Domain.Identity;
+using BlazorAdminDashboard.Domain.Documents.v1;
+using BlazorAdminDashboard.Application.Identity.Abstractions;
+using RedisKit.Querying;
+using RedisKit.Querying.Abstractions;
+using NRedisStack;
 
 namespace BlazorAdminDashboard.Infrastructure.Stores;
 
 public class RedisUserStore(
     IRedisConnectionProvider redisProvider,
     IOptionsMonitor<RedisJsonOptions> options,
-    IdentityErrorDescriber errorDescriber) : UserStoreBase<User, Ulid, UserClaim, UserLogin, UserToken>(errorDescriber)
+    IdentityErrorDescriber errorDescriber) : UserStoreBase<User, Ulid, UserClaim, UserLogin, UserToken>(errorDescriber), IPagedUserStore<User>
 {
     // TODO: Constant Redis client name
     private readonly IRedisConnection _redis = redisProvider.GetRequiredConnection("persistent-db");
     private readonly RedisJsonOptions _jsonOptions = options.Get("persistent-db");
 
+    private SearchCommands Search => _redis.Db.FT();
+
     // I don't believe this is actually required for any of the .NET Identity boilerplate.
     // However, because this is an abstract property, we really have no choice but to override.
+    // TODO: We can remove the IQueryableUserStore implementation if we stop using 'UserStoreBase'.
     public override IQueryable<User> Users => throw new NotImplementedException();
 
-    // TODO: Sort these out into proper regions or even a partial class?
-    public override Task AddClaimsAsync(User user, IEnumerable<Claim> claims, CancellationToken cancellationToken = default)
+    public async Task<IPagedList<User>> SearchUsersAsync(SearchFilter filter, string? query = null)
     {
-        throw new NotImplementedException();
+        ArgumentNullException.ThrowIfNull(nameof(filter));
+
+        // Default to "*" to return everything if not provided.
+        query = query?.EscapeSpecialCharacters() ?? "*";
+
+        IPagedList<UserDocumentV1> documents = await Search.SearchAsync<UserDocumentV1>("idx:users", query, filter);
+
+        // TODO: See if there's a better way to achieve this...
+        IEnumerable<User> users = documents.Select(doc => (User)doc);
+
+        return users.ToPagedList(documents.TotalResults, filter);
     }
 
     public override async Task<IdentityResult> CreateAsync(User user, CancellationToken cancellationToken)
@@ -104,45 +121,6 @@ public class RedisUserStore(
         // This 'could' be made to an implicit conversion to be slightly nicer on the eye...
         // but I have become a fan of more 'explicitness' where appropriate.
         return (User)document;
-    }
-
-    public override Task<IList<Claim>> GetClaimsAsync(User user, CancellationToken cancellationToken)
-    {
-        // TODO: I hate this hard-coded approach to a SessionId... we need to investigate what other providers
-        // like Pixel, IdentityServer or OrchardCore actually do here because I don't think that a 'Store' should
-        // just keep a static list of Claims defined for a User?
-
-        IList<Claim> claims =
-        [
-            new Claim(JwtClaimTypes.SessionId, CryptoRandom.CreateUniqueId(16, CryptoRandom.OutputFormat.Hex)),
-        ];
-
-        if (string.IsNullOrWhiteSpace(user.FirstName) is false)
-        {
-            claims.Add(new Claim(OpenIddictConstants.Claims.GivenName, user.FirstName));
-        }
-
-        if (string.IsNullOrWhiteSpace(user.LastName) is false)
-        {
-            claims.Add(new Claim(OpenIddictConstants.Claims.FamilyName, user.LastName));
-        }
-
-        return Task.FromResult(claims);
-    }
-
-    public override Task<IList<User>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override Task RemoveClaimsAsync(User user, IEnumerable<Claim> claims, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override Task ReplaceClaimAsync(User user, Claim claim, Claim newClaim, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
     }
 
     public override async Task<IdentityResult> UpdateAsync(User user, CancellationToken ct)
@@ -221,6 +199,56 @@ public class RedisUserStore(
         //    : IdentityResult.Failed(new IdentityError { Description = $"Unable to update Redis document for user {user.Id}." });
     }
 
+    #region Claims
+
+    public override Task AddClaimsAsync(User user, IEnumerable<Claim> claims, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task<IList<Claim>> GetClaimsAsync(User user, CancellationToken cancellationToken)
+    {
+        // TODO: I hate this hard-coded approach to a SessionId... we need to investigate what other providers
+        // like Pixel, IdentityServer or OrchardCore actually do here because I don't think that a 'Store' should
+        // just keep a static list of Claims defined for a User?
+
+        IList<Claim> claims =
+        [
+            new Claim(JwtClaimTypes.SessionId, CryptoRandom.CreateUniqueId(16, CryptoRandom.OutputFormat.Hex)),
+        ];
+
+        if (string.IsNullOrWhiteSpace(user.FirstName) is false)
+        {
+            claims.Add(new Claim(OpenIddictConstants.Claims.GivenName, user.FirstName));
+        }
+
+        if (string.IsNullOrWhiteSpace(user.LastName) is false)
+        {
+            claims.Add(new Claim(OpenIddictConstants.Claims.FamilyName, user.LastName));
+        }
+
+        return Task.FromResult(claims);
+    }
+
+    public override Task<IList<User>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task RemoveClaimsAsync(User user, IEnumerable<Claim> claims, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task ReplaceClaimAsync(User user, Claim claim, Claim newClaim, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region Tokens
+
     protected override async Task AddUserTokenAsync(UserToken token)
     {
         ArgumentNullException.ThrowIfNull(token);
@@ -275,6 +303,8 @@ public class RedisUserStore(
     {
         throw new NotImplementedException();
     }
+
+    #endregion
 
     #region Logins
 

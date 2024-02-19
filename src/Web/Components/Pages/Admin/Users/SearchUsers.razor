@@ -1,0 +1,68 @@
+﻿@page "/admin/users"
+
+@using BlazorAdminDashboard.Domain.Identity
+
+@rendermode RenderMode.InteractiveServer
+
+@* @attribute [Authorize(Policy = Policies.CanManageUsers)] *@
+
+<MudTable UserAttributes="@(new (){{"id","tblUsers"}})" ServerData="@(new Func<TableState, Task<TableData<User>>>(GetUsersDataAsync))"
+          Dense="false" Hover="true" ReadOnly="true" SortLabel="Sort By" Elevation="4" @ref="usersTable">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Users</MudText>
+        <MudIconButton UserAttributes="@(new (){{"id","btnNew"}})" Icon="@Icons.Material.Outlined.AddCircleOutline" Size="Size.Medium"
+                       @onclick="OpenNewUserDialogAsync" Color="Color.Primary"></MudIconButton>
+        <MudSpacer />
+        <MudSpacer />
+        <MudTextField UserAttributes="@(new (){{"id","txtSearchBox"}})" T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search by User Name or Email" Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>User Name</MudTh>
+        <MudTh>User Email</MudTh>
+        <MudTh>Phone Number</MudTh>
+        <MudTh></MudTh>
+        <MudTh></MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="#">
+            @context.UserName
+        </MudTd>
+        <MudTd DataLabel="User Email">
+            @context.Email
+        </MudTd>
+        <MudTd DataLabel="Phone Number">
+            @context.PhoneNumber
+        </MudTd>
+        <MudTd DataLabel="">
+            @if (context.IsLockedOut)
+            {
+                <MudIcon Icon="@Icons.Material.Outlined.Lock" Color="Color.Warning" Title="Account is locked" />
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Outlined.LockOpen" Color="Color.Success" Title="Account is unlocked" />
+            }
+        </MudTd>
+        <MudTd DataLabel="">
+            <MudIconButton UserAttributes="@(new (){{"id","btnEdit"}})" Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                           @onclick="()=> EditUser(context)" Size="Size.Medium"></MudIconButton>
+        </MudTd>
+        <MudTd DataLabel="">
+            <MudIconButton UserAttributes="@(new (){{"id","btnDelete"}})" Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                           @onclick="() => DeleteUserAsync(context)" Size="Size.Medium"></MudIconButton>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="pageSizeOptions" RowsPerPageString="Results Per Page" />
+    </PagerContent>
+    <ColGroup>
+        <col />
+        <col />
+        <col />
+        <col style="width:20px;" />
+        <col style="width:20px;" />
+        <col style="width:20px;" />
+    </ColGroup>
+</MudTable>

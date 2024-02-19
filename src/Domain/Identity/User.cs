@@ -19,6 +19,8 @@ public class User : IdentityUser<Ulid>
 
     public DateTimeOffset LastModifiedAt { get; set; }
 
+    public bool IsLockedOut => LockoutEnabled && LockoutEnd.HasValue;
+
     public User()
     {
         Id = Ulid.NewUlid();

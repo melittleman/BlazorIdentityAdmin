@@ -1,12 +1,16 @@
-﻿using BlazorAdminDashboard.Domain.Identity;
+﻿using BlazorAdminDashboard.Application.Identity.Abstractions;
+using BlazorAdminDashboard.Domain.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RedisKit.Querying;
+using RedisKit.Querying.Abstractions;
 
 namespace BlazorAdminDashboard.Application.Identity;
 
 public sealed class CustomUserManager(
     IUserStore<User> store,
+    IPagedUserStore<User> pagedStore,
     IOptions<IdentityOptions> optionsAccessor,
     IPasswordHasher<User> passwordHasher,
     IEnumerable<IUserValidator<User>> userValidators,
@@ -25,5 +29,12 @@ public sealed class CustomUserManager(
         services,
         logger)
 {
+    public Task<IPagedList<User>> SearchUsersAsync(SearchFilter filter, string? query = null)
+    {
+        ArgumentNullException.ThrowIfNull(filter);
+        
+        // TODO: Can we pass in a cancellation token here?
 
+        return pagedStore.SearchUsersAsync(filter, query);
+    }
 }

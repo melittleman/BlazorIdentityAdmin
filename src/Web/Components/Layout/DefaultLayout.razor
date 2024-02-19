@@ -37,9 +37,11 @@ else
     {
         Snackbar.Clear();
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
-        Snackbar.Configuration.MaxDisplayedSnackbars = 5;
         Snackbar.Configuration.SnackbarVariant = Variant.Filled;
-        Snackbar.Configuration.PreventDuplicates = true;
+        Snackbar.Configuration.MaxDisplayedSnackbars = 5;
+        Snackbar.Configuration.PreventDuplicates = false;
+        Snackbar.Configuration.NewestOnTop = false;
+        Snackbar.Configuration.ShowCloseIcon = true;
     }
 
     protected override void OnParametersSet()

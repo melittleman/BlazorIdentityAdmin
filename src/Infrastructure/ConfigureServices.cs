@@ -17,6 +17,7 @@ using BlazorAdminDashboard.Infrastructure.Stores;
 using BlazorAdminDashboard.Infrastructure.Configuration;
 using BlazorAdminDashboard.Infrastructure.Hosted;
 using BlazorAdminDashboard.Application.Identity;
+using BlazorAdminDashboard.Application.Identity.Abstractions;
 
 namespace BlazorAdminDashboard.Infrastructure;
 
@@ -62,6 +63,7 @@ public static class ConfigureServices
         });
 
         services.AddHostedService<RedisIndexCreationService>();
+        services.AddScoped<IPagedUserStore<User>, RedisUserStore>();
 
         // Authentication
 
