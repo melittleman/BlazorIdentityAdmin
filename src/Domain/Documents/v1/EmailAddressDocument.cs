@@ -1,7 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using BlazorAdminDashboard.Domain.Enums;
-
-namespace BlazorAdminDashboard.Domain.Documents.v1;
+﻿namespace BlazorAdminDashboard.Domain.Documents.v1;
 
 public sealed class EmailAddressDocumentV1
 {

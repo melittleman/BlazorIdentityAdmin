@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace BlazorAdminDashboard.Domain.Documents.v1;
+﻿namespace BlazorAdminDashboard.Domain.Documents.v1;
 
 // TODO: Should these 'Documents' be records instead?
 public sealed class RoleDocumentV1

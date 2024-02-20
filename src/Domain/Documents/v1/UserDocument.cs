@@ -1,9 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-using BlazorAdminDashboard.Domain.Identity;
-using BlazorAdminDashboard.Domain.Enums;
-
-namespace BlazorAdminDashboard.Domain.Documents.v1;
+﻿namespace BlazorAdminDashboard.Domain.Documents.v1;
 
 // TODO: Need further testing of Redis.OM as it doesn't yet seem
 // to support JSON pathing via the JsonPropertyName attributes.
@@ -69,6 +64,8 @@ public sealed class UserDocumentV1
 
     [JsonPropertyName("lockout_ends_at")]
     public DateTimeOffset? LockoutEndsAt { get; set; }
+
+    // TODO: We should add a 'IsDisabled' and 'IsDeleted' flags here too...
 
     [JsonPropertyName("mfa_tokens")]
     public ICollection<MultiFactorTokenDocumentV1>? MultiFactorTokens { get; set; }

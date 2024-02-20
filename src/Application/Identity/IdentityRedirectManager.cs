@@ -1,7 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Http;
-
 namespace BlazorAdminDashboard.Application.Identity;
 
 public sealed class IdentityRedirectManager(NavigationManager navigationManager)

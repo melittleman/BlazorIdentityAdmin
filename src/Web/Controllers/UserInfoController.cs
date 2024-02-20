@@ -1,9 +1,4 @@
-﻿using OpenIddict.Abstractions;
-using OpenIddict.Server.AspNetCore;
-
-using BlazorAdminDashboard.Domain.Identity;
-
-namespace BlazorAdminDashboard.Web.Controllers;
+﻿namespace BlazorAdminDashboard.Web.Controllers;
 
 [ApiController]
 [Route("connect/userinfo")]

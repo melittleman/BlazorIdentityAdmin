@@ -1,7 +1,4 @@
-﻿using BlazorAdminDashboard.Domain.Documents.v1;
-using Microsoft.AspNetCore.Identity;
-
-namespace BlazorAdminDashboard.Domain.Identity;
+﻿namespace BlazorAdminDashboard.Domain.Identity;
 
 public class Role : IdentityRole<Ulid>
 {

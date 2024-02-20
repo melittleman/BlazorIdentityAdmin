@@ -1,14 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Logging;
-
-using SendGrid.Helpers.Mail;
-using SendGrid;
-
-using BlazorAdminDashboard.Infrastructure.Configuration;
-using BlazorAdminDashboard.Domain.Identity;
-
-namespace BlazorAdminDashboard.Infrastructure.Email;
+﻿namespace BlazorAdminDashboard.Infrastructure.Email;
 
 public sealed class SendGridEmailSender(
     IOptions<SendGridConfiguration> options,

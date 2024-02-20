@@ -1,7 +1,3 @@
-using Microsoft.AspNetCore.Identity;
-using BlazorAdminDashboard.Domain.Identity;
-using Microsoft.AspNetCore.Http;
-
 namespace BlazorAdminDashboard.Application.Identity;
 
 public sealed class IdentityUserAccessor(UserManager<User> userManager, IdentityRedirectManager redirectManager)

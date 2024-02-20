@@ -1,10 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
-using MudBlazor;
-
-using BlazorAdminDashboard.Domain.Identity;
-using BlazorAdminDashboard.Web.Models;
-
-namespace BlazorAdminDashboard.Web.Components.Admin;
+﻿namespace BlazorAdminDashboard.Web.Components.Admin;
 
 /// <summary>
 /// Dialog to create a new user

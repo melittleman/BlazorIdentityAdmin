@@ -1,7 +1,4 @@
-﻿using System.Security.Claims;
-using System.Text.Json.Serialization;
-
-namespace BlazorAdminDashboard.Domain.Documents.v1;
+﻿namespace BlazorAdminDashboard.Domain.Documents.v1;
 
 public sealed class MultiFactorTokenDocumentV1
 {

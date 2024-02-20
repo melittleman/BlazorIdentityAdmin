@@ -1,10 +1,4 @@
-﻿using System.Security.Claims;
-using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Identity;
-
-using BlazorAdminDashboard.Domain.Identity;
-
-namespace BlazorAdminDashboard.Application.Identity;
+﻿namespace BlazorAdminDashboard.Application.Identity;
 
 public sealed class CustomClaimsPrincipalFactory(
     UserManager<User> userManager,

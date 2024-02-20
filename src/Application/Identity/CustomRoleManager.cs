@@ -1,8 +1,4 @@
-﻿using BlazorAdminDashboard.Domain.Identity;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
-
-namespace BlazorAdminDashboard.Application.Identity;
+﻿namespace BlazorAdminDashboard.Application.Identity;
 
 public sealed class CustomRoleManager(
     IRoleStore<Role> store,

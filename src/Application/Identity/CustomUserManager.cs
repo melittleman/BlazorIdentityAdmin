@@ -1,12 +1,4 @@
-﻿using BlazorAdminDashboard.Application.Identity.Abstractions;
-using BlazorAdminDashboard.Domain.Identity;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using RedisKit.Querying;
-using RedisKit.Querying.Abstractions;
-
-namespace BlazorAdminDashboard.Application.Identity;
+﻿namespace BlazorAdminDashboard.Application.Identity;
 
 public sealed class CustomUserManager(
     IUserStore<User> store,

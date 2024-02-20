@@ -1,9 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Components.Authorization;
-
-using BlazorAdminDashboard.Application.Identity;
-
-namespace BlazorAdminDashboard.Application;
+﻿namespace BlazorAdminDashboard.Application;
 
 public static class ConfigureServices
 {

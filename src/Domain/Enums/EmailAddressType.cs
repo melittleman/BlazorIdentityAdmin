@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace BlazorAdminDashboard.Domain.Enums;
+﻿namespace BlazorAdminDashboard.Domain.Enums;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum EmailAddressType

@@ -2,8 +2,6 @@
 
 @inject NavigationManager Navigation
 
-@using Microsoft.AspNetCore.Components.Authorization
-
 <AuthorizeView>
     <Authorized>
 
@@ -24,7 +22,7 @@
 
         <MudMenu id="signedInMenu" AnchorOrigin="Origin.CenterCenter">
             <ActivatorContent>
-                <MudAvatar>@context.User.Identity.Name.First()</MudAvatar>
+                <MudAvatar>@context.User.Identity?.Name?.First()</MudAvatar>
             </ActivatorContent>
             <ChildContent>
                 <MudMenuItem id="profileMenuItem" Href="./authentication/profile">Profile</MudMenuItem>

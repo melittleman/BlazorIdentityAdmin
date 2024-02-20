@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace BlazorAdminDashboard.Web.Models;
+﻿namespace BlazorAdminDashboard.Web.Models;
 
 internal sealed class RegisterInputModel
 {

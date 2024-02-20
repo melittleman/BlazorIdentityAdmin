@@ -1,18 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-
-using RedisKit.Abstractions;
-using RedisKit.DependencyInjection.Abstractions;
-
-using NRedisStack.Search;
-using NRedisStack.Search.Literals.Enums;
-using NRedisStack.RedisStackCommands;
-
-using RedisKit.DependencyInjection.Options;
-using RedisKit.Querying.Extensions;
-
-namespace BlazorAdminDashboard.Infrastructure.Hosted;
+﻿namespace BlazorAdminDashboard.Infrastructure.Hosted;
 
 internal sealed class RedisIndexCreationService : BackgroundService
 {

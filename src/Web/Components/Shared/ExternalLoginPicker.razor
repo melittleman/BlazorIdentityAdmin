@@ -1,10 +1,4 @@
-﻿@using Microsoft.AspNetCore.Authentication
-@using Microsoft.AspNetCore.Identity
-
-@using BlazorAdminDashboard.Application.Identity
-@using BlazorAdminDashboard.Domain.Identity
-
-@inject SignInManager<User> SignInManager
+﻿@inject SignInManager<User> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
 @if (externalLogins.Length == 0)

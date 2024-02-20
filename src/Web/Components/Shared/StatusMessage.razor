@@ -1,6 +1,4 @@
-﻿@using BlazorAdminDashboard.Application.Identity;
-
-@if (!string.IsNullOrEmpty(DisplayMessage))
+﻿@if (!string.IsNullOrEmpty(DisplayMessage))
 {
     var statusMessageClass = DisplayMessage.StartsWith("Error") ? "danger" : "success";
     <div class="alert alert-@statusMessageClass" role="alert">

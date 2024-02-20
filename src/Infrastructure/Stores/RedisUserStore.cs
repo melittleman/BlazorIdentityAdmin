@@ -1,26 +1,4 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
-
-using RedisKit.Extensions;
-using RedisKit.Abstractions;
-using RedisKit.Querying.Extensions;
-using RedisKit.DependencyInjection.Options;
-using RedisKit.DependencyInjection.Abstractions;
-
-using NRedisStack.RedisStackCommands;
-
-using IdentityModel;
-using OpenIddict.Abstractions;
-
-using BlazorAdminDashboard.Domain.Identity;
-using BlazorAdminDashboard.Domain.Documents.v1;
-using BlazorAdminDashboard.Application.Identity.Abstractions;
-using RedisKit.Querying;
-using RedisKit.Querying.Abstractions;
-using NRedisStack;
-
-namespace BlazorAdminDashboard.Infrastructure.Stores;
+﻿namespace BlazorAdminDashboard.Infrastructure.Stores;
 
 public class RedisUserStore(
     IRedisConnectionProvider redisProvider,
@@ -94,6 +72,9 @@ public class RedisUserStore(
 
     public override async Task<User?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken = default)
     {
+        // TODO: I don't believe that we should enforce 'email' to be unique within the Users, so we'll have
+        // to modify / overrided this and then call that implementation so we can return a list of matches.
+
         string email = normalizedEmail.EscapeSpecialCharacters();
 
         // TODO: Constant for Redis index name
@@ -113,6 +94,8 @@ public class RedisUserStore(
     {
         string username = normalizedUserName.EscapeSpecialCharacters();
 
+        // Username should always be unique so I think it's fine to return a single User, but I do think
+        // maybe we should still query for multiple and log / throw an error if we find multiple matches?
         UserDocumentV1? document = await Search.SearchSingleAsync<UserDocumentV1>("idx:users", "@username:{" + username + "}");
         if (document is null) return null;
 

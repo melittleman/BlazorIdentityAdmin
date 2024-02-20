@@ -94,7 +94,11 @@ public static class ConfigureServices
         }
 
         builder.AddIdentityCookies();
-
+        //services.ConfigureApplicationCookie(options =>
+        //{
+        //    options.LoginPath = "/login";
+        //});
+        
         services.AddIdentityCore<User>(options =>
         {
             options.ClaimsIdentity.UserIdClaimType = OpenIddictConstants.Claims.Subject;
