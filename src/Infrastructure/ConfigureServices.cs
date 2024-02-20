@@ -1,25 +1,4 @@
-﻿using System.Text.Json;
-using System.Text.Json.Serialization;
-
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-
-using RedisKit.DependencyInjection.Extensions;
-using OpenIddict.Abstractions;
-using SendGrid;
-
-using BlazorAdminDashboard.Domain.Identity;
-using BlazorAdminDashboard.Infrastructure.Email;
-using BlazorAdminDashboard.Infrastructure.Stores;
-using BlazorAdminDashboard.Infrastructure.Configuration;
-using BlazorAdminDashboard.Infrastructure.Hosted;
-using BlazorAdminDashboard.Application.Identity;
-using BlazorAdminDashboard.Application.Identity.Abstractions;
-
-namespace BlazorAdminDashboard.Infrastructure;
+﻿namespace BlazorAdminDashboard.Infrastructure;
 
 public static class ConfigureServices
 {

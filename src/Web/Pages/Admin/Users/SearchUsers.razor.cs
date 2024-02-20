@@ -1,5 +1,6 @@
 ﻿using BlazorAdminDashboard.Application.Identity;
 using BlazorAdminDashboard.Domain.Identity;
+using BlazorAdminDashboard.Web.Components.Admin;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using RedisKit.Querying;
@@ -9,37 +10,25 @@ namespace BlazorAdminDashboard.Web.Pages.Admin.Users;
 
 public partial class SearchUsers
 {
-    //[Inject]
-    //public IUsersService Service { get; set; }
-
     [Inject]
     public required UserManager<User> Manager { get; set; }
 
     [Inject]
-    public IDialogService DialogService { get; set; }
+    public required IDialogService Dialog { get; set; }
 
     [Inject]
-    public ISnackbar SnackBar { get; set; }
+    public required ISnackbar Snackbar { get; set; }
 
     [Inject]
-    public NavigationManager Navigator { get; set; }
+    public required NavigationManager Navigation { get; set; }
 
-    private MudTable<User> usersTable;
+    private readonly SearchFilter filter = new();
+    private string? searchTerm = null;
 
-
-    //private GetUsersRequest usersRequest = new GetUsersRequest();
-    private SearchFilter filter = new();
-
-
-
-    private readonly int[] pageSizeOptions = { 10, 20, 30, 40, 50 };
+    private MudTable<User> usersTable = new();
+    private readonly int[] pageSizeOptions = [ 10, 25, 50, 100 ];
     private bool resetCurrentPage = false;
 
-    /// <summary>
-    /// Get roles from api endpoint for the current page of the data table
-    /// </summary>
-    /// <param name="state"></param>
-    /// <returns></returns>
     private async Task<TableData<User>> GetUsersDataAsync(TableState state)
     {
         // Max of 32k pages
@@ -49,9 +38,11 @@ public partial class SearchUsers
         // Max of 100 results per page
         filter.Count = (byte)state.PageSize;
 
+        // TODO: Need to sort out the Sort Label and direction...
+
         if (Manager is CustomUserManager custom)
         {
-            IPagedList<User> users = await custom.SearchUsersAsync(filter);
+            IPagedList<User> users = await custom.SearchUsersAsync(filter, searchTerm);
 
             return new TableData<User>
             {
@@ -68,69 +59,87 @@ public partial class SearchUsers
     }
 
     /// <summary>
-    /// Refresh data for the search query
+    ///     Refresh table data for the search query.
     /// </summary>
-    /// <param name="text"></param>
-    private void OnSearch(string text)
+    /// <param name="text">The text to search for.</param>
+    private async Task OnSearchAsync(string text)
     {
-        //filter.UsersFilter = string.Empty;
-        //if (!string.IsNullOrEmpty(text))
-        //{
-        //    usersRequest.UsersFilter = text;
-        //}
-        //resetCurrentPage = true;
-        //usersTable.ReloadServerData();
+        searchTerm = null;
+
+        if (string.IsNullOrEmpty(text) is false)
+        {
+            searchTerm = text;
+        }
+
+        resetCurrentPage = true;
+        await usersTable.ReloadServerData();
     }
 
     /// <summary>
-    /// Show a dialog to add new users
+    ///     Show a dialog to add a new user.
     /// </summary>
-    async Task OpenNewUserDialogAsync()
+    private async Task OpenNewUserDialogAsync()
     {
-        //var dialogReference = await DialogService.ShowAsync<AddUserDialog>("Add New User", new DialogOptions()
-        //{
-        //    CloseButton = true,
-        //    CloseOnEscapeKey = true,
-        //    MaxWidth = MaxWidth.Medium
-        //});
-        //var dialogResult = await dialogReference.Result;
-        //if (!dialogResult.Canceled)
-        //{
-        //    await usersTable.ReloadServerData();
-        //}
+        IDialogReference dialog = await Dialog.ShowAsync<AddUserDialog>("Add New User", new DialogOptions()
+        {
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium
+        });
+
+        DialogResult? result = await dialog.Result;
+
+        if (result.Canceled is false)
+        {
+            await usersTable.ReloadServerData();
+        }
     }
 
     /// <summary>
-    /// Navigate to the edit user page
+    ///     Navigate to the edit user page.
     /// </summary>
-    void EditUser(User userDetails)
+    private void EditUser(User userDetails)
     {
-        Navigator.NavigateTo($"users/edit/{userDetails.Id}");
+        Navigation.NavigateTo($"/admin/users/edit/{userDetails.Id}");
     }
 
     /// <summary>
-    /// Permanently delete user from system. 
+    ///     Soft delete user from the application.
     /// </summary>
-    /// <param name="userDetails"></param>
+    /// <param name="user">The user that will be 'soft' deleted.</param>
     /// <returns></returns>
-    async Task DeleteUserAsync(User userDetails)
+    private async Task DeleteUserAsync(User user)
     {
-        //bool? dialogResult = await DialogService.ShowMessageBox("Warning", "Delete can't be undone !!",
-        //    yesText: "Delete!", cancelText: "Cancel", options: new DialogOptions() { FullWidth = true });
-        //if (dialogResult.GetValueOrDefault())
-        //{
-        //    var result = await Service.DeleteUserAsync(userDetails);
-        //    if (result.IsSuccess)
-        //    {
-        //        SnackBar.Add("Deleted successfully.", Severity.Success);
-        //        await usersTable.ReloadServerData();
-        //        return;
-        //    }
-        //    SnackBar.Add(result.ToString(), Severity.Error, config =>
-        //    {
-        //        config.ShowCloseIcon = true;
-        //        config.RequireInteraction = true;
-        //    });
-        //}
+        bool? dialogMessage = await Dialog.ShowMessageBox(
+            "Warning",
+            $"Are you sure you want to delete {user.UserName}?",
+            yesText: "Confirm",
+            cancelText: "Cancel",
+            options: new DialogOptions() 
+            {
+                FullWidth = true 
+            });
+
+        if (dialogMessage.GetValueOrDefault())
+        {
+            // TODO: Override this method in the custom
+            // manager and change to a 'soft' delete.
+            IdentityResult result = await Manager.DeleteAsync(user);
+
+            if (result.Succeeded)
+            {
+                Snackbar.Add("Deleted successfully.", Severity.Success);
+
+                await usersTable.ReloadServerData();
+            }
+            else
+            {
+                Snackbar.Add(result.ToString(), Severity.Error, config =>
+                {
+                    config.ShowCloseIcon = true;
+                    config.RequireInteraction = true;
+                });
+            }
+        }
     }
 }

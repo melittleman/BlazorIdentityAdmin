@@ -16,13 +16,30 @@ public class RedisUserStore(
     // TODO: We can remove the IQueryableUserStore implementation if we stop using 'UserStoreBase'.
     public override IQueryable<User> Users => throw new NotImplementedException();
 
-    public async Task<IPagedList<User>> SearchUsersAsync(SearchFilter filter, string? query = null)
+    public async Task<IPagedList<User>> SearchUsersAsync(SearchFilter filter, string? searchTerm = null)
     {
         ArgumentNullException.ThrowIfNull(nameof(filter));
 
-        // Default to "*" to return everything if not provided.
-        query = query?.EscapeSpecialCharacters() ?? "*";
+        string? query = null;
 
+        if (searchTerm is null)
+        {
+            // Default to returning all documents
+            // if no search term is specified.
+            query = "*";
+        }
+        else
+        {
+            // Escapes characters such as '@' or '.' in email addresses.
+            searchTerm = searchTerm.EscapeSpecialCharacters();
+
+            // Example: FT.SEARCH idx:users "(*admin*) | (@email:{*admin*}) | (@username:{*admin*})"
+            // means search for the wildcard query *admin* in every TEXT field, OR the 'email' TAG OR the 'username' TAG.
+
+            query = $"(*{searchTerm}*) | (@email:{{*{searchTerm}*}}) | (@username:{{*{searchTerm}*}})";
+        }
+
+        // TODO: The SearchAsync method doesn't currently persist the HIGHLIGHT fields back into the resulting document.
         IPagedList<UserDocumentV1> documents = await Search.SearchAsync<UserDocumentV1>("idx:users", query, filter);
 
         // TODO: See if there's a better way to achieve this...

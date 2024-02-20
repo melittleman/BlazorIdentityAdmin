@@ -2,5 +2,5 @@
 
 public interface IPagedUserStore<TUser>
 {
-    Task<IPagedList<TUser>> SearchUsersAsync(SearchFilter filter, string? query = null);
+    Task<IPagedList<TUser>> SearchUsersAsync(SearchFilter filter, string? searchTerm = null);
 }
