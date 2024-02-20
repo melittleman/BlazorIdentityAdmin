@@ -22,3 +22,15 @@ global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Primitives;
 global using Microsoft.Extensions.DependencyInjection;
+
+global using MudBlazor;
+global using MudBlazor.Services;
+
+global using BlazorAdminDashboard.Application;
+global using BlazorAdminDashboard.Domain.Theming;
+global using BlazorAdminDashboard.Domain.Identity;
+global using BlazorAdminDashboard.Infrastructure;
+global using BlazorAdminDashboard.Web;
+global using BlazorAdminDashboard.Web.Components;
+global using BlazorAdminDashboard.Web.Pages.Account;
+global using BlazorAdminDashboard.Web.Pages.Account.Manage;

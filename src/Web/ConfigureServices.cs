@@ -1,9 +1,4 @@
-﻿using BlazorAdminDashboard.Domain.Identity;
-using BlazorAdminDashboard.Web.Components.Pages.Account;
-using BlazorAdminDashboard.Web.Components.Pages.Account.Manage;
-using MudBlazor.Services;
-
-namespace BlazorAdminDashboard.Web;
+﻿namespace BlazorAdminDashboard.Web;
 
 public static class ConfigureServices
 {

@@ -99,7 +99,7 @@ public class RedisUserStore(
         // TODO: Constant for Redis index name
         // TODO: Why doesn't $ string interpolation seem to work for 'normalizedEmail'?
         // TODO: Are we able to use Redis.OM for this querying despite not actually using it for index creation?
-        UserDocumentV1? document = await _redis.Db.FT().SearchSingleAsync<UserDocumentV1>("idx:users", "@email:{" + email + "}");
+        UserDocumentV1? document = await Search.SearchSingleAsync<UserDocumentV1>("idx:users", "@email:{" + email + "}");
         if (document is null) return null;
 
         // Note: This is where we would be doing any neccessary conversions between v1 and v2+ etc. of the document.
@@ -113,7 +113,7 @@ public class RedisUserStore(
     {
         string username = normalizedUserName.EscapeSpecialCharacters();
 
-        UserDocumentV1? document = await _redis.Db.FT().SearchSingleAsync<UserDocumentV1>("idx:users", "@username:{" + username + "}");
+        UserDocumentV1? document = await Search.SearchSingleAsync<UserDocumentV1>("idx:users", "@username:{" + username + "}");
         if (document is null) return null;
 
         // Note: This is where we would be doing any neccessary conversions between v1 and v2+ etc. of the document.
@@ -393,7 +393,7 @@ public class RedisUserStore(
         string issuer = loginProvider.EscapeSpecialCharacters();
         string subject = providerKey.EscapeSpecialCharacters();
 
-        UserDocumentV1? document = await _redis.Db.FT().SearchSingleAsync<UserDocumentV1>("idx:users", "@login_provider:{" + issuer + "} @login_key:{" + subject + "}");
+        UserDocumentV1? document = await Search.SearchSingleAsync<UserDocumentV1>("idx:users", "@login_provider:{" + issuer + "} @login_key:{" + subject + "}");
         if (document is null) return null;
 
         ExternalLoginDocumentV1? login = document.ExternalLogins?.SingleOrDefault(l => l.Issuer == loginProvider && l.Subject == providerKey);

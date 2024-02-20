@@ -1,7 +1,4 @@
-﻿using BlazorAdminDashboard.Domain.Theming;
-using MudBlazor;
-
-namespace BlazorAdminDashboard.Web.Theming;
+﻿namespace BlazorAdminDashboard.Web.Theming;
 
 public sealed class AdminTheme : DefaultTheme
 {

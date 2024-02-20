@@ -1,8 +1,3 @@
-using BlazorAdminDashboard.Application;
-using BlazorAdminDashboard.Infrastructure;
-using BlazorAdminDashboard.Web;
-using BlazorAdminDashboard.Web.Components;
-
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplicationServices();

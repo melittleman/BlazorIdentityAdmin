@@ -4,9 +4,8 @@ using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using RedisKit.Querying;
 using RedisKit.Querying.Abstractions;
-using System.Reflection.Emit;
 
-namespace BlazorAdminDashboard.Web.Components.Pages.Admin.Users;
+namespace BlazorAdminDashboard.Web.Pages.Admin.Users;
 
 public partial class SearchUsers
 {
