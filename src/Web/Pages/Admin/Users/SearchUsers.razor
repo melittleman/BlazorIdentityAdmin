@@ -4,36 +4,91 @@
 
 @* @attribute [Authorize(Policy = Policies.CanManageUsers)] *@
 
-<MudTable UserAttributes="@(new (){{"id","tblUsers"}})" ServerData="@(new Func<TableState, Task<TableData<User>>>(GetUsersDataAsync))"
-          Dense="false" Hover="true" ReadOnly="true" SortLabel="Sort By" Elevation="4" @ref="usersTable">
+<MudTable @ref="usersTable" 
+    ServerData="@(new Func<TableState, Task<TableData<User>>>(GetUsersDataAsync))"
+    Dense="false" 
+    Hover="true" 
+    ReadOnly="true" 
+    SortLabel="Sort By" 
+    Elevation="2" >
+
     <ToolBarContent>
+
         <MudText Typo="Typo.h6">Users</MudText>
-        <MudIconButton UserAttributes="@(new (){{"id","btnNew"}})" Icon="@Icons.Material.Outlined.AddCircleOutline" Size="Size.Medium"
-                       @onclick="OpenNewUserDialogAsync" Color="Color.Primary"></MudIconButton>
+
+        <MudIconButton @onclick="OpenNewUserDialogAsync"
+            Icon="@Icons.Material.Outlined.AddCircleOutline"
+            Size="Size.Medium"
+            Color="Color.Primary" />
+
         <MudSpacer />
         <MudSpacer />
-        <MudTextField UserAttributes="@(new (){{"id","txtSearchBox"}})" T="string" ValueChanged="@(searchText => OnSearchAsync(searchText))" Placeholder="Search by User Name or Email" Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Clearable="true" Immediate="true" DebounceInterval="500" Class="mt-0"></MudTextField>
+
+        <MudTextField T="string" 
+            ValueChanged="@(t => OnSearchAsync(t))" 
+            Placeholder="Search" 
+            Adornment="Adornment.Start"
+            AdornmentIcon="@Icons.Material.Filled.Search" 
+            IconSize="Size.Medium" 
+            Clearable="true" 
+            Immediate="true" 
+            DebounceInterval="500" 
+            Class="mt-0" />
+
     </ToolBarContent>
     <HeaderContent>
-        <MudTh>User Name</MudTh>
-        <MudTh>User Email</MudTh>
-        <MudTh>Phone Number</MudTh>
+        @* 
+            The 'SortLabel' properties here need to match the JSON name of the field in the document.
+            This can of course change if we want, but might need to do some mapping. Alternatively it
+            could be nice to actually just use the [JsonPropertyName] attributes directly?
+        *@
+
+        <MudTh>
+            <MudTableSortLabel T="User" SortLabel="username">Username</MudTableSortLabel>
+        </MudTh>
+
+        <MudTh>
+            <MudTableSortLabel T="User" SortLabel="email">Email</MudTableSortLabel>
+        </MudTh>
+
+        <MudTh>
+            @* TODO: Implement sorting by 'Name' properly although this might not be simple because it doesn't map to a property in the document... *@
+            <MudTableSortLabel T="User" SortLabel="first_name">Name</MudTableSortLabel>
+        </MudTh>
+
+        <MudTh>
+            <MudTableSortLabel T="User" SortLabel="created_at" InitialDirection="SortDirection.Descending">Created</MudTableSortLabel>
+        </MudTh>
+
+        @* Locked Out Icon *@
         <MudTh></MudTh>
+
+        @* Edit Button *@
         <MudTh></MudTh>
+
+        @* Delete Button *@
         <MudTh></MudTh>
+
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="#">
-            @context.UserName
+
+        <MudTd DataLabel="Username">
+            @context.Username
         </MudTd>
-        <MudTd DataLabel="User Email">
+
+        <MudTd DataLabel="Email">
             @context.Email
         </MudTd>
-        <MudTd DataLabel="Phone Number">
-            @context.PhoneNumber
+
+        <MudTd DataLabel="Name">
+            @context.Name
         </MudTd>
-        <MudTd DataLabel="">
+
+        <MudTd DataLabel="Created">
+            @context.CreatedAt
+        </MudTd>
+
+        <MudTd>
             @if (context.IsLockedOut)
             {
                 <MudIcon Icon="@Icons.Material.Outlined.Lock" Color="Color.Warning" Title="Account is locked" />
@@ -43,24 +98,36 @@
                 <MudIcon Icon="@Icons.Material.Outlined.LockOpen" Color="Color.Success" Title="Account is unlocked" />
             }
         </MudTd>
-        <MudTd DataLabel="">
-            <MudIconButton UserAttributes="@(new (){{"id","btnEdit"}})" Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
-                           @onclick="()=> EditUser(context)" Size="Size.Medium"></MudIconButton>
+
+        <MudTd>
+            <MudIconButton @onclick="()=> EditUser(context)" 
+                Icon="@Icons.Material.Filled.Edit" 
+                Color="Color.Primary"
+                Size="Size.Medium" />
         </MudTd>
-        <MudTd DataLabel="">
-            <MudIconButton UserAttributes="@(new (){{"id","btnDelete"}})" Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
-                           @onclick="() => DeleteUserAsync(context)" Size="Size.Medium"></MudIconButton>
+
+        <MudTd>
+            <MudIconButton @onclick="() => DeleteUserAsync(context)"
+                Icon="@Icons.Material.Filled.Delete"
+                Color="Color.Error"
+                Size="Size.Medium" />
         </MudTd>
+
     </RowTemplate>
     <PagerContent>
-        <MudTablePager PageSizeOptions="pageSizeOptions" RowsPerPageString="Results Per Page" />
+
+        <MudTablePager PageSizeOptions="pageSizeOptions" RowsPerPageString="Page size" />
+
     </PagerContent>
     <ColGroup>
+
+        <col />
         <col />
         <col />
         <col />
         <col style="width:20px;" />
         <col style="width:20px;" />
         <col style="width:20px;" />
+
     </ColGroup>
 </MudTable>

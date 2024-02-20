@@ -1,46 +1,56 @@
 ﻿<MudDialog>
     <TitleContent>
 
-        <MudText Typo="Typo.h6">
+        <MudText Typo="Typo.h5">
             Add New User
         </MudText>
 
     </TitleContent>
     <DialogContent>
 
-        <EditForm Model="@model" OnValidSubmit="AddUserAsync">
+        @* TODO: Provide a way for the user to cancel the creation? *@
 
-            <DataAnnotationsValidator />
+        @if (isCreating)
+        {
+            <MudText Typo="Typo.h6">Please wait whilst we create this user...</MudText>
+            <MudProgressCircular Color="Color.Inherit" Indeterminate="true" />
+        }
+        else
+        {
+            <EditForm Model="@model" OnValidSubmit="AddUserAsync">
 
-            <MudCard Outlined="false" Style="min-width:600px;" Elevation="0">
-                <MudCardContent>
+                <DataAnnotationsValidator />
 
-                    <MudTextField @bind-Value="model.Email" For="@(() => model.Email)"
-                        Label="Email" 
-                        Class="mt-3"
-                        InputType="InputType.Email"/>
+                <MudCard Outlined="false" Style="min-width:600px;" Elevation="0">
+                    <MudCardContent>
 
-                    <MudTextField @bind-Value="model.Password" For="@(() => model.Password)"
-                        Label="Password"
-                        Class="mt-3"
-                        InputType="InputType.Password" />
+                        <MudTextField @bind-Value="model.Email" For="@(() => model.Email)"
+                            Label="Email" 
+                            Class="mt-3"
+                            InputType="InputType.Email"/>
 
-                    <MudTextField @bind-Value="model.ConfirmPassword" For="@(() => model.ConfirmPassword)"
-                        Label="ConfirmPassword"
-                        Class="mt-3"
-                        InputType="InputType.Password" />
+                        <MudTextField @bind-Value="model.Password" For="@(() => model.Password)"
+                            Label="Password"
+                            Class="mt-3"
+                            InputType="InputType.Password" />
 
-                </MudCardContent>
-                <MudCardActions>
+                        <MudTextField @bind-Value="model.ConfirmPassword" For="@(() => model.ConfirmPassword)"
+                            Label="ConfirmPassword"
+                            Class="mt-3"
+                            InputType="InputType.Password" />
 
-                    <MudButton ButtonType="ButtonType.Submit" 
-                        Variant="Variant.Filled"
-                        Color="Color.Primary"
-                        Class="ml-auto">Create</MudButton>
+                    </MudCardContent>
+                    <MudCardActions>
 
-                </MudCardActions>
-            </MudCard>
-        </EditForm>
+                        <MudButton ButtonType="ButtonType.Submit" 
+                            Variant="Variant.Filled"
+                            Color="Color.Primary"
+                            Class="ml-auto">Create</MudButton>
+
+                    </MudCardActions>
+                </MudCard>
+            </EditForm>
+        }
 
     </DialogContent>
 </MudDialog>

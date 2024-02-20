@@ -2,6 +2,45 @@
 
 public class User : IdentityUser<Ulid>
 {
+    // TODO: Need to make sure this is required
+    // across the board as I believe we should 
+    // always have a non-nullable and unique 
+    // "Username" to visually identify a user.
+    // Note that this maps to the "preferred_username"
+    // claim within the ClaimsPrincipal / token.
+    public string Username
+    {
+        get
+        {
+            return UserName ?? Email ?? string.Empty;
+        }
+        set
+        {
+            UserName = value;
+        }
+    }
+
+    public string Name 
+    {   
+        get
+        {
+            if (string.IsNullOrEmpty(FirstName) is false &&
+                string.IsNullOrEmpty(LastName) is false)
+            {
+                return $"{FirstName} {LastName}";
+            }
+
+            if (string.IsNullOrEmpty(Username) is false)
+            {
+                return Username;
+            }
+
+            return string.IsNullOrEmpty(Email)
+                ? string.Empty
+                : Email;
+        }
+    }
+
     public string? FirstName { get; set; }
 
     public string? LastName { get; set; }
@@ -30,6 +69,7 @@ public class User : IdentityUser<Ulid>
 
     public User(string username) : this()
     {
+        Username = username;
         UserName = username;
     }
 

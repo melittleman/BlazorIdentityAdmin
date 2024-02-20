@@ -2,6 +2,7 @@
 
 public partial class AddUserDialog : ComponentBase
 {
+    private bool isCreating = false;
     private readonly RegisterInputModel model = new();
 
     [CascadingParameter]
@@ -34,6 +35,8 @@ public partial class AddUserDialog : ComponentBase
     /// <returns></returns>
     public async Task AddUserAsync()
     {
+        isCreating = true;
+
         // TODO: There is a lot of duplication in this method with the 'Register.razor'
         // component so we can probably look to unify some of this logic.
         User user = new();
@@ -58,6 +61,7 @@ public partial class AddUserDialog : ComponentBase
                 config.RequireInteraction = true;
             });
 
+            isCreating = false;
             Dialog.Close(false);
             return;
         }
@@ -82,6 +86,8 @@ public partial class AddUserDialog : ComponentBase
         await Email.SendConfirmationLinkAsync(user, model.Email, HtmlEncoder.Default.Encode(callbackUrl));
 
         Snackbar.Add("Used created successfully.", Severity.Success);
-        Dialog.Close(true);        
+
+        isCreating = false;
+        Dialog.Close(true);
     }
 }

@@ -84,7 +84,7 @@ public static class ConfigureServices
             options.ClaimsIdentity.UserNameClaimType = OpenIddictConstants.Claims.Name;
             options.ClaimsIdentity.EmailClaimType = OpenIddictConstants.Claims.Email;
             options.ClaimsIdentity.RoleClaimType = OpenIddictConstants.Claims.Role;
-            options.ClaimsIdentity.SecurityStampClaimType = "security_stamp"; // TODO: Is there a better alternative?
+            options.ClaimsIdentity.SecurityStampClaimType = "sec_stamp"; // TODO: Is there a better alternative?
 
             options.SignIn.RequireConfirmedEmail = true;
             options.SignIn.RequireConfirmedAccount = true;

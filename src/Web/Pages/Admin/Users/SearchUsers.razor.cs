@@ -1,4 +1,6 @@
-﻿namespace BlazorAdminDashboard.Web.Pages.Admin.Users;
+﻿using StackExchange.Redis;
+
+namespace BlazorAdminDashboard.Web.Pages.Admin.Users;
 
 public partial class SearchUsers
 {
@@ -25,12 +27,25 @@ public partial class SearchUsers
     {
         // Max of 32k pages
         filter.Page = (short)(resetCurrentPage ? 1 : (state.Page + 1));
+        filter.Count = (byte)state.PageSize; // Max of 100 results per page
         resetCurrentPage = false;
 
-        // Max of 100 results per page
-        filter.Count = (byte)state.PageSize;
+        if (state.SortDirection is SortDirection.None || string.IsNullOrEmpty(state.SortLabel))
+        {
+            filter.OrderBy = null;
+        }
+        else
+        {
+            // TODO: Move this into an extension as it's going to be used a lot!
+            filter.SortBy = state.SortDirection switch
+            {
+                SortDirection.Ascending => RedisKit.Querying.Enums.SortDirection.Ascending,
+                SortDirection.Descending => RedisKit.Querying.Enums.SortDirection.Descending,
+                _ => throw new NotImplementedException()
+            };
 
-        // TODO: Need to sort out the Sort Label and direction...
+            filter.OrderBy = state.SortLabel;            
+        }
 
         if (Manager is CustomUserManager custom)
         {
