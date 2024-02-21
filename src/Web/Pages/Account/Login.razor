@@ -1,7 +1,9 @@
 ﻿@page "/Account/Login"
 
 @using UAParser
+@using Device = BlazorAdminDashboard.Domain.Identity.Device;
 
+@inject UserManager<User> UserManager
 @inject SignInManager<User> SignInManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
@@ -70,6 +72,8 @@
 
 @code {
 
+    // TODO: I think this is now large enough to be refactored into a 'code behind'.
+
     private string? errorMessage;
 
     [CascadingParameter]
@@ -81,10 +85,10 @@
     // This seems to be the only way we could 'hack' to get 2-way data binding
     // working from an InteractiveServer child component back to a parent SSR one.
     [SupplyParameterFromForm(Name = "GeoLocationProvider.Latitude")]
-    private double Latitude { get; set; }
+    private double? Latitude { get; set; } = null;
 
     [SupplyParameterFromForm(Name = "GeoLocationProvider.Longitude")]
-    private double Longitude { get; set; }
+    private double? Longitude { get; set; } = null;
 
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
@@ -100,35 +104,74 @@
 
     public async Task LoginUser()
     {
-        // This doesn't count login failures towards account lockout
-        // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+        // TODO: We should allow signin with either username or email?
+        User? user = await UserManager.FindByNameAsync(Input.Email);
+        if (user is null)
+        {
+            // We can't actually tell the user that it was the 
+            // email that was incorrect, otherwise they would be
+            // able to figure out what accounts we actually have.
+            errorMessage = "Error: Incorrect username or password.";
+            return;
+        }
 
-        // TODO: Compare these 2 methods...
-        // SignInManager.SignInWithClaimsAsync();
+        // Will lockout after 5 failed attempts by default...
+        SignInResult result = await SignInManager.CheckPasswordSignInAsync(user, Input.Password, lockoutOnFailure: true);
+        if (result.Succeeded is false)
+        {
+            HandleSignInResult(result);
+            return;
+        }
 
+        DateTimeOffset authTime = DateTimeOffset.UtcNow;
         string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         string? userAgent = HttpContext.Request.Headers["User-Agent"];
 
-        if (string.IsNullOrEmpty(userAgent) is false)
+        if (string.IsNullOrEmpty(userAgent) is false && string.IsNullOrEmpty(ipAddress) is false)
         {
             Parser uaParser = UAParser.Parser.GetDefault();
             ClientInfo clientInfo = uaParser.Parse(userAgent);
 
             string operatingSystem = clientInfo.OS.ToString();
-            string browser =  clientInfo.UA.Family;
+            string browser = clientInfo.UA.Family;
             string version = $"{clientInfo.UA.Major}.{clientInfo.UA.Minor}.{clientInfo.UA.Patch}";
-        }
 
-        if (Latitude != 0 && Longitude != 0 && string.IsNullOrEmpty(ipAddress) is false)
-        {
-            // TODO: Need to save these along with the above data to populate the 'devices' array against the User.
-        }
+            // TODO: Think of the right way to separate here if there's a better alternative?
+            string deviceName = $"{operatingSystem}:{browser}@{version}";
 
-        SignInResult result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+            string? coordinates = Latitude is not null && Longitude is not null
+                ? $"{Latitude}, {Longitude}"
+                : null;
+
+            Device device = new()
+            {
+                Name = deviceName,
+                IpAddress = ipAddress,
+                Location = coordinates,
+                AccessedAt = authTime
+            };
+
+            if (SignInManager is CustomSignInManager custom)
+            {
+                result = await custom.PasswordSignInDeviceAsync(user, device, Input.RememberMe);
+            }
+
+            // TODO: Now need to update the user with this new Device if the Signin was successful before we redirect
+
+            HandleSignInResult(result);
+        }
+    }
+
+    private void HandleSignInResult(SignInResult result)
+    {
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
             RedirectManager.RedirectTo(ReturnUrl);
+        }
+        else if (result.IsNotAllowed)
+        {
+            errorMessage = "Error: Your must confirm your account to login.";
         }
         else if (result.RequiresTwoFactor)
         {

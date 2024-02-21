@@ -9,8 +9,21 @@ public sealed class DeviceDocumentV1
     public required string IpAddress { get; set; }
 
     [JsonPropertyName("last_location")]
-    public required string LastLocation { get; set; }
+    public string? LastLocation { get; set; }
 
     [JsonPropertyName("last_accessed_at")]
     public required DateTimeOffset LastAccessedAt { get; set; }
+
+    public static explicit operator DeviceDocumentV1(Device device)
+    {
+        ArgumentNullException.ThrowIfNull(device);
+
+        return new DeviceDocumentV1()
+        {
+            Name = device.Name,
+            IpAddress = device.IpAddress,
+            LastLocation = device.Location,
+            LastAccessedAt = device.AccessedAt
+        };
+    }
 }

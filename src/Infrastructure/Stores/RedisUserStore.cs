@@ -212,10 +212,12 @@ public class RedisUserStore(
         // like Pixel, IdentityServer or OrchardCore actually do here because I don't think that a 'Store' should
         // just keep a static list of Claims defined for a User?
 
-        IList<Claim> claims =
-        [
-            new Claim(JwtClaimTypes.SessionId, CryptoRandom.CreateUniqueId(16, CryptoRandom.OutputFormat.Hex)),
-        ];
+        IList<Claim> claims = [];
+
+        if (string.IsNullOrWhiteSpace(user.Username) is false)
+        {
+            claims.Add(new Claim(OpenIddictConstants.Claims.PreferredUsername, user.Username));
+        }
 
         if (string.IsNullOrWhiteSpace(user.FirstName) is false)
         {

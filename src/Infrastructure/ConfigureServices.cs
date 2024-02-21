@@ -102,10 +102,10 @@ public static class ConfigureServices
         .AddClaimsPrincipalFactory<CustomClaimsPrincipalFactory>()
         .AddUserManager<CustomUserManager>()
         .AddRoleManager<CustomRoleManager>()
+        .AddSignInManager<CustomSignInManager>()
         .AddUserStore<RedisUserStore>()
         .AddRoleStore<RedisRoleStore>()
-        .AddDefaultTokenProviders()
-        .AddSignInManager();
+        .AddDefaultTokenProviders();
 
         // OpenIddict
         services.AddOpenIddict().AddServer(options =>

@@ -5,17 +5,45 @@
 <MudText Typo="Typo.h3" GutterBottom="true">Hello, world!</MudText>
 <MudText Class="mb-8">Welcome to your new app, powered by MudBlazor and the .NET 8 Template!</MudText>
 
-<AuthorizeView>
-    <Authorized>
-        <h2>Hello @context.User.Identity?.Name, here's the list of your claims:</h2>
-        <ul>
-            @foreach (var claimGroup in context.User.Claims.GroupBy(a => a.Type))
+@* 
+    TODO: It's a shame there doesn't seem to be a better / more efficient way of doing this..
+    I just want an 'AuthorizeView' that contains the 'AuthenticationProperties' in @context too.
+*@
+@if (auth is not null && auth.Succeeded && auth.Principal.Identity?.IsAuthenticated is true)
+{
+    <h2>Hello @auth.Principal.Identity?.Name, here's the list of your claims:</h2>
+    <ul>
+        @foreach (var claimGroup in auth.Principal.Claims.GroupBy(a => a.Type))
+        {
+            foreach (var claimValue in claimGroup.Select(s => s.Value).Distinct())
             {
-                foreach (var claimValue in claimGroup.Select(s => s.Value).Distinct())
-                {
-                    <li><b>@claimGroup.Key</b>: @claimValue</li>
-                }
+                <li><b>@claimGroup.Key</b>: @claimValue</li>
             }
-        </ul>
-    </Authorized>
-</AuthorizeView>
+        }
+    </ul>
+
+    <h3>And here are the properties:</h3>
+    <ul>
+        @foreach ((string key, string? value) in auth.Properties.Items)
+        {
+            if (value is null) continue;
+
+            <li><b>@key</b>: @value</li>   
+        }
+    </ul>
+}
+
+@code {
+    
+    private AuthenticateResult? auth;
+
+    [CascadingParameter]
+    public required HttpContext HttpContext { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        auth = await HttpContext.AuthenticateAsync();
+
+        await base.OnInitializedAsync();
+    }
+}
