@@ -8,17 +8,7 @@ public class User : IdentityUser<Ulid>
     // "Username" to visually identify a user.
     // Note that this maps to the "preferred_username"
     // claim within the ClaimsPrincipal / token.
-    public string Username
-    {
-        get
-        {
-            return UserName ?? Email ?? string.Empty;
-        }
-        set
-        {
-            UserName = value;
-        }
-    }
+    public string Username => UserName ?? string.Empty;
 
     public string Name 
     {   
@@ -69,7 +59,6 @@ public class User : IdentityUser<Ulid>
 
     public User(string username) : this()
     {
-        Username = username;
         UserName = username;
     }
 

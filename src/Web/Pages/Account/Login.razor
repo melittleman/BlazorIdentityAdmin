@@ -1,5 +1,7 @@
 ﻿@page "/Account/Login"
 
+@using UAParser
+
 @inject SignInManager<User> SignInManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
@@ -12,11 +14,16 @@
     <div class="col-md-4">
         <section>
             <StatusMessage Message="@errorMessage" />
-            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login" Enhance="true">
+
+                <GeolocationProvider />
                 <DataAnnotationsValidator />
+
                 <h2>Use a local account to log in.</h2>
                 <hr />
-                <ValidationSummary class="text-danger" role="alert" />
+
+                <ValidationSummary class="text-danger" role="alert" />                
+
                 <div class="form-floating mb-3">
                     <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                     <label for="email" class="form-label">Email</label>
@@ -71,6 +78,14 @@
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
+    // This seems to be the only way we could 'hack' to get 2-way data binding
+    // working from an InteractiveServer child component back to a parent SSR one.
+    [SupplyParameterFromForm(Name = "GeoLocationProvider.Latitude")]
+    private double Latitude { get; set; }
+
+    [SupplyParameterFromForm(Name = "GeoLocationProvider.Longitude")]
+    private double Longitude { get; set; }
+
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
@@ -91,7 +106,25 @@
         // TODO: Compare these 2 methods...
         // SignInManager.SignInWithClaimsAsync();
 
-        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        string? userAgent = HttpContext.Request.Headers["User-Agent"];
+
+        if (string.IsNullOrEmpty(userAgent) is false)
+        {
+            Parser uaParser = UAParser.Parser.GetDefault();
+            ClientInfo clientInfo = uaParser.Parse(userAgent);
+
+            string operatingSystem = clientInfo.OS.ToString();
+            string browser =  clientInfo.UA.Family;
+            string version = $"{clientInfo.UA.Major}.{clientInfo.UA.Minor}.{clientInfo.UA.Patch}";
+        }
+
+        if (Latitude != 0 && Longitude != 0 && string.IsNullOrEmpty(ipAddress) is false)
+        {
+            // TODO: Need to save these along with the above data to populate the 'devices' array against the User.
+        }
+
+        SignInResult result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");

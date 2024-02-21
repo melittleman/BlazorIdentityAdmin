@@ -1,4 +1,6 @@
-﻿namespace BlazorAdminDashboard.Web;
+﻿using Darnton.Blazor.DeviceInterop.Geolocation;
+
+namespace BlazorAdminDashboard.Web;
 
 public static class ConfigureServices
 {
@@ -8,6 +10,8 @@ public static class ConfigureServices
         services.AddControllers();
         services.AddRazorComponents().AddInteractiveServerComponents();
         services.AddCascadingAuthenticationState();
+
+        services.AddScoped<IGeolocationService, GeolocationService>();
 
         // To forward the scheme from the proxy in Kestrel environments.
         services.Configure<ForwardedHeadersOptions>(options =>
