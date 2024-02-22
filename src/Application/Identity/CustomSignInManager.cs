@@ -57,12 +57,16 @@ public sealed class CustomSignInManager(
         // properties, but could come in handy down the line so leaving it in for now until we find a reason not to.
         props.SetString("session_id", sessionId);
         props.SetString("device.name", device.Name);
+        props.SetString("device.fingerprint", device.Fingerprint);
+        props.SetString("device.ip_address", device.IpAddress);
         props.SetString("device.location", device.Location);
+
+        // TODO: We want the ".last_activity" property set, but I think this can be handled directly in the TicketStore...
 
         Claim[] claims = 
         [
-            // TODO: Potentially more to add including 'locale' and 'zoneinfo' ?
-
+            new Claim(JwtClaimTypes.Locale, user.CultureName),
+            new Claim(JwtClaimTypes.ZoneInfo, user.TimezoneId),
             new Claim(JwtClaimTypes.IdentityProvider, "local"), // TODO: Should this really be a fully qualified URI?
             new Claim(JwtClaimTypes.SessionId, sessionId),
             new Claim(JwtClaimTypes.AuthenticationMethod, "pwd"),

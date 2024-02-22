@@ -13,9 +13,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="C:\Users\MattLindsay\.nuget\packages\psc.blazor.components.browserdetect\1.0.14\contentFiles\any\net6.0\psc_logo.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="6.8.0" />
     <PackageReference Include="Darnton.Blazor.DeviceInterop" Version="0.1.2" />
     <PackageReference Include="MudBlazor" Version="6.14.0" />
+    <PackageReference Include="PSC.Blazor.Components.BrowserDetect" Version="1.0.14" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="UAParser" Version="3.1.47" />
   </ItemGroup>

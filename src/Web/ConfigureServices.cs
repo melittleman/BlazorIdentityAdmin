@@ -1,4 +1,5 @@
-﻿using Darnton.Blazor.DeviceInterop.Geolocation;
+﻿using System.Globalization;
+using Darnton.Blazor.DeviceInterop.Geolocation;
 
 namespace BlazorAdminDashboard.Web;
 
@@ -22,6 +23,30 @@ public static class ConfigureServices
             // added security as otherwise this will allow forwarded headers from any source.
             options.KnownNetworks.Clear();
             options.KnownProxies.Clear();
+        });
+
+        services.AddRequestLocalization(options =>
+        {
+            CultureInfo[] supportedCultures =
+            [
+                new CultureInfo("en"),
+                new CultureInfo("en-US"),
+                new CultureInfo("en-GB")
+            ];
+
+            options.SupportedCultures = supportedCultures;
+            options.SupportedUICultures = supportedCultures;
+
+            options.SetDefaultCulture("en");
+            
+            // TODO: This is where we could set what was saved against the user's account,
+            // although this does seem to get hit an awful lot, so maybe not such a great idea...
+            // See: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/localization/select-language-culture?view=aspnetcore-8.0#use-a-custom-provider
+            //options.AddInitialRequestCultureProvider(new CustomRequestCultureProvider(async context =>
+            //{
+            //    // My custom request culture logic
+            //    return await Task.FromResult(new ProviderCultureResult("en"));
+            //}));
         });
 
         services.AddMudServices(options =>

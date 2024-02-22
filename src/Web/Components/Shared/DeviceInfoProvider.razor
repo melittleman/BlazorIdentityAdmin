@@ -1,0 +1,202 @@
+﻿@using PSC.Blazor.Components.BrowserDetect
+
+@rendermode RenderMode.InteractiveServer
+@inject IJSRuntime JS
+
+<BrowserDetect BrowserInfoChanged="BrowserInfoChanged"
+    OSArchitectureUpdate="OsArchitectureUpdated"
+    OSVersionUpdate="OsVersionUpdated" />
+
+@* 
+    TODO: We have to manually check each value as null or empty values
+    will cause validation to fail. Need to find out if there's a better or 
+    easier way of forcing the form submission to skip certain validations.
+*@
+
+@if (string.IsNullOrEmpty(Info.BrowserMajor) is false)
+{
+    <input type="hidden" name="DeviceInfo.BrowserMajor" value="@Info.BrowserMajor" />
+}
+
+@if (string.IsNullOrEmpty(Info.BrowserName) is false)
+{
+    <input type="hidden" name="DeviceInfo.BrowserName" value="@Info.BrowserName" />
+}
+
+@if (string.IsNullOrEmpty(Info.BrowserVersion) is false)
+{
+    <input type="hidden" name="DeviceInfo.BrowserVersion" value="@Info.BrowserVersion" />
+}
+
+@if (string.IsNullOrEmpty(Info.CPUArchitect) is false)
+{
+    <input type="hidden" name="DeviceInfo.CPUArchitect" value="@Info.CPUArchitect" />
+}
+
+@if (string.IsNullOrEmpty(Info.DeviceModel) is false) 
+{
+    <input type="hidden" name="DeviceInfo.DeviceModel" value="@Info.DeviceModel" />
+}
+
+@if (string.IsNullOrEmpty(Info.DeviceType) is false)
+{
+    <input type="hidden" name="DeviceInfo.DeviceType" value="@Info.DeviceType" />
+}
+
+@if (string.IsNullOrEmpty(Info.DeviceVendor) is false)
+{
+    <input type="hidden" name="DeviceInfo.DeviceVendor" value="@Info.DeviceVendor" />
+}
+
+@if (string.IsNullOrEmpty(Info.EngineName) is false)
+{
+    <input type="hidden" name="DeviceInfo.EngineName" value="@Info.EngineName" />
+}
+
+@if (string.IsNullOrEmpty(Info.EngineVersion) is false)
+{
+    <input type="hidden" name="DeviceInfo.EngineVersion" value="@Info.EngineVersion" />
+}
+
+@if (string.IsNullOrEmpty(Info.GPURenderer) is false)
+{
+    <input type="hidden" name="DeviceInfo.GPURenderer" value="@Info.GPURenderer" />
+}
+
+@if (string.IsNullOrEmpty(Info.GPUVendor) is false)
+{
+    <input type="hidden" name="DeviceInfo.GPUVendor" value="@Info.GPUVendor" />
+}
+
+@* 
+    We need to 'stringify' these below booleans, as otherwise they get treated as a genuine
+    bool on the input, which causes the value attribute to have no string when false for example.
+*@
+
+@if (Info.IsAndroid is not null)
+{
+    <input type="hidden" name="DeviceInfo.IsAndroid" value="@Info.IsAndroid.ToString()" />
+}
+
+@if (Info.IsBraveBrowser is not null)
+{
+    <input type="hidden" name="DeviceInfo.IsBraveBrowser" value="@Info.IsBraveBrowser.ToString()" />
+}
+
+@if (Info.IsDesktop is not null)
+{
+    <input type="hidden" name="DeviceInfo.IsDesktop" value="@Info.IsDesktop.ToString()" />
+}
+
+@if (Info.IsIPad is not null)
+{
+    <input type="hidden" name="DeviceInfo.IsIPad" value="@Info.IsIPad.ToString()" />
+}
+
+@if (Info.IsIPhone is not null)
+{
+    <input type="hidden" name="DeviceInfo.IsIPhone" value="@Info.IsIPhone.ToString()" />
+}
+
+@if (Info.IsMobile is not null)
+{
+    <input type="hidden" name="DeviceInfo.IsMobile" value="@Info.IsMobile.ToString()" />
+}
+
+@if (Info.IsTablet is not null)
+{
+    <input type="hidden" name="DeviceInfo.IsTablet" value="@Info.IsTablet.ToString()" />
+}
+
+@if (string.IsNullOrEmpty(Info.OSName) is false)
+{
+    <input type="hidden" name="DeviceInfo.OSName" value="@Info.OSName" />
+}
+
+@if (string.IsNullOrEmpty(Info.OSVersion) is false)
+{
+    <input type="hidden" name="DeviceInfo.OSVersion" value="@Info.OSVersion" />
+}
+
+@if (string.IsNullOrEmpty(Info.ScreenResolution) is false)
+{
+    <input type="hidden" name="DeviceInfo.ScreenResolution" value="@Info.ScreenResolution" />
+}
+
+@if (string.IsNullOrEmpty(Info.TimeZone) is false)
+{
+    <input type="hidden" name="DeviceInfo.TimeZone" value="@Info.TimeZone" />
+}
+
+@code {
+
+    [Parameter]
+    public DeviceInfo Info { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<DeviceInfo> InfoChanged { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) 
+        {
+            if (Info is not null) 
+            {
+                Info.IsBraveBrowser = await JS.InvokeAsync<bool>("isBraveBrowser");
+                await InfoChanged.InvokeAsync(Info);
+            }
+        }
+    }
+
+    private async Task OsArchitectureUpdated(string cpu)
+    {
+        if (Info is not null)
+        {
+            Info.CPUArchitect = cpu;
+        }
+
+        await InfoChanged.InvokeAsync(Info);
+    }
+
+    private async Task OsVersionUpdated(string version)
+    {
+        if (Info is not null) 
+        {
+            Info.OSVersion = version;
+        }
+
+        await InfoChanged.InvokeAsync(Info);
+    }
+
+    private async Task BrowserInfoChanged(BrowserInfo info)
+    {
+        // We have to do this 'hard-coded' fix as otherwise Brave 
+        // will just identify via the User-Agent as "Chrome".
+        Info.BrowserName = Info.IsBraveBrowser is true 
+            ? "Brave" 
+            : info.BrowserName;
+        
+        Info.BrowserMajor = info.BrowserMajor;
+        Info.BrowserVersion = info.BrowserVersion;
+        Info.CPUArchitect = info.CPUArchitect;
+        Info.DeviceModel = info.DeviceModel;
+        Info.DeviceType = info.DeviceType;
+        Info.DeviceVendor = info.DeviceVendor;
+        Info.EngineName = info.EngineName;
+        Info.EngineVersion = info.EngineVersion;
+        Info.GPURenderer = info.GPURenderer;
+        Info.GPUVendor = info.GPUVendor;
+        Info.IsAndroid = info.IsAndroid;
+        Info.IsDesktop = info.IsDesktop;
+        Info.IsIPad = info.IsIPad;
+        Info.IsIPhone = info.IsIPhone;
+        Info.IsMobile = info.IsMobile;
+        Info.IsTablet = info.IsTablet;
+        Info.OSName = info.OSName;
+        Info.OSVersion = info.OSVersion;
+        Info.ScreenResolution = info.ScreenResolution;
+        Info.TimeZone = info.TimeZone;
+
+        await InfoChanged.InvokeAsync(Info);
+    }
+}

@@ -1,7 +1,9 @@
 ﻿namespace BlazorAdminDashboard.Domain.Identity;
 
 public sealed record Device
-{    
+{   
+    public required string Fingerprint { get; set; }
+
     public required string Name { get; set; }
     
     public required string IpAddress { get; set; }
@@ -15,9 +17,15 @@ public sealed record Device
 
     }
 
-    public Device(string name, string ipAddress, string location, DateTimeOffset accessedAt)
+    public Device(
+        string fingerprint,
+        string name,
+        string ipAddress,
+        string location,
+        DateTimeOffset accessedAt)
     {
         Name = name;
+        Fingerprint = fingerprint;
         IpAddress = ipAddress;
         Location = location;
         AccessedAt = accessedAt;
@@ -30,7 +38,8 @@ public sealed record Device
         return new Device()
         {
             Name = doc.Name,
-            IpAddress = doc.IpAddress,
+            Fingerprint = doc.Fingerprint,
+            IpAddress = doc.LastIpAddress,
             Location = doc.LastLocation,
             AccessedAt = doc.LastAccessedAt
         };

@@ -1,0 +1,86 @@
+﻿@using Darnton.Blazor.DeviceInterop.Geolocation
+
+@rendermode RenderMode.InteractiveServer
+@inject IGeolocationService Geolocation
+
+@if (Info is not null)
+{
+    // TODO: Is this actually incorrect?
+    // I would imagine there's a chance someone's co-ordinates could be exactly 0!
+    // Might need to somehow change this to be nullable.
+
+    if (Info.Latitude != 0)
+    {
+        <input type="hidden" name="GeolocationInfo.Latitude" value="@Info.Latitude" />
+    }
+
+    if (Info.Longitude != 0)
+    {
+        <input type="hidden" name="GeolocationInfo.Longitude" value="@Info.Longitude" />
+    }
+
+    if (Info.Accuracy != 0)
+    {
+        <input type="hidden" name="GeolocationInfo.Accuracy" value="@Info.Accuracy" />
+    }
+
+    if (Info.Altitude is not null)
+    {
+        <input type="hidden" name="GeolocationInfo.Altitude" value="@Info.Altitude" />
+    }
+
+    if (Info.AltitudeAccuracy is not null)
+    {
+        <input type="hidden" name="GeolocationInfo.AltitudeAccuracy" value="@Info.AltitudeAccuracy" />
+    }
+
+    if (Info.Heading is not null)
+    {
+        <input type="hidden" name="GeolocationInfo.Heading" value="@Info.Heading" />
+    }
+
+    if (Info.Speed is not null)
+    {
+        <input type="hidden" name="GeolocationInfo.Speed" value="@Info.Speed" />
+    }
+}
+
+@code {
+
+    [Parameter]
+    public GeolocationInfo? Info { get; set; } = null;
+
+    [Parameter]
+    public EventCallback<GeolocationInfo> InfoChanged { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // JsInterop calls must be performed after 'first render' as
+            // this is the indication that the SignalR circuit is up and 
+            // connected after 'pre-rendering' has occurred.
+
+            GeolocationResult geoResult = await Geolocation.GetCurrentPosition();
+            if (geoResult.IsSuccess)
+            {
+                GeolocationCoordinates coordinates = geoResult.Position.Coords;
+
+                Info ??= new GeolocationInfo();
+
+                Info.Latitude = coordinates.Latitude;
+                Info.Longitude = coordinates.Longitude;
+                Info.Accuracy = coordinates.Accuracy;
+                Info.Altitude = coordinates.Altitude;
+                Info.AltitudeAccuracy = coordinates.AltitudeAccuracy;
+                Info.Heading = coordinates.Heading;
+                Info.Speed = coordinates.Speed;
+
+                await InfoChanged.InvokeAsync(Info);
+                StateHasChanged();
+            }
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}

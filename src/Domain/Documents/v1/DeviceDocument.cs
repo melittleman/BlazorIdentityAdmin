@@ -2,11 +2,14 @@
 
 public sealed class DeviceDocumentV1
 {
+    [JsonPropertyName("fingerprint")]
+    public required string Fingerprint { get; set; }
+
     [JsonPropertyName("name")]
     public required string Name { get; set; }
 
-    [JsonPropertyName("ip_address")]
-    public required string IpAddress { get; set; }
+    [JsonPropertyName("last_ip_address")]
+    public required string LastIpAddress { get; set; }
 
     [JsonPropertyName("last_location")]
     public string? LastLocation { get; set; }
@@ -21,7 +24,8 @@ public sealed class DeviceDocumentV1
         return new DeviceDocumentV1()
         {
             Name = device.Name,
-            IpAddress = device.IpAddress,
+            Fingerprint = device.Fingerprint,
+            LastIpAddress = device.IpAddress,
             LastLocation = device.Location,
             LastAccessedAt = device.AccessedAt
         };

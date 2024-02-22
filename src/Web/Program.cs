@@ -9,6 +9,7 @@ WebApplication app = builder.Build();
 // TODO: Move WebApplication configuring into extensions also?
 
 app.UseForwardedHeaders();
+app.UseRequestLocalization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

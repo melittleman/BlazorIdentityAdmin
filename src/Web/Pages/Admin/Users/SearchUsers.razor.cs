@@ -1,6 +1,4 @@
-﻿using StackExchange.Redis;
-
-namespace BlazorAdminDashboard.Web.Pages.Admin.Users;
+﻿namespace BlazorAdminDashboard.Web.Pages.Admin.Users;
 
 public partial class SearchUsers
 {

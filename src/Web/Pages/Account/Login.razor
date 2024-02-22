@@ -1,7 +1,9 @@
 ﻿@page "/Account/Login"
 
-@using UAParser
-@using Device = BlazorAdminDashboard.Domain.Identity.Device;
+@using Microsoft.AspNetCore.Localization
+@using PSC.Blazor.Components.BrowserDetect
+@using BlazorAdminDashboard.Web.Validation
+@using BlazorAdminDashboard.Domain.Identity;
 
 @inject UserManager<User> UserManager
 @inject SignInManager<User> SignInManager
@@ -18,13 +20,14 @@
             <StatusMessage Message="@errorMessage" />
             <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login" Enhance="true">
 
-                <GeolocationProvider />
+                <DeviceInfoProvider />
+                <GeolocationInfoProvider />
                 <DataAnnotationsValidator />
 
                 <h2>Use a local account to log in.</h2>
                 <hr />
 
-                <ValidationSummary class="text-danger" role="alert" />                
+                <ValidationSummary class="text-danger" role="alert" />     
 
                 <div class="form-floating mb-3">
                     <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
@@ -82,13 +85,11 @@
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
-    // This seems to be the only way we could 'hack' to get 2-way data binding
-    // working from an InteractiveServer child component back to a parent SSR one.
-    [SupplyParameterFromForm(Name = "GeoLocationProvider.Latitude")]
-    private double? Latitude { get; set; } = null;
+    [SupplyParameterFromForm]
+    private DeviceInfo DeviceInfo { get; set; } = new();
 
-    [SupplyParameterFromForm(Name = "GeoLocationProvider.Longitude")]
-    private double? Longitude { get; set; } = null;
+    [SupplyParameterFromForm]
+    private GeolocationInfo? GeolocationInfo { get; set; }
 
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
@@ -104,8 +105,14 @@
 
     public async Task LoginUser()
     {
-        // TODO: We should allow signin with either username or email?
-        User? user = await UserManager.FindByNameAsync(Input.Email);
+        // TODO: Email addresses aren't actually unique within
+        // the application so this may cause us some issues.
+        User? user = await UserManager.FindByEmailAsync(Input.Email);
+        if (user is null) 
+        {
+            user = await UserManager.FindByNameAsync(Input.Email);
+        }
+
         if (user is null)
         {
             // We can't actually tell the user that it was the 
@@ -125,34 +132,43 @@
 
         DateTimeOffset authTime = DateTimeOffset.UtcNow;
         string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        string? userAgent = HttpContext.Request.Headers["User-Agent"];
+        IRequestCultureFeature? culture = HttpContext.Features.Get<IRequestCultureFeature>();
+        string? coordinates = GeolocationInfo?.GetCoordinates();
 
-        if (string.IsNullOrEmpty(userAgent) is false && string.IsNullOrEmpty(ipAddress) is false)
+        if (DeviceInfo is not null && string.IsNullOrEmpty(ipAddress) is false)
         {
-            Parser uaParser = UAParser.Parser.GetDefault();
-            ClientInfo clientInfo = uaParser.Parse(userAgent);
-
-            string operatingSystem = clientInfo.OS.ToString();
-            string browser = clientInfo.UA.Family;
-            string version = $"{clientInfo.UA.Major}.{clientInfo.UA.Minor}.{clientInfo.UA.Patch}";
-
-            // TODO: Think of the right way to separate here if there's a better alternative?
-            string deviceName = $"{operatingSystem}:{browser}@{version}";
-
-            string? coordinates = Latitude is not null && Longitude is not null
-                ? $"{Latitude}, {Longitude}"
-                : null;
+            string fingerprint = DeviceInfo.GetFingerprint();
+            string operatingSystem = DeviceInfo.GetOperatingSystem();
+            string browser = DeviceInfo.GetBrowser();
 
             Device device = new()
             {
-                Name = deviceName,
+                Fingerprint = fingerprint,
+                Name = $"{operatingSystem}|{browser}",
                 IpAddress = ipAddress,
                 Location = coordinates,
                 AccessedAt = authTime
             };
 
-            if (SignInManager is CustomSignInManager custom)
+            if (string.IsNullOrEmpty(DeviceInfo.TimeZone) is false)
             {
+                // TODO: What should we do about this setting?
+                // Should we always save it against the user, 
+                // or should we only save it if they have not set it before, 
+                // or should we never save it, and make them always do it manually?
+                user.TimezoneId = DeviceInfo.TimeZone;
+            }
+
+            if (culture is not null)
+            {
+                // TODO: Same here, need to figure out where this initially comes from 
+                // and how it is persisted to the users account. I think this is fine
+                // for the time being just to save it in the ClaimsPrincipal.
+                user.CultureName = culture.RequestCulture.UICulture.Name;
+            }
+
+            if (SignInManager is CustomSignInManager custom)
+            {                
                 result = await custom.PasswordSignInDeviceAsync(user, device, Input.RememberMe);
             }
 
@@ -175,9 +191,11 @@
         }
         else if (result.RequiresTwoFactor)
         {
-            RedirectManager.RedirectTo(
-                "Account/LoginWith2fa",
-                new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+            RedirectManager.RedirectTo("Account/LoginWith2fa", new() 
+            { 
+                ["returnUrl"] = ReturnUrl,
+                ["rememberMe"] = Input.RememberMe 
+            });
         }
         else if (result.IsLockedOut)
         {
@@ -186,7 +204,9 @@
         }
         else
         {
-            errorMessage = "Error: Invalid login attempt.";
+            // We can't actually tell the user what was wrong as they 
+            // could then be able to tell that a username / email was correct.
+            errorMessage = "Error: Incorrect username or password.";
         }
     }
 
