@@ -47,7 +47,9 @@ public sealed class DeviceInfo : BrowserInfo
 
         byte[] hash = SHA256.HashData(Encoding.ASCII.GetBytes(data));
 
-        return BitConverter.ToString(hash).Replace("-", string.Empty);
+        // Truncate the string to 48 characters which still gives us
+        // enough uniqueness without storing excessive amounts of data.
+        return BitConverter.ToString(hash).Replace("-", string.Empty)[..48];
     }
 
     public string GetOperatingSystem()
