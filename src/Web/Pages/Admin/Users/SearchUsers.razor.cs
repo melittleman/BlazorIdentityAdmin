@@ -14,10 +14,8 @@ public partial class SearchUsers
     [Inject]
     public required NavigationManager Navigation { get; set; }
 
-    private readonly SearchFilter filter = new();
-    private string? searchTerm = null;
-
     private MudTable<User> usersTable = new();
+    private readonly SearchFilter filter = new();
     private readonly int[] pageSizeOptions = [ 10, 25, 50, 100 ];
     private bool resetCurrentPage = false;
 
@@ -47,7 +45,7 @@ public partial class SearchUsers
 
         if (Manager is CustomUserManager custom)
         {
-            IPagedList<User> users = await custom.SearchUsersAsync(filter, searchTerm);
+            IPagedList<User> users = await custom.SearchUsersAsync(filter);
 
             return new TableData<User>
             {
@@ -69,11 +67,11 @@ public partial class SearchUsers
     /// <param name="text">The text to search for.</param>
     private async Task OnSearchAsync(string text)
     {
-        searchTerm = null;
+        filter.Query = null;
 
         if (string.IsNullOrEmpty(text) is false)
         {
-            searchTerm = text;
+            filter.Query = text;
         }
 
         resetCurrentPage = true;
