@@ -5,6 +5,8 @@ public class RedisUserStore(
     IOptionsMonitor<RedisJsonOptions> options,
     IdentityErrorDescriber errorDescriber) : UserStoreBase<User, Ulid, UserClaim, UserLogin, UserToken>(errorDescriber), IPagedUserStore<User>
 {
+    private const string UserIndexName = "idx:users";
+
     // TODO: Constant Redis client name
     private readonly IRedisConnection _redis = redisProvider.GetRequiredConnection("persistent-db");
     private readonly RedisJsonOptions _jsonOptions = options.Get("persistent-db");
@@ -16,31 +18,24 @@ public class RedisUserStore(
     // TODO: We can remove the IQueryableUserStore implementation if we stop using 'UserStoreBase'.
     public override IQueryable<User> Users => throw new NotImplementedException();
 
-    public async Task<IPagedList<User>> SearchUsersAsync(SearchFilter filter, string? searchTerm = null)
+    public async Task<IPagedList<User>> SearchUsersAsync(SearchFilter filter)
     {
         ArgumentNullException.ThrowIfNull(nameof(filter));
 
-        string? query = null;
-
-        if (searchTerm is null)
-        {
-            // Default to returning all documents
-            // if no search term is specified.
-            query = "*";
-        }
-        else
+        // If it is null, will default to "*" to return all Users.
+        if (filter.Query is not null)
         {
             // Escapes characters such as '@' or '.' in email addresses.
-            searchTerm = searchTerm.EscapeSpecialCharacters();
+            string escapedQuery = filter.Query.EscapeSpecialCharacters();
 
-            // Example: FT.SEARCH idx:users "(*admin*) | (@email:{*admin*}) | (@username:{*admin*})"
-            // means search for the wildcard query *admin* in every TEXT field, OR the 'email' TAG OR the 'username' TAG.
+            // Example: FT.SEARCH idx:users "(*admin\\@test\\.com*) | (@email:{*admin\\@test\\.com*}) | (@username:{*admin\\@test\\.com*})"
+            // means search for the wildcard query "admin@test.com" in every TEXT field, OR the 'email' TAG OR the 'username' TAG.
 
-            query = $"(*{searchTerm}*) | (@email:{{*{searchTerm}*}}) | (@username:{{*{searchTerm}*}})";
+            filter.Query = $"(*{escapedQuery}*) | (@email:{{*{escapedQuery}*}}) | (@username:{{*{escapedQuery}*}})";
         }
 
         // TODO: The SearchAsync method doesn't currently persist the HIGHLIGHT fields back into the resulting document.
-        IPagedList<UserDocumentV1> documents = await Search.SearchAsync<UserDocumentV1>("idx:users", query, filter);
+        IPagedList<UserDocumentV1> documents = await Search.SearchAsync<UserDocumentV1>(UserIndexName, filter);
 
         // TODO: See if there's a better way to achieve this...
         IEnumerable<User> users = documents.Select(doc => (User)doc);
@@ -95,9 +90,8 @@ public class RedisUserStore(
         string email = normalizedEmail.EscapeSpecialCharacters();
 
         // TODO: Constant for Redis index name
-        // TODO: Why doesn't $ string interpolation seem to work for 'normalizedEmail'?
         // TODO: Are we able to use Redis.OM for this querying despite not actually using it for index creation?
-        UserDocumentV1? document = await Search.SearchSingleAsync<UserDocumentV1>("idx:users", "@email:{" + email + "}");
+        UserDocumentV1? document = await Search.SearchSingleAsync<UserDocumentV1>(UserIndexName, $"@email:{{{email}}}");
         if (document is null) return null;
 
         // Note: This is where we would be doing any neccessary conversions between v1 and v2+ etc. of the document.
@@ -113,7 +107,7 @@ public class RedisUserStore(
 
         // Username should always be unique so I think it's fine to return a single User, but I do think
         // maybe we should still query for multiple and log / throw an error if we find multiple matches?
-        UserDocumentV1? document = await Search.SearchSingleAsync<UserDocumentV1>("idx:users", "@username:{" + username + "}");
+        UserDocumentV1? document = await Search.SearchSingleAsync<UserDocumentV1>(UserIndexName, $"@username:{{{username}}}");
         if (document is null) return null;
 
         // Note: This is where we would be doing any neccessary conversions between v1 and v2+ etc. of the document.
@@ -395,7 +389,7 @@ public class RedisUserStore(
         string issuer = loginProvider.EscapeSpecialCharacters();
         string subject = providerKey.EscapeSpecialCharacters();
 
-        UserDocumentV1? document = await Search.SearchSingleAsync<UserDocumentV1>("idx:users", "@login_provider:{" + issuer + "} @login_key:{" + subject + "}");
+        UserDocumentV1? document = await Search.SearchSingleAsync<UserDocumentV1>(UserIndexName, $"(@login_provider:{{{issuer}}}) (@login_key:{{{subject}}})");
         if (document is null) return null;
 
         ExternalLoginDocumentV1? login = document.ExternalLogins?.SingleOrDefault(l => l.Issuer == loginProvider && l.Subject == providerKey);

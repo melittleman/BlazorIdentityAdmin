@@ -21,12 +21,12 @@ public sealed class CustomUserManager(
         services,
         logger)
 {
-    public Task<IPagedList<User>> SearchUsersAsync(SearchFilter filter, string? searchTerm = null)
+    public Task<IPagedList<User>> SearchUsersAsync(SearchFilter filter)
     {
         ArgumentNullException.ThrowIfNull(filter);
         
         // TODO: Can we pass in a cancellation token here?
 
-        return pagedStore.SearchUsersAsync(filter, searchTerm);
+        return pagedStore.SearchUsersAsync(filter);
     }
 }
