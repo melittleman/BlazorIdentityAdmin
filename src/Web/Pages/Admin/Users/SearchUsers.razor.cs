@@ -14,6 +14,9 @@ public partial class SearchUsers
     [Inject]
     public required NavigationManager Navigation { get; set; }
 
+    [Inject]
+    public required IHostApplicationLifetime Lifetime { get; set; }
+
     private MudTable<User> usersTable = new();
     private readonly SearchFilter filter = new();
     private readonly int[] pageSizeOptions = [ 10, 25, 50, 100 ];
@@ -43,9 +46,12 @@ public partial class SearchUsers
             filter.OrderBy = state.SortLabel;            
         }
 
+        // TODO: Change this to 'IPagedUserStore'?
         if (Manager is CustomUserManager custom)
         {
-            IPagedList<User> users = await custom.SearchUsersAsync(filter);
+            // TODO: Wired up to the ApplicationStopping token at the moment, but I think
+            // this makes more sense for a user to be able to cancel the search themselves.
+            IPagedList<User> users = await custom.SearchUsersAsync(filter, Lifetime.ApplicationStopping);
 
             return new TableData<User>
             {

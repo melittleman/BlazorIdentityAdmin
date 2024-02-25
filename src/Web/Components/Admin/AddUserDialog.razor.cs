@@ -3,7 +3,7 @@
 public partial class AddUserDialog : ComponentBase
 {
     private bool isCreating = false;
-    private readonly RegisterInputModel model = new();
+    private readonly RegisterFormInput model = new();
 
     [CascadingParameter]
     public required MudDialogInstance Dialog { get; set; }

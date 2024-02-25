@@ -83,7 +83,7 @@
     private HttpContext HttpContext { get; set; } = default!;
 
     [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = new();
+    private LoginFormInput Input { get; set; } = new();
 
     [SupplyParameterFromForm]
     private DeviceInfo DeviceInfo { get; set; } = new();
@@ -137,14 +137,15 @@
 
         if (DeviceInfo is not null && string.IsNullOrEmpty(ipAddress) is false)
         {
-            string fingerprint = DeviceInfo.GetFingerprint();
-            string operatingSystem = DeviceInfo.GetOperatingSystem();
-            string browser = DeviceInfo.GetBrowser();
-
             Device device = new()
             {
-                Fingerprint = fingerprint,
-                Name = $"{operatingSystem}|{browser}",
+                // Examples:
+                // Windows 10 PC
+                // Android 14.0 Mobile
+                // iOS 17.3.1 Tablet
+                OperatingSystem = $"{DeviceInfo.GetOperatingSystem()} {DeviceInfo.GetDeviceType()}",
+                Browser = DeviceInfo.GetBrowser(),
+                Fingerprint = DeviceInfo.GetFingerprint(),
                 IpAddress = ipAddress,
                 Location = coordinates,
                 AccessedAt = authTime
@@ -208,19 +209,5 @@
             // could then be able to tell that a username / email was correct.
             errorMessage = "Error: Incorrect username or password.";
         }
-    }
-
-    private sealed class InputModel
-    {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = "";
-
-        [Required]
-        [DataType(DataType.Password)]
-        public string Password { get; set; } = "";
-
-        [Display(Name = "Remember me?")]
-        public bool RememberMe { get; set; }
     }
 }

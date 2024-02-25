@@ -45,11 +45,28 @@ public sealed class DeviceInfo : BrowserInfo
             OSVersion + SEPARATOR +
             TimeZone;
 
-        byte[] hash = SHA256.HashData(Encoding.ASCII.GetBytes(data));
+        // Using SHA1 here as it is simpler and faster, we don't actually need the added
+        // security of SHA256 as this is not being used to transfer sensitive information.
+        byte[] hash = SHA1.HashData(Encoding.UTF8.GetBytes(data));
 
-        // Truncate the string to 48 characters which still gives us
-        // enough uniqueness without storing excessive amounts of data.
-        return BitConverter.ToString(hash).Replace("-", string.Empty)[..48];
+        // Truncated to 36 charcters long (2 per byte) for ease of storage.
+        return Convert.ToHexString(hash, 0, 18).ToLowerInvariant();        
+    }
+
+    public string GetDeviceType()
+    {
+        if (IsDesktop is true) return "PC";
+
+        if (IsMobile is true) return "Mobile";
+
+        if (IsTablet is true) return "Tablet";
+
+        // TODO: I don't think we also need to check
+        // IsAndroid, IsIPhone etc. here as they should
+        // all just be caught by IsMobile, but need
+        // to test that theory on different devices.
+
+        return "Unknown Device";
     }
 
     public string GetOperatingSystem()
@@ -58,13 +75,8 @@ public sealed class DeviceInfo : BrowserInfo
         {
             if (string.IsNullOrEmpty(OSVersion) is false)
             {
-                // Using the '@' character for separation here, so 
-                // that we can more easily split this string later on as 
-                // There could be Operating Systems that contain spaces
-                // for example "Linux Red Hat".
-
-                // e.g. "Windows@11 or later"
-                return $"{OSName}@{OSVersion}";
+                // e.g. "Windows 11 or later"
+                return $"{OSName} {OSVersion}";
             }
 
             // e.g. "MacOS"
@@ -80,13 +92,8 @@ public sealed class DeviceInfo : BrowserInfo
         {
             if (string.IsNullOrEmpty(BrowserMajor) is false)
             {
-                // Using the '@' character for separation here, so 
-                // that we can more easily split this string later on as 
-                // There could be Browser names that contain spaces
-                // for example "Duck Duck Go".
-
-                // e.g. "Chrome@121"
-                return $"{BrowserName}@{BrowserMajor}";
+                // e.g. "Chrome 121"
+                return $"{BrowserName} {BrowserMajor}";
             }
 
             // e.g. "Brave"

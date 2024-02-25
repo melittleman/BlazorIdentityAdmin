@@ -10,6 +10,7 @@ public static class ConfigureServices
 
         services.AddSingleton<ISendGridClient>(new SendGridClient(configuration["SendGrid:ApiKey"]));
         services.AddSingleton<IEmailSender<User>, SendGridEmailSender>();
+        services.AddSingleton<IDeviceEmailSender, SendGridEmailSender>();
 
         // Redis
 
@@ -21,13 +22,11 @@ public static class ConfigureServices
 
         }).AddRedisDataProtection(env, options =>
         {
-            options.KeyName = "data-protection:keys";
+            options.KeyName = "dashboard:data-protection:keys";
 
         }).AddRedisTicketStore(options =>
         {
             options.KeyPrefix = "dashboard:auth-tickets:";
-
-            // Why is the ticket store not working...?!
             options.CookieSchemeName = IdentityConstants.ApplicationScheme;
 
         }).ConfigureRedisJson(options =>
@@ -42,7 +41,12 @@ public static class ConfigureServices
         });
 
         services.AddHostedService<RedisIndexCreationService>();
-        services.AddScoped<IPagedUserStore<User>, RedisUserStore>();
+
+        // TODO: I'm not sure if these should actually be registered multiple times or not?
+        // Need to investigate what the Pros/Cons are, because we could just cast from IUserStore...
+        services.AddScoped<IUserDeviceStore, RedisUserStore>();
+        services.AddScoped<IPagedUserStore, RedisUserStore>();
+        services.AddScoped<IPagedTicketStore, RedisPagedTicketStore>();
 
         // Authentication
 

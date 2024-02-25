@@ -1,5 +1,7 @@
 ﻿@page "/"
 
+@inject IPagedTicketStore Tickets
+
 <PageTitle>Home</PageTitle>
 
 <MudText Typo="Typo.h3" GutterBottom="true">Hello, world!</MudText>
@@ -33,16 +35,67 @@
     </ul>
 }
 
+@if (tickets is not null)
+{
+    @* 
+        TODO: We can probably explicitely show that this ticket 
+        is 'active' because it is available under auth.Ticket.
+    *@
+
+    @foreach(AuthenticationTicket ticket in tickets)
+    {
+        <ul>
+
+            @* TODO: These probably all need moving into extension methods too. *@
+
+            @if (ticket.Properties.Items.ContainsKey("device.os"))
+            {
+                <li>@ticket.Properties.Items["device.os"]</li>
+            }
+
+            @if (ticket.Properties.Items.ContainsKey("device.browser"))
+            {
+                <li>@ticket.Properties.Items["device.browser"]</li>
+            }
+
+            @if (ticket.Properties.Items.ContainsKey("device.location"))
+            {
+                <li>@ticket.Properties.Items["device.location"]</li>
+            }
+
+            @if (ticket.Properties.Items.ContainsKey(".last_activity"))
+            {
+                <li>@ticket.Properties.Items[".last_activity"]</li>
+            }
+
+        </ul>
+    }
+}
+
 @code {
-    
+
     private AuthenticateResult? auth;
 
     [CascadingParameter]
     public required HttpContext HttpContext { get; set; }
 
+    private IPagedList<AuthenticationTicket>? tickets;
+
     protected override async Task OnInitializedAsync()
     {
         auth = await HttpContext.AuthenticateAsync();
+
+        // TODO: Move into a 'GetUserId' extension method.
+        string? userId = auth.Principal?.GetClaim(OpenIddictConstants.Claims.Subject);
+
+        if (string.IsNullOrEmpty(userId) is false)
+        {
+            // We ideally want the newest logged in sessions first.
+            // TODO: This casting between enums is very annoying... we may have to change the RedisKit one?
+            SearchFilter filter = new(1, 10, userId, "last_activity", RedisKit.Querying.Enums.SortDirection.Descending);
+
+            tickets = await Tickets.SearchTicketsAsync(filter);
+        }
 
         await base.OnInitializedAsync();
     }

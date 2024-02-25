@@ -1,6 +1,6 @@
 ﻿namespace BlazorAdminDashboard.Application.Identity.Abstractions;
 
-public interface IPagedUserStore<TUser>
+public interface IPagedUserStore : IUserStore<User>
 {
-    Task<IPagedList<TUser>> SearchUsersAsync(SearchFilter filter);
+    Task<IPagedList<User>> SearchUsersAsync(SearchFilter filter, CancellationToken? ct = default);
 }

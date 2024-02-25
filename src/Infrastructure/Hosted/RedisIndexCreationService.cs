@@ -33,8 +33,9 @@ internal sealed class RedisIndexCreationService : BackgroundService
 
         Task[] indexTasks =
         [
-            CreateUserIndex(),
-            CreateRoleIndex()
+            CreateUserIndexAsync(),
+            CreateRoleIndexAsync(),
+            CreateAuthTicketIndexAsync()
 
             // More indexes can be added here...
         ];
@@ -44,7 +45,7 @@ internal sealed class RedisIndexCreationService : BackgroundService
         _logger.LogInformation("RedisIndexCreationService has successfully finished executing on startup.");
     }
 
-    private async Task<bool> CreateUserIndex()
+    private async Task<bool> CreateUserIndexAsync()
     {
         _logger.LogDebug("User index is being created in Redis.");
 
@@ -62,6 +63,12 @@ internal sealed class RedisIndexCreationService : BackgroundService
         schema.AddTagField(new FieldName("$.external_logins[*].iss", "login_provider"));
         schema.AddTagField(new FieldName("$.external_logins[*].sub", "login_key"));
 
+        schema.AddTagField(new FieldName("$.devices[*].last_ip", "ip_address"));
+        schema.AddGeoField(new FieldName("$.devices[*].last_location", "location"), sortable: true);
+        schema.AddTagField(new FieldName("$.devices[*].last_accessed_at", "accessed_at"), sortable: true, noIndex: true);
+
+        // TODO: We can use the "FILTER" parameter here to potentially excelude users
+        // from the index who are marked as "is_deleted": true for example?
         FTCreateParams createParams = FTCreateParams.CreateParams()
             .On(IndexDataType.JSON)
             .Prefix("dashboard:users:");
@@ -75,7 +82,7 @@ internal sealed class RedisIndexCreationService : BackgroundService
         return true;
     }
 
-    private async Task<bool> CreateRoleIndex()
+    private async Task<bool> CreateRoleIndexAsync()
     {
         _logger.LogDebug("Role index is being created in Redis.");
 
@@ -94,6 +101,39 @@ internal sealed class RedisIndexCreationService : BackgroundService
         }
 
         _logger.LogDebug("Role index has been created in Redis.");
+        return true;
+    }
+
+    private async Task<bool> CreateAuthTicketIndexAsync()
+    {
+        _logger.LogDebug("Auth Ticket index is being created in Redis.");
+
+        Schema schema = new();
+
+        // Use JSON Path filter expressions to index the individual claim types that we are interested in.
+        // See: https://support.smartbear.com/alertsite/docs/monitors/api/endpoint/jsonpath.html
+        schema.AddTagField(new FieldName("$..claims[?(@.type=='sub')].value", "sub"));
+        schema.AddTagField(new FieldName("$..claims[?(@.type=='idp')].value", "idp"), sortable: true);
+        schema.AddTagField(new FieldName("$..claims[?(@.type=='name')].value", "name"), sortable: true);
+
+        schema.AddTagField(new FieldName("$.properties.items.session_id", "session_id"));
+
+        schema.AddTagField(new FieldName("$.properties.items.['device.ip']", "ip_address"));
+        schema.AddGeoField(new FieldName("$.properties.items.['device.location']", "location"), sortable: true);
+
+        schema.AddTagField(new FieldName("$.properties.items.['.issued']", "issued"), sortable: true, noIndex: true);
+        schema.AddTagField(new FieldName("$.properties.items.['.last_activity']", "last_activity"), sortable: true, noIndex: true);
+
+        FTCreateParams createParams = new FTCreateParams()
+            .On(IndexDataType.JSON)
+            .Prefix("dashboard:auth-tickets:");
+
+        if (await _connection.Db.FT().CreateIndexAsync("idx:tickets", createParams, schema) is false)
+        {
+            throw new InvalidOperationException("Unable to create idx:tickets Index in Redis!");
+        }
+
+        _logger.LogDebug("Auth Ticket index has been created in Redis.");
         return true;
     }
 }

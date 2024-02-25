@@ -3,7 +3,7 @@
 public class RedisUserStore(
     IRedisConnectionProvider redisProvider,
     IOptionsMonitor<RedisJsonOptions> options,
-    IdentityErrorDescriber errorDescriber) : UserStoreBase<User, Ulid, UserClaim, UserLogin, UserToken>(errorDescriber), IPagedUserStore<User>
+    IdentityErrorDescriber errorDescriber) : UserStoreBase<User, Ulid, UserClaim, UserLogin, UserToken>(errorDescriber), IPagedUserStore, IUserDeviceStore
 {
     private const string UserIndexName = "idx:users";
 
@@ -18,9 +18,10 @@ public class RedisUserStore(
     // TODO: We can remove the IQueryableUserStore implementation if we stop using 'UserStoreBase'.
     public override IQueryable<User> Users => throw new NotImplementedException();
 
-    public async Task<IPagedList<User>> SearchUsersAsync(SearchFilter filter)
+    public async Task<IPagedList<User>> SearchUsersAsync(SearchFilter filter, CancellationToken? ct = default)
     {
-        ArgumentNullException.ThrowIfNull(nameof(filter));
+        ArgumentNullException.ThrowIfNull(filter);
+        ct?.ThrowIfCancellationRequested();
 
         // If it is null, will default to "*" to return all Users.
         if (filter.Query is not null)
@@ -404,6 +405,86 @@ public class RedisUserStore(
     }
 
     public override Task RemoveLoginAsync(User user, string loginProvider, string providerKey, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region Devices
+
+    public async Task<ICollection<Device>> GetDevicesAsync(User user, CancellationToken? ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        ct?.ThrowIfCancellationRequested();
+
+        string key = $"dashboard:users:{user.Id}";
+
+        // TODO: This could be further simplified if we store an empty array as default in the document, then we can use
+        // the JSON.ARRAPPEND command to add to this existing array without the need to first read it from the database.
+        IEnumerable<DeviceDocumentV1?> devices = await _redis.Db.JSON().GetEnumerableAsync<DeviceDocumentV1>(key, "$.devices[*]");
+
+        return devices.Where(doc => doc is not null).Select(doc =>
+        {
+            // Document can't be null anymore due to the .Where() clause.
+            return (Device)doc!;
+
+        }).ToList();
+    }
+
+    public async Task<Device?> FindByFingerprintAsync(User user, string fingerprint, CancellationToken? ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        ArgumentException.ThrowIfNullOrEmpty(fingerprint);
+        ct?.ThrowIfCancellationRequested();
+
+        // Opting to just use the 'Get' method here, rather than an actual
+        // index on the 'devices' collection because I don't see the need
+        // to search across all devices for all users at the moment.
+        ICollection<Device> devices = await GetDevicesAsync(user, ct);
+
+        // Using .SingleOrDefault as this should always be unique for a given user.
+        return devices.SingleOrDefault(d => d.Fingerprint == fingerprint);
+    }
+
+    public async Task<bool> AddOrUpdateDeviceAsync(User user, Device device, CancellationToken? ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        ArgumentNullException.ThrowIfNull(device);
+
+        ct?.ThrowIfCancellationRequested();
+
+        string key = $"dashboard:users:{user.Id}";
+
+        // TODO: This could be further simplified if we store an empty array as default in the document, then we can use
+        // the JSON.ARRAPPEND command to add to this existing array without the need to first read it from the database.
+        IEnumerable<DeviceDocumentV1?> devices = await _redis.Db.JSON().GetEnumerableAsync<DeviceDocumentV1>(key, "$.devices[*]");
+
+        // We should only update devices based on their 'fingerprint' as this will always be unique for a given user.
+        // It's highly unlikely that 2 or more users will have the same fingerprints, but not impossible...
+        DeviceDocumentV1? existingDevice = devices.Where(doc => doc is not null).SingleOrDefault(d => d!.Fingerprint == device.Fingerprint);
+
+        if (existingDevice is not null)
+        {
+            // TODO: We have to assume that if we've found a matching fingerprint, that the
+            // OperatingSystem and Browser properties will also be the same. But should we check?
+
+            existingDevice.LastIpAddress = device.IpAddress;
+            existingDevice.LastAccessedAt = device.AccessedAt;
+
+            // Only overwrite it if there's incoming coordinates.
+            existingDevice.LastLocation = device.Location ?? existingDevice.LastLocation;
+        }
+        else
+        {
+            devices ??= [];
+            devices = devices.Append((DeviceDocumentV1)device);
+        }
+
+        return await _redis.Db.JSON().SetAsync(key, "$.devices", devices);
+    }
+
+    public Task<bool> RemoveDeviceAsync(User user, Device device, CancellationToken? ct = default)
     {
         throw new NotImplementedException();
     }
