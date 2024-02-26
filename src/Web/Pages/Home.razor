@@ -4,72 +4,102 @@
 
 <PageTitle>Home</PageTitle>
 
-<MudText Typo="Typo.h3" GutterBottom="true">Hello, world!</MudText>
-<MudText Class="mb-8">Welcome to your new app, powered by MudBlazor and the .NET 8 Template!</MudText>
-
-@* 
+@*
     TODO: It's a shame there doesn't seem to be a better / more efficient way of doing this..
     I just want an 'AuthorizeView' that contains the 'AuthenticationProperties' in @context too.
 *@
-@if (auth is not null && auth.Succeeded && auth.Principal.Identity?.IsAuthenticated is true)
+@if (auth is null || auth.Succeeded is false || auth.Principal.Identity?.IsAuthenticated is false)
 {
-    <h2>Hello @auth.Principal.Identity?.Name, here's the list of your claims:</h2>
-    <ul>
-        @foreach (var claimGroup in auth.Principal.Claims.GroupBy(a => a.Type))
-        {
-            foreach (var claimValue in claimGroup.Select(s => s.Value).Distinct())
-            {
-                <li><b>@claimGroup.Key</b>: @claimValue</li>
-            }
-        }
-    </ul>
-
-    <h3>And here are the properties:</h3>
-    <ul>
-        @foreach ((string key, string? value) in auth.Properties.Items)
-        {
-            if (value is null) continue;
-
-            <li><b>@key</b>: @value</li>   
-        }
-    </ul>
+    // Not Authenticated
+    <MudText Typo="Typo.h1" GutterBottom="true">Hello, world!</MudText>
+    <MudText Class="mb-8">Welcome to your new app, powered by MudBlazor and the .NET 8 Template!</MudText>
 }
-
-@if (tickets is not null)
+else
 {
-    @* 
-        TODO: We can probably explicitely show that this ticket 
-        is 'active' because it is available under auth.Ticket.
-    *@
+    // Authenticated
+    <MudText Typo="Typo.h1" GutterBottom="true">Hello, @auth.Principal.Identity?.Name!</MudText>
+    <MudText Class="mb-8">Welcome to your new app, powered by MudBlazor and the .NET 8 Template!</MudText>
 
-    @foreach(AuthenticationTicket ticket in tickets)
-    {
-        <ul>
+    <MudDivider Class="mb-8" />
 
-            @* TODO: These probably all need moving into extension methods too. *@
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudText Typo="Typo.h2" GutterBottom="true">Session Information</MudText>
 
-            @if (ticket.Properties.Items.ContainsKey("device.os"))
+        <MudGrid Spacing="2">
+            <MudItem Class="flex-auto">
+                <MudCard Class="p-4" Style="height: 100%">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h3">Claims</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <ul>
+                            @foreach (IGrouping<string, Claim> claimGroup in auth.Principal.Claims.GroupBy(a => a.Type))
+                            {
+                                foreach (string claimValue in claimGroup.Select(s => s.Value).Distinct())
+                                {
+                                    <li class="mb-3"><strong>@claimGroup.Key</strong>: @claimValue</li>
+                                }
+                            }
+                        </ul>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem Class="flex-auto">
+                <MudCard Class="p-4" Style="height: 100%">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h3">Properties</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <ul>
+                            @foreach ((string key, string? value) in auth.Properties.Items)
+                            {
+                                <li class="mb-3"><strong>@key</strong>: @value</li>
+                            }
+                        </ul>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        @if (tickets is not null)
+        {
+            // TODO: We can probably explicitely show that this ticket
+            // is 'active' because it is available under auth.Ticket.
+
+            foreach (AuthenticationTicket ticket in tickets)
             {
-                <li>@ticket.Properties.Items["device.os"]</li>
-            }
+                <ul>
 
-            @if (ticket.Properties.Items.ContainsKey("device.browser"))
-            {
-                <li>@ticket.Properties.Items["device.browser"]</li>
-            }
+                    @* TODO: These probably all need moving into extension methods too. *@
 
-            @if (ticket.Properties.Items.ContainsKey("device.location"))
-            {
-                <li>@ticket.Properties.Items["device.location"]</li>
-            }
+                    @if (ticket.Properties.Items.ContainsKey("device.os"))
+                    {
+                        <li>@ticket.Properties.Items["device.os"]</li>
+                    }
 
-            @if (ticket.Properties.Items.ContainsKey(".last_activity"))
-            {
-                <li>@ticket.Properties.Items[".last_activity"]</li>
-            }
+                    @if (ticket.Properties.Items.ContainsKey("device.browser"))
+                    {
+                        <li>@ticket.Properties.Items["device.browser"]</li>
+                    }
 
-        </ul>
-    }
+                    @if (ticket.Properties.Items.ContainsKey("device.location"))
+                    {
+                        <li>@ticket.Properties.Items["device.location"]</li>
+                    }
+
+                    @if (ticket.Properties.Items.ContainsKey(".last_activity"))
+                    {
+                        <li>@ticket.Properties.Items[".last_activity"]</li>
+                    }
+
+                </ul>
+            }
+        }
+    </MudContainer>
 }
 
 @code {
