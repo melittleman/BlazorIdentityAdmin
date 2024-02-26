@@ -1,6 +1,6 @@
 ﻿@page "/"
 
-@inject IPagedTicketStore Tickets
+@inject IPagedTicketStore TicketStore
 
 <PageTitle>Home</PageTitle>
 
@@ -85,16 +85,14 @@
     {
         auth = await HttpContext.AuthenticateAsync();
 
-        // TODO: Move into a 'GetUserId' extension method.
-        string? userId = auth.Principal?.GetClaim(OpenIddictConstants.Claims.Subject);
+        // string? userId = auth.Principal?.GetClaim(OpenIddictConstants.Claims.Subject);
+        // vs.
+        string? userId = auth.Principal?.FindFirstValue(OpenIddictConstants.Claims.Subject);
+        // Which is better / more efficient?
 
         if (string.IsNullOrEmpty(userId) is false)
         {
-            // We ideally want the newest logged in sessions first.
-            // TODO: This casting between enums is very annoying... we may have to change the RedisKit one?
-            SearchFilter filter = new(1, 10, userId, "last_activity", RedisKit.Querying.Enums.SortDirection.Descending);
-
-            tickets = await Tickets.SearchTicketsAsync(filter);
+            tickets = await TicketStore.GetByUserIdAsync(userId);
         }
 
         await base.OnInitializedAsync();

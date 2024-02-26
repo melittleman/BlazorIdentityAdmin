@@ -45,6 +45,8 @@ public sealed class CustomSignInManager(
 
         AuthenticationProperties props = new()
         {
+            // This actually translates to ".persistent": "" which is a bit
+            // annoying so we may have to see if there's a way to enforce a bool.
             IsPersistent = isPersistent,
             AllowRefresh = true,
         };
