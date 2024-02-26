@@ -1,7 +1,5 @@
 ﻿@page "/"
 
-@inject IPagedTicketStore TicketStore
-
 <PageTitle>Home</PageTitle>
 
 @*
@@ -25,9 +23,9 @@ else
     <MudContainer MaxWidth="MaxWidth.Large">
         <MudText Typo="Typo.h2" GutterBottom="true">Session Information</MudText>
 
-        <MudGrid Spacing="2">
+        <MudGrid Class="mb-8" Spacing="2">
             <MudItem Class="flex-auto">
-                <MudCard Class="p-4" Style="height: 100%">
+                <MudCard Class="pa-4" Style="height: 100%">
                     <MudCardHeader>
                         <CardHeaderContent>
                             <MudText Typo="Typo.h3">Claims</MudText>
@@ -47,7 +45,7 @@ else
                 </MudCard>
             </MudItem>
             <MudItem Class="flex-auto">
-                <MudCard Class="p-4" Style="height: 100%">
+                <MudCard Class="pa-4" Style="height: 100%">
                     <MudCardHeader>
                         <CardHeaderContent>
                             <MudText Typo="Typo.h3">Properties</MudText>
@@ -65,45 +63,23 @@ else
             </MudItem>
         </MudGrid>
 
-        @if (tickets is not null)
+        @if (string.IsNullOrEmpty(userId) is false && string.IsNullOrEmpty(sessionId) is false) 
         {
-            // TODO: We can probably explicitely show that this ticket
-            // is 'active' because it is available under auth.Ticket.
+            <MudText Typo="Typo.h2" GutterBottom="true">Devices</MudText>
 
-            foreach (AuthenticationTicket ticket in tickets)
-            {
-                <ul>
+            <MudPaper Class="mb-8" Width="100%">
 
-                    @* TODO: These probably all need moving into extension methods too. *@
-
-                    @if (ticket.Properties.Items.ContainsKey("device.os"))
-                    {
-                        <li>@ticket.Properties.Items["device.os"]</li>
-                    }
-
-                    @if (ticket.Properties.Items.ContainsKey("device.browser"))
-                    {
-                        <li>@ticket.Properties.Items["device.browser"]</li>
-                    }
-
-                    @if (ticket.Properties.Items.ContainsKey("device.location"))
-                    {
-                        <li>@ticket.Properties.Items["device.location"]</li>
-                    }
-
-                    @if (ticket.Properties.Items.ContainsKey(".last_activity"))
-                    {
-                        <li>@ticket.Properties.Items[".last_activity"]</li>
-                    }
-
-                </ul>
-            }
+                <UserSessionList SessionId="@sessionId" UserId="@userId" />
+            </MudPaper>
         }
+
     </MudContainer>
 }
 
 @code {
 
+    private string? userId;
+    private string? sessionId;
     private AuthenticateResult? auth;
 
     [CascadingParameter]
@@ -115,15 +91,13 @@ else
     {
         auth = await HttpContext.AuthenticateAsync();
 
+        // TODO: These should definitely also be extension methods...
+        auth.Ticket?.Properties.Items.TryGetValue("session_id", out sessionId);
+
         // string? userId = auth.Principal?.GetClaim(OpenIddictConstants.Claims.Subject);
         // vs.
-        string? userId = auth.Principal?.FindFirstValue(OpenIddictConstants.Claims.Subject);
-        // Which is better / more efficient?
-
-        if (string.IsNullOrEmpty(userId) is false)
-        {
-            tickets = await TicketStore.GetByUserIdAsync(userId);
-        }
+        userId = auth.Principal?.FindFirstValue(OpenIddictConstants.Claims.Subject);
+        // ^^ Which is better / more efficient?
 
         await base.OnInitializedAsync();
     }

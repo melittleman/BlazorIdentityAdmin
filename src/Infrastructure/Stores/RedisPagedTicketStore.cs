@@ -1,4 +1,5 @@
-﻿using RedisKit.Querying.Enums;
+﻿using System.Globalization;
+using RedisKit.Querying.Enums;
 
 namespace BlazorAdminDashboard.Infrastructure.Stores;
 
@@ -42,7 +43,7 @@ internal sealed class RedisPagedTicketStore(
         return Search.SearchAsync<AuthenticationTicket>(TicketIndex, filter, _jsonOptions.Serializer);
     }
 
-    public Task<IPagedList<AuthenticationTicket>> GetByUserIdAsync(string userId, CancellationToken? ct = null)
+    public async Task<IPagedList<AuthenticationTicket>> GetByUserIdAsync(string userId, CancellationToken? ct = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(userId);
         ct?.ThrowIfCancellationRequested();
@@ -52,12 +53,28 @@ internal sealed class RedisPagedTicketStore(
         // logged in sessions at once as that would mean multiple devices / browsers.
         SearchFilter filter = new(page: 1, count: 20)
         {
+            // TODO: This sort seems to not actually be working because
+            // Redis doesn't know what to do with a date format like this...
             Query = $"@sub:{{{userId}}}",
-            OrderBy = "last_activity", // We ideally want the newest logged in sessions first.
+            OrderBy = "last_activity",
             SortBy = SortDirection.Descending
         };
 
-        // TODO: from appsettings configuration or constant.
-        return Search.SearchAsync<AuthenticationTicket>(TicketIndex, filter, _jsonOptions.Serializer);
+        IPagedList<AuthenticationTicket> tickets = await Search.SearchAsync<AuthenticationTicket>(TicketIndex, filter, _jsonOptions.Serializer);
+
+        return tickets.OrderByDescending(t =>
+        {
+            // TODO: Need to move this into an extension!
+            if (t.Properties.Items.TryGetValue(".last_activity", out string? value) && DateTimeOffset.TryParseExact(value!, "r",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.RoundtripKind,
+                out DateTimeOffset dto))
+            {
+                return dto;
+            }
+
+            return DateTimeOffset.UnixEpoch;
+
+        }).ToPagedList(tickets.TotalResults, filter);
     }
 }

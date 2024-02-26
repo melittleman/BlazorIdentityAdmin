@@ -1,0 +1,227 @@
+﻿@using System.Globalization
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using BlazorAdminDashboard.Application.Identity.Abstractions
+
+@rendermode RenderMode.InteractiveServer
+
+@inject IPagedTicketStore PagedTickets
+@inject ITicketStore Tickets
+@inject IDialogService Dialog
+@inject ISnackbar Snackbar
+
+@if (tickets is null)
+{
+    <MudList Clickable="false" Dense="false" DisableGutters="false">
+
+        <MudListItem>
+            <MudStack Spacing="1">
+                <MudSkeleton Animation="Animation.Wave" Width="25%" />
+                <MudSkeleton Animation="Animation.Wave" Width="40%" />
+            </MudStack>
+        </MudListItem>
+
+        <MudDivider />
+
+        <MudListItem>
+            <MudStack Spacing="1">
+                <MudSkeleton Animation="Animation.Wave" Width="50%" />
+                <MudSkeleton Animation="Animation.Wave" Width="30%" />
+            </MudStack>
+        </MudListItem>
+
+        <MudDivider />
+
+        <MudListItem>
+            <MudStack Spacing="1">
+                <MudSkeleton Animation="Animation.Wave" Width="35%" />
+                <MudSkeleton Animation="Animation.Wave" Width="45%" />
+            </MudStack>
+        </MudListItem>
+    </MudList>
+}
+else
+{
+    <MudList Clickable="false" Dense="false" DisableGutters="false">
+
+        @foreach (AuthenticationTicket ticket in tickets)
+        {
+            string icon;
+            string deviceOs = "Unknown device";
+            string deviceBrowser = "Unknown browser";
+            string? deviceLocation = null;
+            DateTimeOffset lastActivity = DateTimeOffset.UnixEpoch;
+
+            // TODO: These probably all need moving into extension methods.
+            if (ticket.Properties.Items.ContainsKey("device.os"))
+            {
+                deviceOs = ticket.Properties.Items["device.os"]!;
+            }
+
+            if (ticket.Properties.Items.ContainsKey("device.browser"))
+            {
+                deviceBrowser = ticket.Properties.Items["device.browser"]!;
+            }
+
+            if (ticket.Properties.Items.ContainsKey("device.location"))
+            {
+                // TODO: This needs to be translated into something user
+                // friendly via an IP Address lookup service such as IPInfo.
+                deviceLocation = ticket.Properties.Items["device.location"];
+            }
+
+            if (ticket.Properties.Items.ContainsKey(".last_activity"))
+            {
+                _ = DateTimeOffset.TryParseExact(
+                ticket.Properties.Items[".last_activity"]!, "r",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.RoundtripKind,
+                out lastActivity);
+            }
+
+            bool isActiveNow = false;
+            string lastActivityDisplay = "A long time ago";
+
+            if (ticket.Properties.Items.TryGetValue("session_id", out string? sessionId) && 
+                sessionId is not null && 
+                sessionId == SessionId)
+            {
+                // This is the current logged in device session.
+                isActiveNow = true;
+            }
+            else
+            {
+                TimeSpan lastActivityDifference = DateTimeOffset.UtcNow.Subtract(lastActivity);
+
+                int activeMinutes = (int)lastActivityDifference.TotalMinutes;
+                int activeHours = (int)lastActivityDifference.TotalHours;
+                int activeDays = (int)lastActivityDifference.TotalDays;
+
+                if (activeMinutes < 60)
+                {
+                    lastActivityDisplay = activeMinutes == 1 
+                        ? "1 minute ago" 
+                        : $"{activeMinutes} minutes ago";
+                }
+                else if (activeHours < 24)
+                {
+                    lastActivityDisplay = activeHours == 1 
+                        ? "1 hour ago" 
+                        : $"{lastActivityDifference.TotalHours} hours ago";
+                }
+                else if (activeDays < 365)
+                {
+                    lastActivityDisplay = activeDays == 1
+                        ? "1 day ago" 
+                        : $"{lastActivityDifference.TotalDays} days ago";
+                }
+            }
+
+            if (deviceBrowser.Contains("Chrome"))
+            {
+                icon = Icons.Custom.Brands.Chrome;
+            }
+            else
+            {
+                icon = deviceOs switch
+                {
+                    string os when os.Contains("Microsoft") || os.Contains("Windows") => Icons.Custom.Brands.MicrosoftWindows,
+                    string os when os.Contains("Apple") || os.Contains("iOS") || os.Contains("Mac") => Icons.Custom.Brands.Apple,
+                    string os when os.Contains("Linux") => Icons.Custom.Brands.Linux,
+                    string os when os.Contains("Android") => Icons.Material.Filled.Android,
+                    _ => Icons.Material.Outlined.Computer
+                };
+            }
+
+            <MudListItem Icon="@icon" IconColor="Color.Secondary">
+
+                <MudStack Row="true" AlignItems="AlignItems.Stretch" Justify="Justify.SpaceBetween">
+
+                    <MudStack Spacing="1">
+                        <MudText Typo="Typo.subtitle1">@deviceOs</MudText>
+                        <MudText Typo="Typo.caption">
+
+                            @if (isActiveNow)
+                            {
+                                @($"{deviceBrowser} - ")
+                                <MudElement HtmlTag="span" Class="mud-success-text">Active now</MudElement>
+                            }
+                            else
+                            {
+                                @($"{deviceBrowser} - {lastActivityDisplay}")
+                            }
+
+                        </MudText>
+                    </MudStack>
+                    <MudTooltip Text="More options" Color="Color.Tertiary" Placement="Placement.Left" Delay="750" Arrow="true">
+                        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Disabled="isActiveNow">
+
+                            <MudMenuItem OnClick="() => DeleteSession(ticket)"
+                                Icon="@Icons.Material.Outlined.Delete"
+                                IconColor="Color.Error"
+                                IconSize="Size.Small">
+                                Delete
+                            </MudMenuItem>
+                        </MudMenu>
+                    </MudTooltip>
+                </MudStack>
+            </MudListItem>
+
+            // TODO: We could create a little helper extension to more easily get the current index.
+            // See: https://stackoverflow.com/a/39997157
+            if (tickets.IndexOf(ticket) + 1 != tickets.Count)
+            {
+                <MudDivider />
+            }
+        }
+
+    </MudList>
+}
+
+@code {
+
+    private IPagedList<AuthenticationTicket>? tickets;
+
+    [Parameter]
+    public required string SessionId { get; set; }
+
+    [Parameter]
+    public required string UserId { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // OnInitializedAsync gets called twice due to pre-rendering to this
+        // provides the most explicit way to ensure we only call async code once.
+        // TODO: Is there actually a better alternative here though?
+        if (firstRender)
+        {
+            tickets = await PagedTickets.GetByUserIdAsync(UserId);
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task DeleteSession(AuthenticationTicket ticket)
+    {
+        if (ticket.Properties.Items.TryGetValue("session_id", out string? sessionId) is false || sessionId is null)
+        {
+            Snackbar.Add("Sorry, we are unable to delete this session.", Severity.Error);
+            return;
+        }
+
+        bool? dialogMessage = await Dialog.ShowMessageBox(
+            "Warning",
+            $"Are you sure you want to delete this session? Doing so will immediately log this device out.",
+            yesText: "Confirm",
+            cancelText: "Cancel");
+
+        if (dialogMessage.GetValueOrDefault())
+        {
+            await Tickets.RemoveAsync(sessionId);
+            if (tickets?.Remove(ticket) is true)
+            {
+                Snackbar.Add("Session was successfully logged out.", Severity.Success);
+            }
+        }
+    }
+}
