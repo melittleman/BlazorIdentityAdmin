@@ -1,4 +1,5 @@
 ﻿@rendermode RenderMode.InteractiveServer
+@inject IJSRuntime JS
 
 @* Prevents double popovers! *@
 <CascadingValue Name="UsePopoverProvider" Value="false">
@@ -9,21 +10,24 @@
 @if (_isDarkMode)
 {
     <MudTooltip Text="Enable light mode" Color="Color.Primary" Placement="Placement.Bottom" Delay="750" Arrow="true">
-        <MudIconButton aria-label="Enable light mode" Icon="@Icons.Material.Outlined.LightMode" Color="Color.Inherit" OnClick="(() => _isDarkMode = false)" />
+        <MudIconButton aria-label="Enable light mode" Icon="@Icons.Material.Outlined.LightMode" Color="Color.Inherit" OnClick="ToggleDarkMode" />
     </MudTooltip>
 }
 else
 {
     <MudTooltip Text="Enable dark mode" Color="Color.Primary" Placement="Placement.Bottom" Delay="750" Arrow="true">
-        <MudIconButton aria-label="Enable dark mode" Icon="@Icons.Material.Outlined.DarkMode" Color="Color.Inherit" OnClick="(() => _isDarkMode = true)" />
+        <MudIconButton aria-label="Enable dark mode" Icon="@Icons.Material.Outlined.DarkMode" Color="Color.Inherit" OnClick="ToggleDarkMode" />
     </MudTooltip>
 }
 
 @code {
 
-    // TODO: We should initially load this from local storage / cookie.
-    private bool _isDarkMode = true;
+    // Note that these need to be static in order to be persisted
+    // from the SSR page request through to the SignalR circuit.
     private static MudTheme? _theme;
+    private static bool _isDarkMode = true;
+
+    private const string DarkModeCookieName = ".isDarkMode";
 
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
@@ -46,8 +50,23 @@ else
             {
                 _theme = new MainTheme(theme);
             }
+
+            // We are using Cookies here instead of Local Storage because we would only 
+            // be able to retrieve the local storage value AFTER the initial page load.
+            if (HttpContext.Request.Cookies.ContainsKey(DarkModeCookieName))
+            {
+                _isDarkMode = Convert.ToBoolean(HttpContext.Request.Cookies[DarkModeCookieName]);
+            }
         }
 
         base.OnInitialized();
+    }
+
+    private async Task ToggleDarkMode()
+    {
+        _isDarkMode = !_isDarkMode;
+
+        // name, value, days
+        await JS.InvokeVoidAsync("setCookie", DarkModeCookieName, _isDarkMode, 365);
     }
 }
