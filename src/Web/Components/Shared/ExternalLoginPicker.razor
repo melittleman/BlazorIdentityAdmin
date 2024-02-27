@@ -1,4 +1,6 @@
-﻿@inject SignInManager<User> SignInManager
+﻿@using AspNet.Security.OAuth.GitHub
+
+@inject SignInManager<User> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
 @if (externalLogins.Length == 0)
@@ -17,9 +19,25 @@ else
             <AntiforgeryToken />
             <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
             <p>
-                @foreach (var provider in externalLogins)
+                @foreach (AuthenticationScheme provider in externalLogins)
                 {
-                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+                    if (provider.Name.Equals(GitHubAuthenticationDefaults.AuthenticationScheme))
+                    {
+                        // TODO: Tooltip / title / aria label?
+                        <MudButton ButtonType="ButtonType.Submit"
+                            Variant="Variant.Outlined"
+                            EndIcon="@Icons.Custom.Brands.GitHub"
+                            Size="Size.Medium" 
+                            Color="Color.Tertiary"
+                            name="provider" 
+                            value="@provider.Name">
+                            GitHub
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+                    }
                 }
             </p>
         </div>

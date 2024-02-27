@@ -1,12 +1,14 @@
-﻿@if (!string.IsNullOrEmpty(DisplayMessage))
+﻿@if (string.IsNullOrEmpty(DisplayMessage) is false)
 {
-    var statusMessageClass = DisplayMessage.StartsWith("Error") ? "danger" : "success";
-    <div class="alert alert-@statusMessageClass" role="alert">
+    <MudAlert Severity="@Severity" Class="mt-8 mud-width-full" Elevation="4">
+
         @DisplayMessage
-    </div>
+
+    </MudAlert>
 }
 
 @code {
+
     private string? messageFromCookie;
 
     [Parameter]
@@ -17,13 +19,22 @@
 
     private string? DisplayMessage => Message ?? messageFromCookie;
 
+    private bool IsError => DisplayMessage?.StartsWith("Error") is true;
+
+    private Severity Severity => IsError 
+        ? Severity.Error 
+        : Severity.Info;
+
     protected override void OnInitialized()
     {
-        messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
-
-        if (messageFromCookie is not null)
+        if (HttpContext is not null)
         {
-            HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
+            messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
+
+            if (messageFromCookie is not null)
+            {
+                HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
+            }
         }
     }
 }

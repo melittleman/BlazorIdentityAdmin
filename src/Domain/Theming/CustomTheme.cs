@@ -2,17 +2,29 @@
 
 public class CustomTheme
 {
-    public string PrimaryColor { get; set; } = "#262937";
+    public string LightPrimaryColor { get; set; } = "#262937";
 
-    public string PrimaryAccentColor { get; set; } = "#f8f8f6";
+    public string LightPrimaryAccentColor { get; set; } = "#f8f8f6";
 
-    public string SecondaryColor { get; set; } = "#f4b43a";
+    public string LightSecondaryColor { get; set; } = "#f4b43a";
 
-    public string SecondaryAccentColor { get; set; } = "#262937";
+    public string LightSecondaryAccentColor { get; set; } = "#262937";
 
-    public string TertiaryColor { get; set; } = "#df2073";
+    public string LightTertiaryColor { get; set; } = "#df2073";
 
-    public string TertiaryAccentColor { get; set; } = "ffffff";
+    public string LightTertiaryAccentColor { get; set; } = "#ffffff";
+
+    public string DarkPrimaryColor { get; set; } = "#f4b43a";
+
+    public string DarkPrimaryAccentColor { get; set; } = "#262937";
+
+    public string DarkSecondaryColor { get; set; } = "#262937";
+
+    public string DarkSecondaryAccentColor { get; set; } = "#f8f8f6";
+
+    public string DarkTertiaryColor { get; set; } = "#df2073";
+
+    public string DarkTertiaryAccentColor { get; set; } = "#ffffff";
 
     public string BorderRadius { get; set; } = "0.5rem";
 

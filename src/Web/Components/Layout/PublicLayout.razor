@@ -2,20 +2,11 @@
 
 @layout DefaultLayout
 
-<HeaderBar />
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center" Style="height: 100vh;">
 
-<MudMainContent>
-    <MudContainer MaxWidth="MaxWidth.Medium" Class="d-flex align-center" Style="height: 100vh;">
+    <div class="d-flex flex-column mud-width-full">
 
-        <div class="d-flex flex-column mud-width-full">
+        @Body
 
-            <MudPaper Elevation="5" Class="pa-8" Width="100%">
-
-                <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Large" Style="width:100px; height:100px;" />
-
-                @Body
-
-            </MudPaper>
-        </div>
-    </MudContainer>
-</MudMainContent>
+    </div>
+</MudContainer>

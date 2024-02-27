@@ -13,14 +13,14 @@ public class DefaultTheme : MudTheme
             Surface = "ffffff",
             TextPrimary = "#262937",
 
-            Primary = theme.PrimaryColor,
-            PrimaryContrastText = theme.PrimaryAccentColor,
+            Primary = theme.LightPrimaryColor,
+            PrimaryContrastText = theme.LightPrimaryAccentColor,
 
-            Secondary = theme.SecondaryColor,
-            SecondaryContrastText = theme.SecondaryAccentColor,
+            Secondary = theme.LightSecondaryColor,
+            SecondaryContrastText = theme.LightSecondaryAccentColor,
 
-            Tertiary = theme.TertiaryColor,
-            TertiaryContrastText = theme.TertiaryAccentColor,
+            Tertiary = theme.LightTertiaryColor,
+            TertiaryContrastText = theme.LightTertiaryAccentColor,
         };
 
         PaletteDark = new PaletteDark()
@@ -29,14 +29,14 @@ public class DefaultTheme : MudTheme
             Surface = "#2e313f",
             TextPrimary = "#f8f8f6",
 
-            Primary = theme.PrimaryColor,
-            PrimaryContrastText = theme.PrimaryAccentColor,
+            Primary = theme.DarkPrimaryColor,
+            PrimaryContrastText = theme.DarkPrimaryAccentColor,
 
-            Secondary = theme.SecondaryColor,
-            SecondaryContrastText = theme.SecondaryAccentColor,
+            Secondary = theme.DarkSecondaryColor,
+            SecondaryContrastText = theme.DarkSecondaryAccentColor,
 
-            Tertiary = theme.TertiaryColor,
-            TertiaryContrastText = theme.TertiaryAccentColor,
+            Tertiary = theme.DarkTertiaryColor,
+            TertiaryContrastText = theme.DarkTertiaryAccentColor,
         };
 
         LayoutProperties = new()

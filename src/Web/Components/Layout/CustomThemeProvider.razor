@@ -13,13 +13,13 @@
 
 @if (_isDarkMode)
 {
-    <MudTooltip Text="Enable light mode" Color="Color.Tertiary" Placement="Placement.Bottom" Delay="750" Arrow="true">
+    <MudTooltip Text="Enable light mode" Color="Color.Tertiary" Placement="Placement.Left" Delay="750" Arrow="true">
         <MudIconButton aria-label="Enable light mode" Icon="@Icons.Material.Outlined.LightMode" Color="Color.Inherit" OnClick="ToggleDarkMode" />
     </MudTooltip>
 }
 else
 {
-    <MudTooltip Text="Enable dark mode" Color="Color.Tertiary" Placement="Placement.Bottom" Delay="750" Arrow="true">
+    <MudTooltip Text="Enable dark mode" Color="Color.Tertiary" Placement="Placement.Left" Delay="750" Arrow="true">
         <MudIconButton aria-label="Enable dark mode" Icon="@Icons.Material.Outlined.DarkMode" Color="Color.Inherit" OnClick="ToggleDarkMode" />
     </MudTooltip>
 }
@@ -71,7 +71,9 @@ else
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        string url = Navigation.ToBaseRelativePath(e.Location);
+        // Need to prepend a "/" to keep it in the same 
+        // format as HttpContext.Request.Path used above.
+        string url = "/" + Navigation.ToBaseRelativePath(e.Location);
 
         SetTheme(url);
         StateHasChanged();

@@ -6,14 +6,14 @@ public sealed class AdminTheme : DefaultTheme
     {
         Palette.DrawerBackground = Palette.Primary;
         Palette.DrawerText = Palette.PrimaryContrastText;
-        Palette.DrawerIcon = Palette.Secondary;
+        Palette.DrawerIcon = Palette.PrimaryContrastText;
 
         Palette.AppbarBackground = Palette.Surface;
         Palette.AppbarText = Palette.TextPrimary;
 
         PaletteDark.DrawerBackground = PaletteDark.Primary;
         PaletteDark.DrawerText = PaletteDark.PrimaryContrastText;
-        PaletteDark.DrawerIcon = Palette.Secondary;
+        PaletteDark.DrawerIcon = PaletteDark.PrimaryContrastText;
 
         PaletteDark.AppbarBackground = PaletteDark.Surface;
         PaletteDark.AppbarText = PaletteDark.TextPrimary;

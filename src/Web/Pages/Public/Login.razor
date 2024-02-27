@@ -1,5 +1,11 @@
 ﻿@page "/login"
 
+@* 
+    TODO: This needs to be looked at becase we aren't actually in an interactive render mode when 
+    this page first loads. It does need to be here because of the interactive password field though.
+*@
+@rendermode RenderMode.InteractiveServer
+
 @using Microsoft.AspNetCore.Localization
 @using PSC.Blazor.Components.BrowserDetect
 @using BlazorAdminDashboard.Web.Validation
@@ -7,77 +13,105 @@
 
 @inject UserManager<User> UserManager
 @inject SignInManager<User> SignInManager
-@inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject ILogger<Login> Logger
 
 <PageTitle>Login</PageTitle>
 
-<h1>Login</h1>
-<div class="row">
-    <div class="col-md-4">
-        <section>
-            <StatusMessage Message="@errorMessage" />
-            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login" Enhance="true">
+@*
+    TODO: This should be wrapped in an AuthorizeView...
+*@
 
-                <DeviceInfoProvider />
-                <GeolocationInfoProvider />
-                <DataAnnotationsValidator />
+<MudStack Spacing="4" AlignItems="AlignItems.Center">
+    <MudPaper Elevation="4" Class="pa-4" Width="100%">
 
-                <h2>Use a local account to log in.</h2>
-                <hr />
+        <MudStack Row="true" AlignItems="AlignItems.Start">
 
-                <ValidationSummary class="text-danger" role="alert" />     
+            @* TODO: This icon should actually be the tenant's logo URL if available. *@
+            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Secondary" Size="Size.Large" Style="width:80px; height:80px;" />
+            <MudStack Justify="Justify.Center" Spacing="0">
 
-                <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label for="email" class="form-label">Email</label>
-                    <ValidationMessage For="() => Input.Email" class="text-danger" />
-                </div>
-                <div class="form-floating mb-3">
-                    <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label for="password" class="form-label">Password</label>
-                    <ValidationMessage For="() => Input.Password" class="text-danger" />
-                </div>
-                <div class="checkbox mb-3">
-                    <label class="form-label">
-                        <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
-                        Remember me
-                    </label>
-                </div>
-                <div>
-                    <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a href="Account/ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
-                    </p>
-                    <p>
-                        <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
-                </div>
-            </EditForm>
-        </section>
+                <MudText Typo="Typo.h1" GutterBottom="true">Login</MudText>
+                <MudText Typo="Typo.subtitle1">Don't have an account? <MudLink Typo="Typo.subtitle2" Href="@registerLink">Register now</MudLink></MudText>
+            </MudStack>
 
-        <MudAlert Severity="Severity.Info" Class="mt-8 mud-width-full" Style="max-width:500px;" Elevation="25">No authentication is required, click sign in.</MudAlert>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
+            <MudSpacer />
+            <CustomThemeProvider Theme="new CustomTheme()" />
+        </MudStack>
+
+        <StatusMessage Message="@errorMessage" />
+
+        @* TODO: I'm not sure if we actually need this "Enhance"" property here or not? *@
+        <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login" Enhance="true">
+
+            <DeviceInfoProvider />
+            <GeolocationInfoProvider />
+            <DataAnnotationsValidator />
+
+            <MudTextField T="string" @bind-Value="Input.Email" 
+                Label="Username" 
+                Variant="Variant.Outlined" 
+                InputType="InputType.Text"
+                Class="my-6"
+                autocomplete="username"
+                aria-required="true" />
+
+            <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-error" />
+
+            <MudTextField @bind-Value="@Input.Password"
+                Label="Password"
+                Variant="Variant.Outlined"
+                InputType="@passwordInput"
+                Adornment="Adornment.End"
+                AdornmentIcon="@passwordInputIcon"
+                OnAdornmentClick="TogglePasswordVisibility"
+                autocomplete="current-password"
+                aria-required="true" />
+
+            <ValidationMessage For="() => Input.Password" class="mud-alert mud-alert-error" />
+
+            @* TODO: Change this to a MudStack... *@
+            <div Class="d-flex justify-space-between align-center">
+                <MudCheckBox T="bool" @bind-Value="Input.RememberMe" Label="Remember me?" Color="Color.Primary" Class="ml-n1 my-3"></MudCheckBox>
+                <MudLink Href="/forgot-password" Typo="Typo.subtitle2">Forgot password?</MudLink>
+            </div>
+
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true">
+                Login
+            </MudButton>
+        </EditForm>
+
+    </MudPaper>
+    <MudPaper Elevation="4" Class="pa-4" Width="100%">
+
+        <MudStack Spacing="1" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.subtitle1" GutterBottom="true">Or login with</MudText>
+
             <ExternalLoginPicker />
-        </section>
-    </div>
-</div>
+        </MudStack>
+    </MudPaper>
+
+    <MudLink Href="/resend-email" Typo="Typo.subtitle2">Resend email confirmation</MudLink>
+</MudStack>
+
+@* 
+    TODO: Add this in once we have static user data that we can pre-populate the form with.
+    <MudAlert Severity="Severity.Info" Class="mt-8 mud-width-full" Elevation="25">
+        No authentication is required, click sign in.
+    </MudAlert> 
+*@
 
 @code {
 
     // TODO: I think this is now large enough to be refactored into a 'code behind'.
 
     private string? errorMessage;
+    private string registerLink = "/register";
+
+    private bool isPasswordVisible;
+    private InputType passwordInput = InputType.Password;
+    private string passwordInputIcon = Icons.Material.Filled.VisibilityOff;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -96,11 +130,19 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        if (HttpContext is not null)
         {
-            // Clear the existing external cookie to ensure a clean login process
-            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+            if (HttpMethods.IsGet(HttpContext.Request.Method))
+            {
+                // Clear the existing external cookie to ensure a clean login process
+                await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+            }
         }
+
+        registerLink = NavigationManager.GetUriWithQueryParameters("/register", new Dictionary<string, object?>
+        {
+            ["returnUrl"] = ReturnUrl
+        });
     }
 
     public async Task LoginUser()
@@ -208,6 +250,22 @@
             // We can't actually tell the user what was wrong as they 
             // could then be able to tell that a username / email was correct.
             errorMessage = "Error: Incorrect username or password.";
+        }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        if (isPasswordVisible)
+        {
+            isPasswordVisible = false;
+            passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+            passwordInput = InputType.Password;
+        }
+        else
+        {
+            isPasswordVisible = true;
+            passwordInputIcon = Icons.Material.Filled.Visibility;
+            passwordInput = InputType.Text;
         }
     }
 }
