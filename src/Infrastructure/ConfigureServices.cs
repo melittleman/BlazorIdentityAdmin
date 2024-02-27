@@ -159,6 +159,30 @@ public static class ConfigureServices
 
         // TODO: Need to register all the custom Store implementations that the OpenIddict.UseEntityFrameworkCore extension otherwise does.
 
+        //builder.Services.AddAuthorizationCore(options =>
+        //{
+        //    options.AddPolicy(Policies.CanManageApplications, policy =>
+        //    {
+        //        policy.RequireAuthenticatedUser();
+        //        policy.RequireClaim(Claims.ReadWriteClaim, "applications");
+        //    });
+        //    options.AddPolicy(Policies.CanManageScopes, policy =>
+        //    {
+        //        policy.RequireAuthenticatedUser();
+        //        policy.RequireClaim(Claims.ReadWriteClaim, "scopes");
+        //    });
+        //    options.AddPolicy(Policies.CanManageUsers, policy =>
+        //    {
+        //        policy.RequireAuthenticatedUser();
+        //        policy.RequireClaim(Claims.ReadWriteClaim, "users");
+        //    });
+        //    options.AddPolicy(Policies.CanManageRoles, policy =>
+        //    {
+        //        policy.RequireAuthenticatedUser();
+        //        policy.RequireClaim(Claims.ReadWriteClaim, "roles");
+        //    });
+        //});
+
         return services;
     }
 }

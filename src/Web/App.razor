@@ -1,0 +1,61 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <base href="/" />
+
+    <!-- TODO: Once we move all the 'Account' pages over to MudBlazor components, there will be no need for Bootstrap. -->
+@*     <link rel="stylesheet" href="bootstrap/bootstrap.min.css" /> *@
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500,600,700&display=swap" />
+    <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
+    <link rel="stylesheet" href="app.css" />
+
+    <link rel="icon" type="image/png" href="favicon.png" />
+
+    <HeadOutlet />
+</head>
+
+<body>
+    <Router AppAssembly="@typeof(Program).Assembly">
+        <Found Context="routeData">
+
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(DefaultLayout)">
+                <NotAuthorized>
+                    <RedirectToLogin />
+                </NotAuthorized>
+            </AuthorizeRouteView>
+
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+
+            @*
+            NOTE: This 'NotFound' section is not actually supported when outside of an 'Interactive' routing. e.g. it won't work in the current Static SSR setup.
+            See: https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/routing?view=aspnetcore-8.0#provide-custom-content-when-content-isnt-found
+
+            However, opting to leave it here for the time being as we may decide to change the routing implementation down the line.
+            *@
+
+            <PageTitle>404: Page not found</PageTitle>
+            <LayoutView Layout="@typeof(DefaultLayout)">
+
+                <MudContainer MaxWidth="MaxWidth.Small">
+                    <div class="d-flex flex-column">
+                        <MudIcon Icon="@Icons.Material.Outlined.Error" />
+                        <MudText Typo="Typo.h5" Class="mt-6" Align="Align.Center">The page you were looking for doesn't exist.</MudText>
+                    </div>
+                </MudContainer>
+            </LayoutView>
+        </NotFound>
+    </Router>
+
+    <script src="js/app.js"></script>
+    <script src="_framework/blazor.web.js"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+</body>
+
+</html>

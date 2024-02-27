@@ -1,6 +1,6 @@
 ﻿@implements IDisposable
-
 @inject NavigationManager Navigation
+@rendermode RenderMode.InteractiveServer
 
 <AuthorizeView>
     <Authorized>
@@ -25,18 +25,18 @@
                 <MudAvatar>@context.User.Identity?.Name?.First()</MudAvatar>
             </ActivatorContent>
             <ChildContent>
-                <MudMenuItem id="profileMenuItem" Href="./authentication/profile">Profile</MudMenuItem>
+                <MudMenuItem id="profileMenuItem" Href="/account/profile">Profile</MudMenuItem>
                 <MudMenuItem id="signOutMenuItem" @onclick="BeginSignOut">Sign Out</MudMenuItem>
             </ChildContent>
         </MudMenu>
     </Authorized>
     <NotAuthorized>
         <MudToolBar Spacing="5">
-            <MudButton id="registerPageLink" Href="authentication/register"                      
+            <MudButton id="registerPageLink" Href="/register"                      
                        Variant="Variant.Outlined" Class="mr-5">
                 Register
             </MudButton>
-            <MudButton id="loginPageLink" Href="authentication/login"
+            <MudButton id="loginPageLink" Href="/login"
                        Variant="Variant.Outlined" Class="mr-5">
                 Login
             </MudButton>
@@ -48,12 +48,12 @@
     @* <AuthorizeView>
     <Authorized>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="Account/Manage">
+            <NavLink class="nav-link" href="/account/manage">
                 <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <form action="Account/Logout" method="post">
+            <form action="/logout" method="post">
                 <AntiforgeryToken />
                 <input type="hidden" name="ReturnUrl" value="@currentUrl" />
                 <button type="submit" class="nav-link">
@@ -64,12 +64,12 @@
     </Authorized>
     <NotAuthorized>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="Account/Register">
+            <NavLink class="nav-link" href="/register">
                 <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="Account/Login">
+            <NavLink class="nav-link" href="/login">
                 <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
             </NavLink>
         </div>
@@ -97,7 +97,7 @@
     private void BeginSignOut(MouseEventArgs args)
     {
         // TODO: This was a WebAssembly extension, so we probably just need to redirect to /logout ?
-        // Navigation.NavigateToLogout("authentication/logout");
+        // Navigation.NavigateToLogout("/logout");
     }
 
     public void Dispose()

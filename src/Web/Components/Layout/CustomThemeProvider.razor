@@ -4,7 +4,7 @@
 @* Prevents double popovers! *@
 <CascadingValue Name="UsePopoverProvider" Value="false">
 
-    <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" DefaultScrollbar="false" />
+    <MudThemeProvider @ref="_provider" @bind-IsDarkMode="@_isDarkMode" Theme="_theme" DefaultScrollbar="false" />
 </CascadingValue>
 
 @if (_isDarkMode)
@@ -26,29 +26,37 @@ else
     // from the SSR page request through to the SignalR circuit.
     private static MudTheme? _theme;
     private static bool _isDarkMode = true;
+    private MudThemeProvider _provider = new();
 
     private const string DarkModeCookieName = ".isDarkMode";
 
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         // TODO: Need to either go and load the custom theme parameters from the
         // tenant or introduce a 'fixed' CascadingValue that can be picked up here.
         CustomTheme theme = new();
+        bool themeChanged = false;
 
         if (HttpContext is not null)
         {
             // We are in static SSR mode.
-
             if (HttpContext.Request.Path.StartsWithSegments("/admin"))
             {
+                themeChanged = _theme is MainTheme;
                 _theme = new AdminTheme(theme);
             }
             else
             {
+                themeChanged = _theme is AdminTheme;
                 _theme = new MainTheme(theme);
+            }
+
+            if (themeChanged)
+            {
+                await InvokeAsync(StateHasChanged);
             }
 
             // We are using Cookies here instead of Local Storage because we would only 
@@ -59,7 +67,7 @@ else
             }
         }
 
-        base.OnInitialized();
+        await base.OnInitializedAsync();
     }
 
     private async Task ToggleDarkMode()

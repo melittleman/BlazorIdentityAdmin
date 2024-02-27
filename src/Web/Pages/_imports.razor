@@ -1,14 +1,10 @@
-﻿@using System.Threading
-
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.Web
-@using Microsoft.AspNetCore.Components.Authorization
-
-@using MudBlazor
-
-@using BlazorAdminDashboard.Web.Components.Layout
-@using BlazorAdminDashboard.Web.Components.Shared
-@using BlazorAdminDashboard.Application.Identity.Abstractions
+﻿
+@*
+    Applies a global Authorization atribute to all pages meaning the user
+    must be authenticated to view them. Use the [AllowAnonymous] attribute on
+    a per-page basis to override this functionality as this is most secure.
+*@
+@attribute [Authorize]
 
 @layout MainLayout
 

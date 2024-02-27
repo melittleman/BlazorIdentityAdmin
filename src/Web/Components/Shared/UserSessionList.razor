@@ -127,8 +127,8 @@ else
                     string os when os.Contains("Microsoft") || os.Contains("Windows") => Icons.Custom.Brands.MicrosoftWindows,
                     string os when os.Contains("Apple") || os.Contains("iOS") || os.Contains("Mac") => Icons.Custom.Brands.Apple,
                     string os when os.Contains("Linux") => Icons.Custom.Brands.Linux,
-                    string os when os.Contains("Android") => Icons.Material.Filled.Android,
-                    _ => Icons.Material.Outlined.Computer
+                    string os when os.Contains("Android") => Icons.Material.Outlined.Android,
+                    _ => Icons.Material.Outlined.DeviceUnknown
                 };
             }
 
@@ -153,7 +153,7 @@ else
                         </MudText>
                     </MudStack>
                     <MudTooltip Text="More options" Color="Color.Tertiary" Placement="Placement.Left" Delay="750" Arrow="true">
-                        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Disabled="isActiveNow">
+                        <MudMenu Icon="@Icons.Material.Outlined.MoreVert" Disabled="isActiveNow">
 
                             <MudMenuItem OnClick="() => DeleteSession(ticket)"
                                 Icon="@Icons.Material.Outlined.Delete"

@@ -7,11 +7,11 @@
     @* TODO: De-deplicate the below as we don't need both these Authorized Views... *@
     <AuthorizeView>
         <Authorized>
-            <MudNavLink Href="Account/Manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Person">@context.User.Identity?.Name</MudNavLink>
+            <MudNavLink Href="/account/manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Person">@context.User.Identity?.Name</MudNavLink>
         </Authorized>
         <NotAuthorized>
-                <MudNavLink Href="Account/Register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.AppRegistration">Register</MudNavLink>
-                <MudNavLink Href="Account/Login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Login">Login</MudNavLink>
+                <MudNavLink Href="/register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.AppRegistration">Register</MudNavLink>
+                <MudNavLink Href="/login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Login">Login</MudNavLink>
         </NotAuthorized>
     </AuthorizeView>
 
@@ -29,24 +29,24 @@
     <AuthorizeView>
         @* <AuthorizeView Policy="@Policies.CanManageUsers"> *@
 
-        <MudNavLink Href="/users/list" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Users</MudNavLink>
+        <MudNavLink Href="/admin/users" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Users</MudNavLink>
     </AuthorizeView>
 
     <AuthorizeView>
         @* <AuthorizeView Policy="@Policies.CanManageRoles"> *@
 
-        <MudNavLink Href="/roles/list" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Roles</MudNavLink>
+        <MudNavLink Href="/admin/roles" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Roles</MudNavLink>
     </AuthorizeView>
 
     <AuthorizeView>
         @* <AuthorizeView Policy="@Policies.CanManageApplications"> *@
 
-        <MudNavLink Href="/applications/list" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Applications</MudNavLink>
+        <MudNavLink Href="/admin/applications" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Applications</MudNavLink>
     </AuthorizeView>
 
     <AuthorizeView>
         @* <AuthorizeView Policy="@Policies.CanManageScopes"> *@
 
-        <MudNavLink Href="/scopes/list" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Scopes</MudNavLink>
+        <MudNavLink Href="/admin/scopes" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Scopes</MudNavLink>
     </AuthorizeView>
 </MudNavMenu>
