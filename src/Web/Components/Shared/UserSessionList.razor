@@ -105,14 +105,14 @@ else
                 else if (activeHours < 24)
                 {
                     lastActivityDisplay = activeHours == 1 
-                        ? "1 hour ago" 
-                        : $"{lastActivityDifference.TotalHours} hours ago";
+                        ? "1 hour ago"
+                        : $"{activeHours} hours ago";
                 }
                 else if (activeDays < 365)
                 {
                     lastActivityDisplay = activeDays == 1
-                        ? "1 day ago" 
-                        : $"{lastActivityDifference.TotalDays} days ago";
+                        ? "1 day ago"
+                        : $"{activeDays} days ago";
                 }
             }
 

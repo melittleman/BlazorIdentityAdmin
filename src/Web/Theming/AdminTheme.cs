@@ -8,15 +8,15 @@ public sealed class AdminTheme : DefaultTheme
         Palette.DrawerText = Palette.PrimaryContrastText;
         Palette.DrawerIcon = Palette.Secondary;
 
-        Palette.AppbarBackground = Colors.Shades.White;
-        Palette.AppbarText = Colors.Grey.Darken3;
+        Palette.AppbarBackground = Palette.Surface;
+        Palette.AppbarText = Palette.TextPrimary;
 
         PaletteDark.DrawerBackground = PaletteDark.Primary;
         PaletteDark.DrawerText = PaletteDark.PrimaryContrastText;
         PaletteDark.DrawerIcon = Palette.Secondary;
 
-        PaletteDark.AppbarBackground = "#32333d";
-        PaletteDark.AppbarText = "rgba(255,255,255, 0.70)";
+        PaletteDark.AppbarBackground = PaletteDark.Surface;
+        PaletteDark.AppbarText = PaletteDark.TextPrimary;
 
         ZIndex = new()
         {

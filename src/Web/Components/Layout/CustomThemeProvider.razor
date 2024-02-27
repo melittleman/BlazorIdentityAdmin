@@ -1,10 +1,14 @@
 ﻿@rendermode RenderMode.InteractiveServer
+
+@implements IDisposable
+
+@inject NavigationManager Navigation
 @inject IJSRuntime JS
 
 @* Prevents double popovers! *@
 <CascadingValue Name="UsePopoverProvider" Value="false">
 
-    <MudThemeProvider @ref="_provider" @bind-IsDarkMode="@_isDarkMode" Theme="_theme" DefaultScrollbar="false" />
+    <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" DefaultScrollbar="false" />
 </CascadingValue>
 
 @if (_isDarkMode)
@@ -26,38 +30,25 @@ else
     // from the SSR page request through to the SignalR circuit.
     private static MudTheme? _theme;
     private static bool _isDarkMode = true;
-    private MudThemeProvider _provider = new();
 
     private const string DarkModeCookieName = ".isDarkMode";
+
+    [Parameter]
+    public required CustomTheme Theme { get; set; }
 
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        // TODO: Need to either go and load the custom theme parameters from the
-        // tenant or introduce a 'fixed' CascadingValue that can be picked up here.
-        CustomTheme theme = new();
-        bool themeChanged = false;
+        // TODO: This gets called twice due to 
+        // pre-rendering, is this an issue?
+        Navigation.LocationChanged += OnLocationChanged;
 
         if (HttpContext is not null)
         {
             // We are in static SSR mode.
-            if (HttpContext.Request.Path.StartsWithSegments("/admin"))
-            {
-                themeChanged = _theme is MainTheme;
-                _theme = new AdminTheme(theme);
-            }
-            else
-            {
-                themeChanged = _theme is AdminTheme;
-                _theme = new MainTheme(theme);
-            }
-
-            if (themeChanged)
-            {
-                await InvokeAsync(StateHasChanged);
-            }
+            SetTheme(HttpContext.Request.Path.ToString());
 
             // We are using Cookies here instead of Local Storage because we would only 
             // be able to retrieve the local storage value AFTER the initial page load.
@@ -76,5 +67,30 @@ else
 
         // name, value, days
         await JS.InvokeVoidAsync("setCookie", DarkModeCookieName, _isDarkMode, 365);
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        string url = Navigation.ToBaseRelativePath(e.Location);
+
+        SetTheme(url);
+        StateHasChanged();
+    }
+
+    private void SetTheme(string urlPath)
+    {
+        if (urlPath.StartsWith("/admin"))
+        {
+            _theme = new AdminTheme(Theme);
+        }
+        else
+        {
+            _theme = new MainTheme(Theme);
+        }
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 }

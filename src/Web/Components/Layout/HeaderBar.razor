@@ -1,4 +1,4 @@
-﻿<MudAppBar Elevation="0" Dense="true" Fixed="true">
+﻿<MudAppBar Elevation="1" Dense="true" Fixed="true">
 
     <MudToolBar DisableGutters="true">
 
@@ -7,9 +7,15 @@
     </MudToolBar>
 
     <MudSpacer />
-    <CustomThemeProvider />
+    <CustomThemeProvider Theme="theme" />
 
     <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" />
 
     <LoginDisplay />
 </MudAppBar>
+
+@code {
+
+    // TODO: Figure out where this is loaded from? Somewhere on the tenant ideally.
+    private static CustomTheme theme = new();
+}
