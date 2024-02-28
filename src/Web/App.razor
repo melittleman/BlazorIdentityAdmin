@@ -25,7 +25,9 @@
 
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(DefaultLayout)">
                 <NotAuthorized>
+
                     <RedirectToLogin />
+
                 </NotAuthorized>
             </AuthorizeRouteView>
 

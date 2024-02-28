@@ -1,6 +1,7 @@
 ﻿@page "/register"
 
 @rendermode RenderMode.InteractiveServer
+@attribute [AllowAnonymous]
 
 @inject UserManager<User> UserManager
 @inject IUserStore<User> UserStore

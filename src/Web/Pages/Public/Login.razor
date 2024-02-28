@@ -1,10 +1,6 @@
 ﻿@page "/login"
 
-@* 
-    TODO: This needs to be looked at becase we aren't actually in an interactive render mode when 
-    this page first loads. It does need to be here because of the interactive password field though.
-*@
-@rendermode RenderMode.InteractiveServer
+@attribute [AllowAnonymous]
 
 @using Microsoft.AspNetCore.Localization
 @using PSC.Blazor.Components.BrowserDetect
@@ -42,7 +38,7 @@
             <DataAnnotationsValidator />
 
             @* TODO: Update this to username or email lookup *@
-            <MudTextField T="string" @bind-Value="Input.Email" 
+            <MudTextField @bind-Value="Input.Email" name="Input.Email" @rendermode="RenderMode.InteractiveServer"
                 Label="Username or email" 
                 Variant="Variant.Outlined" 
                 InputType="InputType.Email"
@@ -52,7 +48,7 @@
 
             <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-text-error" />
 
-            <MudTextField @bind-Value="@Input.Password"
+@*             <MudTextField @bind-Value="@Input.Password"
                 Label="Password"
                 Variant="Variant.Outlined"
                 InputType="@passwordInput"
@@ -61,13 +57,22 @@
                 AdornmentIcon="@passwordInputIcon"
                 OnAdornmentClick="TogglePasswordVisibility"
                 autocomplete="current-password"
-                aria-required="true" />
+                aria-required="true" /> *@
+
+            <PasswordInput @bind-Value="Input.Password"
+                AutoComplete="current-password"
+                Label="Password" />
 
             <ValidationMessage For="() => Input.Password" class="mud-alert mud-alert-text-error" />
 
             @* TODO: Change this to a MudStack... *@
             <div Class="d-flex justify-space-between align-center">
-                <MudCheckBox T="bool" @bind-Value="Input.RememberMe" Label="Remember me?" Color="Color.Primary" Class="ml-n1 my-3" />
+
+                <MudCheckBox @bind-Value="Input.RememberMe" @rendermode="RenderMode.InteractiveServer"
+                    Label="Remember me?" 
+                    Color="Color.Primary" 
+                    Class="ml-n1 my-3" />
+
                 <MudLink Href="/forgot-password" Typo="Typo.subtitle1">Forgot password?</MudLink>
             </div>
 
@@ -109,7 +114,7 @@
     private string passwordInputIcon = Icons.Material.Filled.VisibilityOff;
 
     [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
+    public required HttpContext HttpContext { get; set; }
 
     [SupplyParameterFromForm]
     private LoginFormInput Input { get; set; } = new();
@@ -136,7 +141,7 @@
 
         registerLink = NavigationManager.GetUriWithQueryParameters(registerLink, new Dictionary<string, object?>
         {
-            ["returnUrl"] = ReturnUrl ?? "/login"
+            ["returnUrl"] = string.IsNullOrEmpty(ReturnUrl) is false ? ReturnUrl : "/login"
         });
     }
 

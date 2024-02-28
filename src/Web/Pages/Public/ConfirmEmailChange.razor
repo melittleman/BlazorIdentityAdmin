@@ -4,6 +4,8 @@
 @inject SignInManager<User> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
+@attribute [AllowAnonymous]
+
 @* TODO: Could this actually be merged with the existing 'confirm-email' page? *@
 
 <PageTitle>Confirm Email Change</PageTitle>
