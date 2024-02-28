@@ -1,0 +1,226 @@
+﻿@page "/register"
+
+@rendermode RenderMode.InteractiveServer
+
+@inject UserManager<User> UserManager
+@inject IUserStore<User> UserStore
+@inject SignInManager<User> SignInManager
+@inject IEmailSender<User> EmailSender
+@inject ILogger<Register> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Register</PageTitle>
+
+@*
+    TODO: This should be wrapped in an AuthorizeView...
+*@
+<MudStack Spacing="4" AlignItems="AlignItems.Center">
+    <MudPaper Elevation="4" Class="pa-4" Width="100%">
+
+        <!-- Register form -->
+        <MudStack Row="true" AlignItems="AlignItems.Start">
+
+            @* TODO: This icon should actually be the tenant's logo URL if available. *@
+            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Secondary" Size="Size.Large" Style="width:80px; height:80px;" />
+            <MudStack Justify="Justify.Center" Spacing="0">
+
+                <MudText Typo="Typo.h1" GutterBottom="true">Register</MudText>
+                <MudText Typo="Typo.subtitle1">Already have an account? <MudLink Typo="Typo.subtitle1" Href="@loginLink">Login</MudLink></MudText>
+            </MudStack>
+
+            <MudSpacer />
+            <CustomThemeProvider Theme="new CustomTheme()" />
+        </MudStack>
+
+        <StatusMessage Message="@ErrorMessage" />
+
+        @* TODO: I'm not sure if we actually need this "Enhance"" property here or not? *@
+        <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUserAsync" FormName="register" Enhance="true">
+
+            <DataAnnotationsValidator />
+
+            <MudDivider DividerType="DividerType.Middle" Class="mt-6"/>
+
+            @* TODO: Need a way to provide a username but check it for uniqueness before registration *@
+            <MudTextField T="string" @bind-Value="Input.Email"
+                Label="Email"
+                Variant="Variant.Outlined"
+                InputType="InputType.Email"
+                Class="mt-6"
+                autocomplete="username"
+                aria-required="true" />
+
+            <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-text-error" />
+
+            <MudTextField @bind-Value="@Input.Password"
+                Label="Password"
+                Variant="Variant.Outlined"
+                InputType="@passwordInput"
+                Class="mt-6"
+                Adornment="Adornment.End"
+                AdornmentIcon="@passwordInputIcon"
+                OnAdornmentClick="TogglePasswordVisibility"
+                autocomplete="new-password"
+                aria-required="true" />
+
+            <ValidationMessage For="() => Input.Password" class="mud-alert mud-alert-text-error" />
+
+            <MudTextField @bind-Value="@Input.ConfirmPassword"
+                Label="Confirm Password"
+                Variant="Variant.Outlined"
+                InputType="@confirmPasswordInput"
+                Class="mt-6"
+                Adornment="Adornment.End"
+                AdornmentIcon="@confirmPasswordInputIcon"
+                OnAdornmentClick="ToggleConfirmPasswordVisibility"
+                autocomplete="confirm-password"
+                aria-required="true" />
+
+            <ValidationMessage For="() => Input.ConfirmPassword" class="mud-alert mud-alert-text-error" />
+
+            @* Link for T&C's / Privacy *@
+            <MudCheckBox T="bool" @bind-Value="agreeToTerms" Label="I agree to Terms & Conditions" Color="Color.Primary" Class="ml-n1 my-3" />
+
+            <MudButton ButtonType="ButtonType.Submit" 
+                Variant="Variant.Filled" 
+                Color="Color.Primary" 
+                Disabled="@(!agreeToTerms)" 
+                Size="Size.Large" 
+                FullWidth="true">
+                Register
+            </MudButton>
+
+        </EditForm>
+    </MudPaper>
+    <MudPaper Elevation="4" Class="pa-4" Width="100%">
+
+        <!-- External logins -->
+        <MudStack Spacing="1" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.subtitle1" GutterBottom="true">Or register with</MudText>
+
+            <ExternalLoginPicker />
+        </MudStack>
+    </MudPaper>
+</MudStack>
+
+@code {
+
+    private string loginLink = "/login";
+    private bool agreeToTerms = false;
+
+    bool passwordVisibility;
+    InputType passwordInput = InputType.Password;
+    string passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    bool confirmPasswordVisibility;
+    InputType confirmPasswordInput = InputType.Password;
+    string confirmPasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private IEnumerable<IdentityError>? identityErrors;
+
+    [SupplyParameterFromForm]
+    private RegisterFormInput Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string? ErrorMessage => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
+
+    protected override Task OnInitializedAsync()
+    {
+        loginLink = NavigationManager.GetUriWithQueryParameters(loginLink, new Dictionary<string, object?>
+        {
+            ["returnUrl"] = ReturnUrl
+        });
+
+        return base.OnInitializedAsync();
+    }
+
+    public async Task RegisterUserAsync(EditContext editContext)
+    {
+        User user = new();
+
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+
+        if (UserStore is IUserEmailStore<User> emailStore)
+        {
+            await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);    
+        }
+
+        IdentityResult result = await UserManager.CreateAsync(user, Input.Password);
+
+        if (result.Succeeded is false)
+        {
+            identityErrors = result.Errors;
+            return;
+        }
+
+        Logger.LogInformation("User created a new account with password.");
+
+        string userId = await UserManager.GetUserIdAsync(user);
+        string code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+        string callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("/confirm-email").AbsoluteUri, 
+            new Dictionary<string, object?> 
+            {
+                ["userId"] = userId, 
+                ["code"] = code, 
+                ["returnUrl"] = ReturnUrl 
+            });
+
+        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+        // TODO: This should come fron the tenant settings rather than application wide.
+        if (UserManager.Options.SignIn.RequireConfirmedAccount)
+        {
+            RedirectManager.RedirectTo("/register-confirmation", new() 
+            {
+                ["email"] = Input.Email, 
+                ["returnUrl"] = ReturnUrl 
+            });
+        }
+
+        // TODO: I think this can be safely removed as we don't actually want the registration process
+        // to just automatically log the user in, as there is a lot of functionality on the Login page
+        // e.g. Device / Geo information and Remember Me that we want the user to pass through.
+        // await SignInManager.SignInAsync(user, isPersistent: false);
+
+        RedirectManager.RedirectTo(ReturnUrl);
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        if (passwordVisibility)
+        {
+            passwordVisibility = false;
+            passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+            passwordInput = InputType.Password;
+        }
+        else
+        {
+            passwordVisibility = true;
+            passwordInputIcon = Icons.Material.Filled.Visibility;
+            passwordInput = InputType.Text;
+        }
+    }
+
+    private void ToggleConfirmPasswordVisibility()
+    {
+        if (confirmPasswordVisibility)
+        {
+            confirmPasswordVisibility = false;
+            confirmPasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            confirmPasswordInput = InputType.Password;
+        }
+        else
+        {
+            confirmPasswordVisibility = true;
+            confirmPasswordInputIcon = Icons.Material.Filled.Visibility;
+            confirmPasswordInput = InputType.Text;
+        }
+    }
+}

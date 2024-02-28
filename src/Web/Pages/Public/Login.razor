@@ -26,6 +26,7 @@
 <MudStack Spacing="4" AlignItems="AlignItems.Center">
     <MudPaper Elevation="4" Class="pa-4" Width="100%">
 
+        <!-- Login form -->
         <MudStack Row="true" AlignItems="AlignItems.Start">
 
             @* TODO: This icon should actually be the tenant's logo URL if available. *@
@@ -33,7 +34,7 @@
             <MudStack Justify="Justify.Center" Spacing="0">
 
                 <MudText Typo="Typo.h1" GutterBottom="true">Login</MudText>
-                <MudText Typo="Typo.subtitle1">Don't have an account? <MudLink Typo="Typo.subtitle2" Href="@registerLink">Register now</MudLink></MudText>
+                <MudText Typo="Typo.subtitle1">Don't have an account? <MudLink Typo="Typo.subtitle1" Href="@registerLink">Register</MudLink></MudText>
             </MudStack>
 
             <MudSpacer />
@@ -49,11 +50,14 @@
             <GeolocationInfoProvider />
             <DataAnnotationsValidator />
 
+            <MudDivider DividerType="DividerType.Middle" Class="mt-6" />
+
+            @* TODO: Update this to username or email lookup *@
             <MudTextField T="string" @bind-Value="Input.Email" 
-                Label="Username" 
+                Label="Username or email" 
                 Variant="Variant.Outlined" 
-                InputType="InputType.Text"
-                Class="my-6"
+                InputType="InputType.Email"
+                Class="mt-6"
                 autocomplete="username"
                 aria-required="true" />
 
@@ -63,6 +67,7 @@
                 Label="Password"
                 Variant="Variant.Outlined"
                 InputType="@passwordInput"
+                Class="mt-6"
                 Adornment="Adornment.End"
                 AdornmentIcon="@passwordInputIcon"
                 OnAdornmentClick="TogglePasswordVisibility"
@@ -74,7 +79,7 @@
             @* TODO: Change this to a MudStack... *@
             <div Class="d-flex justify-space-between align-center">
                 <MudCheckBox T="bool" @bind-Value="Input.RememberMe" Label="Remember me?" Color="Color.Primary" Class="ml-n1 my-3"></MudCheckBox>
-                <MudLink Href="/forgot-password" Typo="Typo.subtitle2">Forgot password?</MudLink>
+                <MudLink Href="/forgot-password" Typo="Typo.subtitle1">Forgot password?</MudLink>
             </div>
 
             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true">
@@ -85,6 +90,7 @@
     </MudPaper>
     <MudPaper Elevation="4" Class="pa-4" Width="100%">
 
+        <!-- External logins -->
         <MudStack Spacing="1" AlignItems="AlignItems.Center">
             <MudText Typo="Typo.subtitle1" GutterBottom="true">Or login with</MudText>
 
@@ -92,7 +98,7 @@
         </MudStack>
     </MudPaper>
 
-    <MudLink Href="/resend-email" Typo="Typo.subtitle2">Resend email confirmation</MudLink>
+    <MudLink Href="/resend-email" Typo="Typo.subtitle1">Resend email confirmation</MudLink>
 </MudStack>
 
 @* 
@@ -139,9 +145,9 @@
             }
         }
 
-        registerLink = NavigationManager.GetUriWithQueryParameters("/register", new Dictionary<string, object?>
+        registerLink = NavigationManager.GetUriWithQueryParameters(registerLink, new Dictionary<string, object?>
         {
-            ["returnUrl"] = ReturnUrl
+            ["returnUrl"] = ReturnUrl ?? "/login"
         });
     }
 
