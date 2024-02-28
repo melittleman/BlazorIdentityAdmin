@@ -73,6 +73,14 @@ public static class ConfigureServices
 
                 options.Scope.Add("read:user");
                 options.SaveTokens = true;
+                options.UsePkce = true;
+
+                options.Events.OnCreatingTicket = (context) =>
+                {
+                    // TODO:
+
+                    return Task.CompletedTask;
+                };
             });
         }
 

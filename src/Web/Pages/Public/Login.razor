@@ -67,7 +67,7 @@
 
             @* TODO: Change this to a MudStack... *@
             <div Class="d-flex justify-space-between align-center">
-                <MudCheckBox T="bool" @bind-Value="Input.RememberMe" Label="Remember me?" Color="Color.Primary" Class="ml-n1 my-3"></MudCheckBox>
+                <MudCheckBox T="bool" @bind-Value="Input.RememberMe" Label="Remember me?" Color="Color.Primary" Class="ml-n1 my-3" />
                 <MudLink Href="/forgot-password" Typo="Typo.subtitle1">Forgot password?</MudLink>
             </div>
 
@@ -229,7 +229,7 @@
         }
         else if (result.RequiresTwoFactor)
         {
-            RedirectManager.RedirectTo("Account/LoginWith2fa", new() 
+            RedirectManager.RedirectTo("/login-with-2fa", new() 
             { 
                 ["returnUrl"] = ReturnUrl,
                 ["rememberMe"] = Input.RememberMe 
@@ -238,7 +238,7 @@
         else if (result.IsLockedOut)
         {
             Logger.LogWarning("User account locked out.");
-            RedirectManager.RedirectTo("Account/Lockout");
+            RedirectManager.RedirectTo("/lockout");
         }
         else
         {

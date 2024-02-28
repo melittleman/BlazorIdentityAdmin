@@ -1,0 +1,16 @@
+﻿@page "/lockout"
+
+<PageTitle>Locked out</PageTitle>
+
+@* TODO: Can this be merged with the existing "/error" page? *@
+
+<MudStack Spacing="4" AlignItems="AlignItems.Center">
+    <MudPaper Elevation="4" Class="pa-4" Width="100%">
+
+        <PublicFormHeader>
+            <MudText Typo="Typo.h1" GutterBottom="true">Locked out</MudText>
+        </PublicFormHeader>
+
+        <StatusMessage Message="Error: This account has been locked out, please try again later." />
+    </MudPaper>
+</MudStack>

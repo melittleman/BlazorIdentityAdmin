@@ -1,40 +1,53 @@
-﻿@page "/Account/LoginWithRecoveryCode"
+﻿@page "/login-with-recovery-code"
 
 @inject SignInManager<User> SignInManager
 @inject UserManager<User> UserManager
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<LoginWithRecoveryCode> Logger
 
-<PageTitle>Recovery code verification</PageTitle>
+<PageTitle>Login Recovery Code</PageTitle>
 
-<h1>Recovery code verification</h1>
-<hr />
-<StatusMessage Message="@message" />
-<p>
-    You have requested to log in with a recovery code. This login will not be remembered until you provide
-    an authenticator app code at log in or disable 2FA and log in again.
-</p>
-<div class="row">
-    <div class="col-md-4">
-        <EditForm Model="Input" FormName="login-with-recovery-code" OnValidSubmit="OnValidSubmitAsync" method="post">
+<MudStack Spacing="4" AlignItems="AlignItems.Center">
+    <MudPaper Elevation="4" Class="pa-4" Width="100%">
+
+        <PublicFormHeader>
+            <MudText Typo="Typo.h1" GutterBottom="true">Login Recovery Code</MudText>
+            <MudText Typo="Typo.subtitle1">
+                You have requested to log in with a recovery code. 
+                This login will not be remembered until you provide an authenticator app code at login or disable 2FA and login again.
+            </MudText>
+        </PublicFormHeader>
+
+        <StatusMessage Message="@message" />
+
+        <EditForm Model="Input" FormName="login-with-recovery-code" OnValidSubmit="OnValidSubmitAsync" method="post" Enhance="true">
+
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.RecoveryCode" class="form-control" autocomplete="off" placeholder="RecoveryCode" />
-                <label for="recovery-code" class="form-label">Recovery Code</label>
-                <ValidationMessage For="() => Input.RecoveryCode" class="text-danger" />
-            </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+
+            <MudTextField T="string" @bind-Value="Input.RecoveryCode"
+                Label="Recovery Code"
+                Variant="Variant.Outlined"
+                InputType="InputType.Email"
+                Class="mt-6"
+                autocomplete="off"
+                aria-required="true" />
+    
+            <ValidationMessage For="() => Input.RecoveryCode" class="mud-alert mud-alert-text-error" />
+
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true">
+                Login
+            </MudButton>
         </EditForm>
-    </div>
-</div>
+    </MudPaper>
+</MudStack>
 
 @code {
+
     private string? message;
     private User user = default!;
 
     [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = new();
+    private LoginRecoveryCodeFormInput Input { get; set; } = new();
 
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
@@ -62,20 +75,12 @@
         else if (result.IsLockedOut)
         {
             Logger.LogWarning("User account locked out.");
-            RedirectManager.RedirectTo("Account/Lockout");
+            RedirectManager.RedirectTo("/lockout");
         }
         else
         {
             Logger.LogWarning("Invalid recovery code entered for user with ID '{UserId}' ", userId);
             message = "Error: Invalid recovery code entered.";
         }
-    }
-
-    private sealed class InputModel
-    {
-        [Required]
-        [DataType(DataType.Text)]
-        [Display(Name = "Recovery Code")]
-        public string RecoveryCode { get; set; } = "";
     }
 }

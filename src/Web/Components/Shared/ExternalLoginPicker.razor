@@ -3,44 +3,50 @@
 @inject SignInManager<User> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
-@if (externalLogins.Length == 0)
+@if (externalLogins.Length is 0)
 {
-    <div>
-        <p>
-            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-            about setting up this ASP.NET application to support logging in via external services</a>.
-        </p>
-    </div>
+    <MudText>
+        There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
+        about setting up this ASP.NET application to support logging in via external services</a>.
+    </MudText>
 }
 else
 {
-    <form class="form-horizontal" action="Account/PerformExternalLogin" method="post">
-        <div>
-            <AntiforgeryToken />
-            <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
-            <p>
-                @foreach (AuthenticationScheme provider in externalLogins)
-                {
-                    if (provider.Name.Equals(GitHubAuthenticationDefaults.AuthenticationScheme))
-                    {
-                        // TODO: Tooltip / title / aria label?
-                        <MudButton ButtonType="ButtonType.Submit"
-                            Variant="Variant.Outlined"
-                            EndIcon="@Icons.Custom.Brands.GitHub"
-                            Size="Size.Medium" 
-                            Color="Color.Tertiary"
-                            name="provider" 
-                            value="@provider.Name">
-                            GitHub
-                        </MudButton>
-                    }
-                    else
-                    {
-                        <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                    }
-                }
-            </p>
-        </div>
+    <form class="form-horizontal" action="/perform-external-login" method="post">
+
+        <AntiforgeryToken />
+        <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
+
+        @foreach (AuthenticationScheme provider in externalLogins)
+        {
+            if (provider.Name.Equals(GitHubAuthenticationDefaults.AuthenticationScheme))
+            {
+                // TODO: Tooltip / aria label?
+                <MudButton ButtonType="ButtonType.Submit"
+                    Variant="Variant.Outlined"
+                    EndIcon="@Icons.Custom.Brands.GitHub"
+                    Size="Size.Medium" 
+                    Color="Color.Tertiary"
+                    name="provider" 
+                    value="@provider.Name"
+                    title=@($"Login using your {provider.DisplayName} account")>
+                    @provider.DisplayName
+                </MudButton>
+            }
+            else
+            {
+                <MudButton ButtonType="ButtonType.Submit" 
+                    Variant="Variant.Outlined"
+                    Size="Size.Medium"
+                    Color="Color.Tertiary"
+                    name="provider" 
+                    value="@provider.Name"
+                    title=@($"Login using your {provider.DisplayName} account")>
+                    @provider.DisplayName
+                </MudButton>
+            }
+        }
+
     </form>
 }
 

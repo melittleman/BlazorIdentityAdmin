@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using BlazorAdminDashboard.Web.Pages.Public;
 using Darnton.Blazor.DeviceInterop.Geolocation;
 
 namespace BlazorAdminDashboard.Web;
@@ -73,13 +74,11 @@ public static class ConfigureServices
     // TODO: Should these all be moved to controllers?
     // These endpoints are required by the Identity Razor components defined in the /Components/Account/Pages directory of this project.
     // TODO: Move into a separate extensions class rather than ConfigureServices...
-    public static IEndpointConventionBuilder MapAdditionalIdentityEndpoints(this IEndpointRouteBuilder endpoints)
+    public static IEndpointRouteBuilder MapAdditionalIdentityEndpoints(this IEndpointRouteBuilder endpoints)
     {
         ArgumentNullException.ThrowIfNull(endpoints);
 
-        var accountGroup = endpoints.MapGroup("/Account");
-
-        accountGroup.MapPost("/PerformExternalLogin", (
+        endpoints.MapPost("/perform-external-login", (
             HttpContext context,
             [FromServices] SignInManager<User> signInManager,
             [FromForm] string provider,
@@ -89,27 +88,25 @@ public static class ConfigureServices
                 new("ReturnUrl", returnUrl),
                 new("Action", ExternalLogin.LoginCallbackAction)];
 
-            var redirectUrl = UriHelper.BuildRelative(
+            string redirectUrl = UriHelper.BuildRelative(
                 context.Request.PathBase,
-                "/Account/ExternalLogin",
+                "/external-login",
                 QueryString.Create(query));
 
-            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            AuthenticationProperties properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
             return TypedResults.Challenge(properties, [provider]);
         });
 
-        accountGroup.MapPost("/Logout", async (
+        endpoints.MapPost("/logout", async (
             ClaimsPrincipal user,
             SignInManager<User> signInManager,
             [FromForm] string returnUrl) =>
         {
             await signInManager.SignOutAsync();
-            return TypedResults.LocalRedirect($"~/{returnUrl}");
+            return TypedResults.LocalRedirect($"/{returnUrl}");
         });
 
-        var manageGroup = accountGroup.MapGroup("/Manage").RequireAuthorization();
-
-        manageGroup.MapPost("/LinkExternalLogin", async (
+        endpoints.MapPost("/account/link-external-login", async (
             HttpContext context,
             [FromServices] SignInManager<User> signInManager,
             [FromForm] string provider) =>
@@ -117,19 +114,20 @@ public static class ConfigureServices
             // Clear the existing external cookie to ensure a clean login process
             await context.SignOutAsync(IdentityConstants.ExternalScheme);
 
-            var redirectUrl = UriHelper.BuildRelative(
+            string redirectUrl = UriHelper.BuildRelative(
                 context.Request.PathBase,
-                "/Account/Manage/ExternalLogins",
+                "/account/external-logins",
                 QueryString.Create("Action", ExternalLogins.LinkLoginCallbackAction));
 
-            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl, signInManager.UserManager.GetUserId(context.User));
+            AuthenticationProperties properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl, signInManager.UserManager.GetUserId(context.User));
             return TypedResults.Challenge(properties, [provider]);
-        });
+
+        }).RequireAuthorization();
 
         var loggerFactory = endpoints.ServiceProvider.GetRequiredService<ILoggerFactory>();
         var downloadLogger = loggerFactory.CreateLogger("DownloadPersonalData");
 
-        manageGroup.MapPost("/DownloadPersonalData", async (
+        endpoints.MapPost("/account/download-personal-data", async (
             HttpContext context,
             [FromServices] UserManager<User> userManager,
             [FromServices] AuthenticationStateProvider authenticationStateProvider) =>
@@ -163,8 +161,9 @@ public static class ConfigureServices
 
             context.Response.Headers.TryAdd("Content-Disposition", "attachment; filename=PersonalData.json");
             return TypedResults.File(fileBytes, contentType: "application/json", fileDownloadName: "PersonalData.json");
-        });
 
-        return accountGroup;
+        }).RequireAuthorization();
+
+        return endpoints;
     }
 }

@@ -10,38 +10,47 @@
 
 <PageTitle>Register</PageTitle>
 
+<MudStack Spacing="4" AlignItems="AlignItems.Center">
+    <MudPaper Elevation="4" Class="pa-4" Width="100%">
 
+        <PublicFormHeader>
+            <MudText Typo="Typo.h1" GutterBottom="true">Register</MudText>
+            <MudText Typo="Typo.subtitle1">Associate your @ProviderDisplayName account.</MudText>
+        </PublicFormHeader>
 
+        <StatusMessage Message="@message" />
 
+        @* TODO: We could probably just use the 'StatusMessage' component for this too? But it might need a RenderFragment passing in. *@
+        <MudAlert Severity="Severity.Info" Class="mt-8 mud-width-full" Elevation="4">
+            You've successfully authenticated with <strong>@ProviderDisplayName</strong>.
+            Please confirm or enter an email address below and click the Register button to finish logging in.
+        </MudAlert>
 
+        <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post" Enhance="true">
 
-
-<StatusMessage Message="@message" />
-<h1>Register</h1>
-<h2>Associate your @ProviderDisplayName account.</h2>
-<hr />
-
-<div  class="alert alert-info">
-    You've successfully authenticated with <strong>@ProviderDisplayName</strong>.
-    Please confirm or enter an email address below and click the Register button to finish logging in.
-</div>
-
-<div class="row">
-    <div class="col-md-4">
-        <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post">
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="email" placeholder="Please enter your email." />
-                <label for="email" class="form-label">Email</label>
-                <ValidationMessage For="() => Input.Email" />
-            </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+
+            @* TODO: Need to also add the ability to enter a unique username if not provided. *@
+
+            <MudTextField T="string" @bind-Value="Input.Email"
+                Label="Email"
+                Variant="Variant.Outlined"
+                InputType="InputType.Email"
+                Class="mt-6"
+                autocomplete="email"
+                aria-required="true" />
+
+            <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-text-error" />
+
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true">
+                Register
+            </MudButton>
         </EditForm>
-    </div>
-</div>
+    </MudPaper>
+</MudStack>
 
 @code {
+
     public const string LoginCallbackAction = "LoginCallback";
 
     private string? message;
@@ -51,7 +60,7 @@
     private HttpContext HttpContext { get; set; } = default!;
 
     [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = new();
+    private ExternalLoginFormInput Input { get; set; } = new();
 
     [SupplyParameterFromQuery]
     private string? RemoteError { get; set; }
@@ -71,7 +80,7 @@
             RedirectManager.RedirectToWithStatus("/login", $"Error from external provider: {RemoteError}", HttpContext);
         }
 
-        var info = await SignInManager.GetExternalLoginInfoAsync();
+        ExternalLoginInfo? info = await SignInManager.GetExternalLoginInfoAsync();
         if (info is null)
         {
             RedirectManager.RedirectToWithStatus("/login", "Error loading external login information.", HttpContext);
@@ -108,11 +117,12 @@
                 "{Name} logged in with {LoginProvider} provider.",
                 externalLoginInfo.Principal.Identity?.Name,
                 externalLoginInfo.LoginProvider);
+
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.IsLockedOut)
         {
-            RedirectManager.RedirectTo("Account/Lockout");
+            RedirectManager.RedirectTo("/lockout");
         }
 
         // If the user does not have an account, then ask the user to create an account.
@@ -124,69 +134,58 @@
 
     private async Task OnValidSubmitAsync()
     {
-        var emailStore = GetEmailStore();
-        var user = CreateUser();
+        User user = new();
 
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
 
-        var result = await UserManager.CreateAsync(user);
+        if (UserStore is IUserEmailStore<User> emailStore)
+        {
+            await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+        }
+
+        IdentityResult result = await UserManager.CreateAsync(user);
+
         if (result.Succeeded)
         {
             result = await UserManager.AddLoginAsync(user, externalLoginInfo);
+
             if (result.Succeeded)
             {
                 Logger.LogInformation("User created an account using {Name} provider.", externalLoginInfo.LoginProvider);
 
-                var userId = await UserManager.GetUserIdAsync(user);
-                var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+                string userId = await UserManager.GetUserIdAsync(user);
+                string code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+
                 code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
                 var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-                    NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-                    new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+                    NavigationManager.ToAbsoluteUri("/confirm-email").AbsoluteUri,
+                    new Dictionary<string, object?> 
+                    { 
+                        ["userId"] = userId, 
+                        ["code"] = code 
+                    });
+
                 await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
 
                 // If account confirmation is required, we need to show the link if we don't have a real email sender
                 if (UserManager.Options.SignIn.RequireConfirmedAccount)
                 {
-                    RedirectManager.RedirectTo("Account/RegisterConfirmation", new() { ["email"] = Input.Email });
+                    RedirectManager.RedirectTo("/register-confirmation", new() 
+                    { 
+                        ["email"] = Input.Email 
+                    });
                 }
 
-                await SignInManager.SignInAsync(user, isPersistent: false, externalLoginInfo.LoginProvider);
+                // TODO: I think this can be safely removed as we don't actually want the registration process
+                // to just automatically log the user in, as there is a lot of functionality on the Login page
+                // e.g. Device / Geo information and Remember Me that we want the user to pass through.
+                //await SignInManager.SignInAsync(user, isPersistent: false, externalLoginInfo.LoginProvider);
+
                 RedirectManager.RedirectTo(ReturnUrl);
             }
         }
 
         message = $"Error: {string.Join(",", result.Errors.Select(error => error.Description))}";
-    }
-
-    private User CreateUser()
-    {
-        try
-        {
-            return Activator.CreateInstance<User>();
-        }
-        catch
-        {
-            throw new InvalidOperationException($"Can't create an instance of '{nameof(User)}'. " +
-                $"Ensure that '{nameof(User)}' is not an abstract class and has a parameterless constructor");
-        }
-    }
-
-    private IUserEmailStore<User> GetEmailStore()
-    {
-        if (!UserManager.SupportsUserEmail)
-        {
-            throw new NotSupportedException("The default UI requires a user store with email support.");
-        }
-        return (IUserEmailStore<User>)UserStore;
-    }
-
-    private sealed class InputModel
-    {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = "";
     }
 }

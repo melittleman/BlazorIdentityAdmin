@@ -1,0 +1,103 @@
+﻿@page "/login-with-2fa"
+
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+@inject IdentityRedirectManager RedirectManager
+@inject ILogger<LoginWith2fa> Logger
+@inject NavigationManager NavigationManager
+
+<PageTitle>Two-Factor Authentication</PageTitle>
+
+<MudStack Spacing="4" AlignItems="AlignItems.Center">
+    <MudPaper Elevation="4" Class="pa-4" Width="100%">
+
+        <PublicFormHeader>
+            <MudText Typo="Typo.h1" GutterBottom="true">Two-Factor Authentication</MudText>
+            <MudText Typo="Typo.subtitle1">
+                Don't have access to your authenticator device? <MudLink Typo="Typo.subtitle1" Href="@recoveryCodeLink">Login with a recovery code</MudLink>
+            </MudText>
+        </PublicFormHeader>
+
+        <StatusMessage Message="@message" />
+
+        <MudText Typo="Typo.h3">Your account is protected with an authenticator app. Enter your authenticator code below.</MudText>
+
+        <EditForm Model="Input" FormName="login-with-2fa" OnValidSubmit="OnValidSubmitAsync" method="post" Enhance="true">
+            <DataAnnotationsValidator />
+
+            <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
+            <input type="hidden" name="RememberMe" value="@RememberMe" />
+
+            <MudTextField T="string" @bind-Value="Input.TwoFactorCode"
+                Label="Authenticator Code"
+                Variant="Variant.Outlined"
+                InputType="InputType.Text"
+                Class="mt-6"
+                autocomplete="off"
+                aria-required="true" />
+
+            <ValidationMessage For="() => Input.TwoFactorCode" class="mud-alert mud-alert-text-error" />
+            
+            <MudCheckBox T="bool" @bind-Value="Input.RememberDevice" Label="Remember this device?" Color="Color.Primary" Class="ml-n1 my-3" />
+
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true">
+                Login
+            </MudButton>
+        </EditForm>
+    </MudPaper>
+</MudStack>
+
+@code {
+
+    private string? message;
+    private string recoveryCodeLink = "/login-with-recovery-code";
+    private User user = default!;
+
+    [SupplyParameterFromForm]
+    private Login2faFormInput Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromQuery]
+    private bool RememberMe { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Ensure the user has gone through the username & password screen first
+        user = await SignInManager.GetTwoFactorAuthenticationUserAsync() ??
+            throw new InvalidOperationException("Unable to load two-factor authentication user.");
+
+        recoveryCodeLink = NavigationManager.GetUriWithQueryParameters(recoveryCodeLink, new Dictionary<string, object?>
+        {
+            ["returnUrl"] = ReturnUrl
+        });
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        string authenticatorCode = Input.TwoFactorCode!.Replace(" ", string.Empty).Replace("-", string.Empty);
+
+        // TODO: Does this also need to be updated to include the Device and Geolocation info?
+        SignInResult result = await SignInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, RememberMe, Input.RememberDevice);
+        string userId = await UserManager.GetUserIdAsync(user);
+
+        if (result.Succeeded)
+        {
+            Logger.LogInformation("User with ID '{UserId}' logged in with 2fa.", userId);
+            RedirectManager.RedirectTo(ReturnUrl);
+        }
+        else if (result.IsLockedOut)
+        {
+            Logger.LogWarning("User with ID '{UserId}' account locked out.", userId);
+            RedirectManager.RedirectTo("/lockout");
+        }
+        else
+        {
+            Logger.LogWarning("Invalid authenticator code entered for user with ID '{UserId}'.", userId);
+            message = "Error: Invalid authenticator code.";
+        }
+    }
+
+
+}
