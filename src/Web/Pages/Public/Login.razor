@@ -27,30 +27,19 @@
     <MudPaper Elevation="4" Class="pa-4" Width="100%">
 
         <!-- Login form -->
-        <MudStack Row="true" AlignItems="AlignItems.Start">
-
-            @* TODO: This icon should actually be the tenant's logo URL if available. *@
-            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Secondary" Size="Size.Large" Style="width:80px; height:80px;" />
-            <MudStack Justify="Justify.Center" Spacing="0">
-
-                <MudText Typo="Typo.h1" GutterBottom="true">Login</MudText>
-                <MudText Typo="Typo.subtitle1">Don't have an account? <MudLink Typo="Typo.subtitle1" Href="@registerLink">Register</MudLink></MudText>
-            </MudStack>
-
-            <MudSpacer />
-            <CustomThemeProvider Theme="new CustomTheme()" />
-        </MudStack>
+        <PublicFormHeader>
+            <MudText Typo="Typo.h1" GutterBottom="true">Login</MudText>
+            <MudText Typo="Typo.subtitle1">Don't have an account? <MudLink Typo="Typo.subtitle1" Href="@registerLink">Register</MudLink></MudText>
+        </PublicFormHeader>
 
         <StatusMessage Message="@errorMessage" />
 
         @* TODO: I'm not sure if we actually need this "Enhance"" property here or not? *@
-        <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login" Enhance="true">
+        <EditForm Model="Input" method="post" OnValidSubmit="LoginUserAsync" FormName="login" Enhance="true">
 
             <DeviceInfoProvider />
             <GeolocationInfoProvider />
             <DataAnnotationsValidator />
-
-            <MudDivider DividerType="DividerType.Middle" Class="mt-6" />
 
             @* TODO: Update this to username or email lookup *@
             <MudTextField T="string" @bind-Value="Input.Email" 
@@ -61,7 +50,7 @@
                 autocomplete="username"
                 aria-required="true" />
 
-            <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-error" />
+            <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-text-error" />
 
             <MudTextField @bind-Value="@Input.Password"
                 Label="Password"
@@ -74,7 +63,7 @@
                 autocomplete="current-password"
                 aria-required="true" />
 
-            <ValidationMessage For="() => Input.Password" class="mud-alert mud-alert-error" />
+            <ValidationMessage For="() => Input.Password" class="mud-alert mud-alert-text-error" />
 
             @* TODO: Change this to a MudStack... *@
             <div Class="d-flex justify-space-between align-center">
@@ -98,7 +87,7 @@
         </MudStack>
     </MudPaper>
 
-    <MudLink Href="/resend-email" Typo="Typo.subtitle1">Resend email confirmation</MudLink>
+    <MudLink Href="/resend-email-confirmation" Typo="Typo.subtitle1">Resend email confirmation</MudLink>
 </MudStack>
 
 @* 
@@ -151,7 +140,7 @@
         });
     }
 
-    public async Task LoginUser()
+    public async Task LoginUserAsync()
     {
         // TODO: Email addresses aren't actually unique within
         // the application so this may cause us some issues.

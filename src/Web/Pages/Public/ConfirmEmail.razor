@@ -1,0 +1,76 @@
+﻿@page "/confirm-email"
+
+@inject UserManager<User> UserManager
+@inject IdentityRedirectManager RedirectManager
+@inject NavigationManager NavigationManager
+
+<PageTitle>Confirm Email</PageTitle>
+
+<MudStack Spacing="4" AlignItems="AlignItems.Center">
+    <MudPaper Elevation="4" Class="pa-4" Width="100%">
+
+        <PublicFormHeader>
+            <MudText Typo="Typo.h1" Class="py-4">Confirm Email</MudText>
+        </PublicFormHeader>
+
+        <StatusMessage Message="@statusMessage" />
+
+        @if (isEmailConfirmed)
+        {
+            <MudText Typo="Typo.subtitle1">Click <MudLink Typo="Typo.subtitle1" Href="@loginLink">here</MudLink> to login.</MudText>
+        }
+    </MudPaper>
+</MudStack>
+
+@code {
+    
+    private bool isEmailConfirmed;
+    private string? statusMessage;
+    private string loginLink = "/login";
+    
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    private string? UserId { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? Code { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserId is null || Code is null)
+        {
+            RedirectManager.RedirectTo("");
+        }
+
+        loginLink = NavigationManager.GetUriWithQueryParameters(loginLink, new Dictionary<string, object?>
+        {
+            ["returnUrl"] = ReturnUrl
+        });
+
+        // TODO: This shouldn't really be passing the UserId through the URL
+        // as that seems like a bit of a security concern... change to username / email?
+        User? user = await UserManager.FindByIdAsync(UserId);
+
+        if (user is null)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            statusMessage = $"Error loading user with ID {UserId}";
+        }
+        else
+        {
+            string code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
+            IdentityResult result = await UserManager.ConfirmEmailAsync(user, code);
+
+            isEmailConfirmed = result.Succeeded;
+
+            statusMessage = result.Succeeded 
+                ? "Thank you for confirming your email." 
+                : "Error confirming your email.";
+        }
+    }
+}

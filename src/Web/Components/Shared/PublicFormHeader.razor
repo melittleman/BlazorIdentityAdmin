@@ -1,0 +1,27 @@
+﻿<MudStack Row="true" AlignItems="AlignItems.Start">
+
+    @* TODO: This icon should actually be the tenant's logo URL if available. *@
+    <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Secondary" Size="Size.Large" Style="width:80px; height:80px;" />
+
+        @if (ChildContent is not null)
+        {
+            <MudStack Justify="Justify.Center" AlignItems="AlignItems.Stretch" Spacing="0">
+
+                @ChildContent
+
+            </MudStack>
+        }
+
+    <MudSpacer />
+    <CustomThemeProvider Theme="theme" />
+</MudStack>
+
+<MudDivider DividerType="DividerType.Middle" Class="my-6" />
+
+@code {
+
+    private static CustomTheme theme = new();
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

@@ -1,16 +1,26 @@
-﻿@page "/Account/ConfirmEmailChange"
+﻿@page "/confirm-email-change"
 
 @inject UserManager<User> UserManager
 @inject SignInManager<User> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Confirm email change</PageTitle>
+@* TODO: Could this actually be merged with the existing 'confirm-email' page? *@
 
-<h1>Confirm email change</h1>
+<PageTitle>Confirm Email Change</PageTitle>
 
-<StatusMessage Message="@message" />
+<MudStack Spacing="4" AlignItems="AlignItems.Center">
+    <MudPaper Elevation="4" Class="pa-4" Width="100%">
+
+        <PublicFormHeader>
+            <MudText Typo="Typo.h1" Class="py-4">Confirm Email Change</MudText>
+        </PublicFormHeader>
+
+        <StatusMessage Message="@message" />
+    </MudPaper>
+</MudStack>
 
 @code {
+
     private string? message;
 
     [CascadingParameter]
@@ -35,15 +45,17 @@
                 HttpContext);
         }
 
-        var user = await UserManager.FindByIdAsync(UserId);
+        User? user = await UserManager.FindByIdAsync(UserId);
+
         if (user is null)
         {
             message = "Unable to find user with Id '{userId}'";
             return;
         }
 
-        var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
-        var result = await UserManager.ChangeEmailAsync(user, Email, code);
+        string code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
+        IdentityResult result = await UserManager.ChangeEmailAsync(user, Email, code);
+
         if (!result.Succeeded)
         {
             message = "Error changing email.";
@@ -52,8 +64,9 @@
 
         // In our UI email and user name are one and the same, so when we update the email
         // we need to update the user name.
-        var setUserNameResult = await UserManager.SetUserNameAsync(user, Email);
-        if (!setUserNameResult.Succeeded)
+        IdentityResult setUserNameResult = await UserManager.SetUserNameAsync(user, Email);
+
+        if (setUserNameResult.Succeeded is false)
         {
             message = "Error changing user name.";
             return;

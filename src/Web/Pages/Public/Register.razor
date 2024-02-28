@@ -19,19 +19,10 @@
     <MudPaper Elevation="4" Class="pa-4" Width="100%">
 
         <!-- Register form -->
-        <MudStack Row="true" AlignItems="AlignItems.Start">
-
-            @* TODO: This icon should actually be the tenant's logo URL if available. *@
-            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Secondary" Size="Size.Large" Style="width:80px; height:80px;" />
-            <MudStack Justify="Justify.Center" Spacing="0">
-
-                <MudText Typo="Typo.h1" GutterBottom="true">Register</MudText>
-                <MudText Typo="Typo.subtitle1">Already have an account? <MudLink Typo="Typo.subtitle1" Href="@loginLink">Login</MudLink></MudText>
-            </MudStack>
-
-            <MudSpacer />
-            <CustomThemeProvider Theme="new CustomTheme()" />
-        </MudStack>
+        <PublicFormHeader>
+            <MudText Typo="Typo.h1" GutterBottom="true">Register</MudText>
+            <MudText Typo="Typo.subtitle1">Already have an account? <MudLink Typo="Typo.subtitle1" Href="@loginLink">Login</MudLink></MudText>
+        </PublicFormHeader>
 
         <StatusMessage Message="@ErrorMessage" />
 
@@ -39,8 +30,6 @@
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUserAsync" FormName="register" Enhance="true">
 
             <DataAnnotationsValidator />
-
-            <MudDivider DividerType="DividerType.Middle" Class="mt-6"/>
 
             @* TODO: Need a way to provide a username but check it for uniqueness before registration *@
             <MudTextField T="string" @bind-Value="Input.Email"

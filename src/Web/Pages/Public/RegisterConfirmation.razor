@@ -1,0 +1,56 @@
+﻿@page "/register-confirmation"
+
+@inject UserManager<User> UserManager
+@inject IEmailSender<User> EmailSender
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+@*
+    TODO: I'm really not sure if this even needs to be it's own dedicated 'page'
+    as we could probably get away with adding a component to the registration page.
+*@
+
+<PageTitle>Register Confirmation</PageTitle>
+
+<MudStack Spacing="4" AlignItems="AlignItems.Center">
+    <MudPaper Elevation="4" Class="pa-4" Width="100%">
+
+        <PublicFormHeader>
+            <MudText Typo="Typo.h1" Class="py-4">Register Confirmation</MudText>
+        </PublicFormHeader>
+
+        <StatusMessage Message="@statusMessage" />
+        <MudText Typo="Typo.subtitle1">Please check your email to confirm your account.</MudText>
+
+    </MudPaper>
+</MudStack>
+
+@code {
+    private string? emailConfirmationLink;
+    private string? statusMessage;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    private string? Email { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Email is null)
+        {
+            RedirectManager.RedirectTo("");
+        }
+
+        User? user = await UserManager.FindByEmailAsync(Email);
+
+        if (user is null)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            statusMessage = "Error finding user for unspecified email";
+        }
+    }
+}
