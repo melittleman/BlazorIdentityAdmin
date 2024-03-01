@@ -2,56 +2,72 @@
 @inject NavigationManager Navigation
 @rendermode RenderMode.InteractiveServer
 
-<MudMenu AnchorOrigin="Origin.CenterCenter" Dense="true" Class="mt-1 ml-4">
-    <ActivatorContent>
+@if (user is not null)
+{
+    // We are authenticated.
+    // TODO: Need to investigate some more on why <AuthorizeView> doesn't really work for us here.
+    // I think it has something to do with the fact that it's a Blazor component that's rendered after the request.
+    <MudMenu AnchorOrigin="Origin.CenterCenter" Dense="true" Class="mt-1 ml-4">
+        <ActivatorContent>
 
-        @if (string.IsNullOrEmpty(AvatarUrl) is false)
-        {
-            <MudAvatar>
+            @if (string.IsNullOrEmpty(AvatarUrl) is false)
+            {
+                <MudAvatar>
                     <MudImage Src="@AvatarUrl"></MudImage>
-            </MudAvatar>
-        }
-        else
-        {
-            <MudAvatar>@User.Identity?.Name?.First()</MudAvatar>
-        }
+                </MudAvatar>
+            }
+            else
+            {
+                <MudAvatar>@user.Identity?.Name?.First()</MudAvatar>
+            }
 
-    </ActivatorContent>
-    <ChildContent>
-        <MudCard Elevation="0">
-            <MudCardHeader>
-                <CardHeaderAvatar>
-                    @if (string.IsNullOrEmpty(AvatarUrl) is false)
-                    {
-                        <MudAvatar>
-                            <MudImage Src="@AvatarUrl"></MudImage>
-                        </MudAvatar>
-                    }
-                    else
-                    {
-                        <MudAvatar>@User.Identity?.Name?.First()</MudAvatar>
-                    }
-                </CardHeaderAvatar>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.body2">@User.Identity?.Name</MudText>
-                    <MudText Typo="Typo.caption">@User.FindFirstValue(OpenIddictConstants.Claims.Role)</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-        </MudCard>
+        </ActivatorContent>
+        <ChildContent>
+            <MudCard Elevation="0">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        @if (string.IsNullOrEmpty(AvatarUrl) is false)
+                        {
+                            <MudAvatar>
+                                <MudImage Src="@AvatarUrl"></MudImage>
+                            </MudAvatar>
+                        }
+                        else
+                        {
+                            <MudAvatar>@user.Identity?.Name?.First()</MudAvatar>
+                        }
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.body2">@user.Identity?.Name</MudText>
+                            <MudText Typo="Typo.caption">@user.FindFirstValue(OpenIddictConstants.Claims.Role)</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+            </MudCard>
 
-        <MudDivider Class="mb-4" />
+            <MudDivider Class="mb-4" />
 
-        <MudMenuItem Href="/account/profile" Icon="@Icons.Material.Outlined.Person">Profile</MudMenuItem>
-        <MudMenuItem Href="@LogoutUrl" Icon="@Icons.Material.Outlined.Logout">Logout</MudMenuItem>
-    </ChildContent>
-</MudMenu>
+            <MudMenuItem Href="/account/profile" Icon="@Icons.Material.Outlined.Person">Profile</MudMenuItem>
+            <MudMenuItem Href="@LogoutUrl" Icon="@Icons.Material.Outlined.Logout">Logout</MudMenuItem>
+        </ChildContent>
+    </MudMenu>
+}
+else
+{
+    <MudToolBar Spacing="5">
+        <MudButton Href="/register" StartIcon="@Icons.Material.Outlined.AppRegistration" Variant="Variant.Outlined" Class="mr-5">Register</MudButton>
+        <MudButton Href="/login" StartIcon="@Icons.Material.Outlined.Login" Variant="Variant.Outlined" Class="mr-5">Login</MudButton>
+    </MudToolBar>
+}
 
 @code {
 
-    private string? AvatarUrl => User.FindFirstValue(OpenIddictConstants.Claims.Picture);
+    // Needs to be static to be persisted from the HTTP Request
+    // through to after the SignalR circuit is established.
+    private static ClaimsPrincipal? user;
+    private string? AvatarUrl => user?.FindFirstValue(OpenIddictConstants.Claims.Picture);
 
-    [Parameter]
-    public required ClaimsPrincipal User { get; set; }
+    [CascadingParameter]
+    public required HttpContext HttpContext { get; set; }
 
     private string? currentUrl;
     private string LogoutUrl => string.IsNullOrEmpty(currentUrl) is false
@@ -62,6 +78,11 @@
     {
         currentUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
         Navigation.LocationChanged += OnLocationChanged;
+
+        if (HttpContext?.User.Identity?.IsAuthenticated is true)
+        {
+            user = HttpContext.User;
+        }
 
         return base.OnInitializedAsync();
     }

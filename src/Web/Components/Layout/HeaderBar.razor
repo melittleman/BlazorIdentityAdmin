@@ -11,21 +11,7 @@
 
     <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" />
 
-    <AuthorizeView>
-        <Authorized>
-
-            <LoginDisplay User="@context.User" />
-
-        </Authorized>
-        <NotAuthorized>
-
-            <MudToolBar Spacing="5">
-                <MudButton Href="/register" StartIcon="@Icons.Material.Outlined.AppRegistration" Variant="Variant.Outlined" Class="mr-5">Register</MudButton>
-                <MudButton Href="/login" StartIcon="@Icons.Material.Outlined.Login" Variant="Variant.Outlined" Class="mr-5">Login</MudButton>
-            </MudToolBar>
-
-        </NotAuthorized>
-    </AuthorizeView>
+    <LoginDisplay />
 </MudAppBar>
 
 @code {
