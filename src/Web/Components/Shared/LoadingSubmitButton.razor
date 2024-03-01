@@ -1,0 +1,30 @@
+﻿@rendermode RenderMode.InteractiveServer
+
+<MudButton ButtonType="ButtonType.Submit" 
+    Variant="Variant.Filled" 
+    Color="Color.Primary" 
+    Size="Size.Large" 
+    FullWidth="true"
+    Disabled="@IsProcessing"
+    OnClick="() => IsProcessing = true">
+
+    @if (IsProcessing)
+    {
+        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+        <MudText Class="ms-2">Please wait</MudText>
+    }
+    else
+    {
+        <MudText>@ButtonText</MudText>
+    }
+
+</MudButton>
+
+@code {
+
+    [Parameter]
+    public string ButtonText { get; set; } = "Submit";
+
+    [Parameter]
+    public bool IsProcessing { get; set; } = false;
+}

@@ -70,18 +70,26 @@ else
     public required HttpContext HttpContext { get; set; }
 
     private string? currentUrl;
-    private string LogoutUrl => string.IsNullOrEmpty(currentUrl) is false
+    private string LogoutUrl => string.IsNullOrEmpty(currentUrl) is false 
+        && currentUrl.Contains("returnUrl") is false
+        && currentUrl.Contains("logout") is false
         ? "/logout?returnUrl=" + currentUrl
         : "/logout";
 
     protected override Task OnInitializedAsync()
     {
-        currentUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
         Navigation.LocationChanged += OnLocationChanged;
 
-        if (HttpContext?.User.Identity?.IsAuthenticated is true)
+        // We need a guard here because this method gets called twice, once from the 
+        // HTTP Request, and the other from SignalR. So this prevents overwriting.
+        if (HttpContext is not null)
         {
-            user = HttpContext.User;
+            currentUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
+
+            if (HttpContext.User.Identity?.IsAuthenticated is true)
+            {
+                user = HttpContext.User;
+            }
         }
 
         return base.OnInitializedAsync();

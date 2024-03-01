@@ -76,9 +76,7 @@
                 <MudLink Href="/forgot-password" Typo="Typo.subtitle1">Forgot password?</MudLink>
             </div>
 
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true">
-                Login
-            </MudButton>
+            <LoadingSubmitButton ButtonText="Login" />
         </EditForm>
 
     </MudPaper>
@@ -105,7 +103,6 @@
 @code {
 
     // TODO: I think this is now large enough to be refactored into a 'code behind'.
-
     private string? errorMessage;
     private string registerLink = "/register";
 
