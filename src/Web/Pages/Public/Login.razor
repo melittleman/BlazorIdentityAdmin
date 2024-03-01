@@ -69,6 +69,8 @@
             <div Class="d-flex justify-space-between align-center">
 
                 <MudCheckBox @bind-Value="Input.RememberMe" @rendermode="RenderMode.InteractiveServer"
+                    name="Input.RememberMe"
+                    TriState="false"
                     Label="Remember me?" 
                     Color="Color.Primary" 
                     Class="ml-n1 my-3" />
@@ -209,7 +211,7 @@
 
             if (SignInManager is CustomSignInManager custom)
             {                
-                result = await custom.PasswordSignInDeviceAsync(user, device, Input.RememberMe);
+                result = await custom.PasswordSignInDeviceAsync(user, device, Input.IsRememberMeEnabled);
             }
 
             // TODO: Now need to update the user with this new Device if the Signin was successful before we redirect

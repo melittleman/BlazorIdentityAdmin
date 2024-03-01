@@ -1,4 +1,6 @@
-﻿<MudNavMenu>
+﻿@rendermode RenderMode.InteractiveServer
+
+<MudNavMenu>
     @* <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink> *@
     <MudNavLink Href="/admin/counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Add">Counter</MudNavLink>
     <MudNavLink Href="/admin/weather" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Cloud">Weather</MudNavLink>
@@ -50,3 +52,19 @@
         <MudNavLink Href="/admin/scopes" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Scopes</MudNavLink>
     </AuthorizeView>
 </MudNavMenu>
+
+@code {
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is not null)
+        {
+            var result = await AuthState;
+        }
+
+        await  base.OnInitializedAsync();
+    }
+}

@@ -11,11 +11,11 @@
     @if (IsProcessing)
     {
         <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-        <MudText Class="ms-2">Please wait</MudText>
+        <MudText Class="ms-2" Typo="Typo.button">Please Wait</MudText>
     }
     else
     {
-        <MudText>@ButtonText</MudText>
+        <MudText Typo="Typo.button">@ButtonText</MudText>
     }
 
 </MudButton>
