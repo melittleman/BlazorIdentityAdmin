@@ -7,6 +7,10 @@
     // We are authenticated.
     // TODO: Need to investigate some more on why <AuthorizeView> doesn't really work for us here.
     // I think it has something to do with the fact that it's a Blazor component that's rendered after the request.
+
+    @* TODO: Add check for Admin role. This could actually be moved into the 'HeaderBar' component also? *@
+    <MudIconButton Icon="@Icons.Material.Outlined.Settings" Color="Color.Inherit" Href="/admin" />
+
     <MudMenu AnchorOrigin="Origin.CenterCenter" Dense="true" Class="mt-1 ml-4">
         <ActivatorContent>
 
@@ -53,10 +57,8 @@
 }
 else
 {
-    <MudToolBar Spacing="5">
-        <MudButton Href="/register" StartIcon="@Icons.Material.Outlined.AppRegistration" Variant="Variant.Outlined" Class="mr-5">Register</MudButton>
-        <MudButton Href="/login" StartIcon="@Icons.Material.Outlined.Login" Variant="Variant.Outlined" Class="mr-5">Login</MudButton>
-    </MudToolBar>
+    <MudButton Href="/register" StartIcon="@Icons.Material.Outlined.AppRegistration" Variant="Variant.Outlined" Class="mr-5">Register</MudButton>
+    <MudButton Href="/login" StartIcon="@Icons.Material.Outlined.Login" Variant="Variant.Outlined" Class="mr-5">Login</MudButton>
 }
 
 @code {

@@ -11,7 +11,13 @@
 
         <MudDrawerHeader Dense="true" Style="padding: 10px">
             
-            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Large" />
+            @* 
+                TODO: This kinda sucks that we have to 'hard code' this to secondary color. 
+                There must be a way of getting the current theme so we can properly style this.
+                Using 'inherit' doesn't work as it uses the primary text color when it should be 
+                using the primary contrast text.
+            *@
+            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Large" Color="Color.Secondary" />
             <MudSpacer />
 
             <MudIconButton Title="Close menu" Size="Size.Small" Icon="@Icons.Material.Outlined.Close" OnClick="(() => _drawerOpen = false)" />
@@ -45,7 +51,7 @@
 
         <MudDrawerHeader LinkToIndex="true" Dense="true" Style="padding: 10px">
 
-            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Large" />
+            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Large" Color="Color.Secondary" />
         </MudDrawerHeader>
 
         <NavMenu />

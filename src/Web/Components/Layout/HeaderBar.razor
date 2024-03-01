@@ -7,11 +7,16 @@
     </MudToolBar>
 
     <MudSpacer />
-    <CustomThemeProvider Theme="theme" />
 
-    <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/MudBlazor/MudBlazor/" Target="_blank" />
+    <MudToolBar DisableGutters="true">
 
-    <LoginDisplay />
+        <CustomThemeProvider Theme="theme" />
+
+        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/melittleman/BlazorAdminDashboard" Target="_blank" />
+
+        <LoginDisplay />
+
+    </MudToolBar>
 </MudAppBar>
 
 @code {
