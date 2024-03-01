@@ -71,10 +71,8 @@ else
     [CascadingParameter]
     public required HttpContext HttpContext { get; set; }
 
-    private string? currentUrl;
-    private string LogoutUrl => string.IsNullOrEmpty(currentUrl) is false 
-        && currentUrl.Contains("returnUrl") is false
-        && currentUrl.Contains("logout") is false
+    private static string? currentUrl;
+    private string LogoutUrl => string.IsNullOrEmpty(currentUrl) is false && currentUrl.Contains("logout") is false
         ? "/logout?returnUrl=" + currentUrl
         : "/logout";
 
@@ -86,7 +84,7 @@ else
         // HTTP Request, and the other from SignalR. So this prevents overwriting.
         if (HttpContext is not null)
         {
-            currentUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
+            currentUrl = HttpContext.Request.GetEncodedPathAndQuery();
 
             if (HttpContext.User.Identity?.IsAuthenticated is true)
             {
@@ -99,7 +97,7 @@ else
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        currentUrl = Navigation.ToBaseRelativePath(e.Location);
+        currentUrl = "/" + Navigation.ToBaseRelativePath(e.Location);
         StateHasChanged();
     }
 

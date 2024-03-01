@@ -6,8 +6,17 @@
     <MudNavLink Href="/admin/weather" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Cloud">Weather</MudNavLink>
     <MudNavLink Href="/admin/auth" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Lock">Restricted</MudNavLink>
 
-    @* TODO: De-deplicate the below as we don't need both these Authorized Views... *@
-    <AuthorizeView>
+    @* 
+        TODO: Why is <AuthorizeView> not working? It seems to be because it's 
+        SSR routing which doesn't actually requre or initialize the component. 
+    *@
+
+    @if (user is not null)
+    {
+        <MudNavLink Href="/admin/users" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Users</MudNavLink>
+    }
+
+@*     <AuthorizeView>
         <Authorized>
             <MudNavLink Href="/account/manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Person">@context.User.Identity?.Name</MudNavLink>
         </Authorized>
@@ -15,56 +24,68 @@
                 <MudNavLink Href="/register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.AppRegistration">Register</MudNavLink>
                 <MudNavLink Href="/login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Login">Login</MudNavLink>
         </NotAuthorized>
-    </AuthorizeView>
+    </AuthorizeView> *@
 
-    <AuthorizeView>
+@*     <AuthorizeView>
         <MudNavGroup Title="Account" Expanded="false" Icon="@Icons.Material.Filled.Dashboard">
 
             <MudNavLink Href="/account/profile">Profile</MudNavLink>
             <MudNavLink Href="/account/logins">Logins</MudNavLink>
             <MudNavLink Href="/account/authenticator/manage">Authenticator</MudNavLink>
         </MudNavGroup>
-    </AuthorizeView>
+    </AuthorizeView> *@
 
     @* TODO: Fix up the Authorization Policies... *@
 
-    <AuthorizeView>
-        @* <AuthorizeView Policy="@Policies.CanManageUsers"> *@
+    @* <AuthorizeView>
+        <AuthorizeView Policy="@Policies.CanManageUsers">
 
         <MudNavLink Href="/admin/users" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Users</MudNavLink>
-    </AuthorizeView>
+    </AuthorizeView> *@
 
-    <AuthorizeView>
-        @* <AuthorizeView Policy="@Policies.CanManageRoles"> *@
+@*     <AuthorizeView>
+        <AuthorizeView Policy="@Policies.CanManageRoles">
 
         <MudNavLink Href="/admin/roles" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Roles</MudNavLink>
-    </AuthorizeView>
+    </AuthorizeView> *@
 
-    <AuthorizeView>
-        @* <AuthorizeView Policy="@Policies.CanManageApplications"> *@
+@*     <AuthorizeView>
+        <AuthorizeView Policy="@Policies.CanManageApplications">
 
         <MudNavLink Href="/admin/applications" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Applications</MudNavLink>
-    </AuthorizeView>
+    </AuthorizeView> *@
 
-    <AuthorizeView>
-        @* <AuthorizeView Policy="@Policies.CanManageScopes"> *@
+    @* <AuthorizeView>
+        <AuthorizeView Policy="@Policies.CanManageScopes">
 
         <MudNavLink Href="/admin/scopes" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Scopes</MudNavLink>
-    </AuthorizeView>
+    </AuthorizeView> *@
 </MudNavMenu>
 
 @code {
 
+    private ClaimsPrincipal? user;
+
     [CascadingParameter]
-    public Task<AuthenticationState>? AuthState { get; set; }
+    public required Task<AuthenticationState> AuthState { get; set; }
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        if (AuthState is not null)
+        AuthenticationState result = await AuthState;
+
+        if (result.User.Identity?.IsAuthenticated is true)
         {
-            var result = await AuthState;
+            user = result.User;
         }
 
-        await  base.OnInitializedAsync();
+        if (HttpContext?.User.Identity?.IsAuthenticated is true)
+        {
+            user = HttpContext.User;
+        }
+
+        await base.OnInitializedAsync();
     }
 }

@@ -48,17 +48,6 @@
 
             <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-text-error" />
 
-@*             <MudTextField @bind-Value="@Input.Password"
-                Label="Password"
-                Variant="Variant.Outlined"
-                InputType="@passwordInput"
-                Class="mt-6"
-                Adornment="Adornment.End"
-                AdornmentIcon="@passwordInputIcon"
-                OnAdornmentClick="TogglePasswordVisibility"
-                autocomplete="current-password"
-                aria-required="true" /> *@
-
             <PasswordInput @bind-Value="Input.Password"
                 AutoComplete="current-password"
                 Label="Password" />
@@ -107,10 +96,6 @@
     // TODO: I think this is now large enough to be refactored into a 'code behind'.
     private string? errorMessage;
     private string registerLink = "/register";
-
-    private bool isPasswordVisible;
-    private InputType passwordInput = InputType.Password;
-    private string passwordInputIcon = Icons.Material.Filled.VisibilityOff;
 
     [CascadingParameter]
     public required HttpContext HttpContext { get; set; }
@@ -249,22 +234,6 @@
             // We can't actually tell the user what was wrong as they 
             // could then be able to tell that a username / email was correct.
             errorMessage = "Error: Incorrect username or password.";
-        }
-    }
-
-    private void TogglePasswordVisibility()
-    {
-        if (isPasswordVisible)
-        {
-            isPasswordVisible = false;
-            passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-            passwordInput = InputType.Password;
-        }
-        else
-        {
-            isPasswordVisible = true;
-            passwordInputIcon = Icons.Material.Filled.Visibility;
-            passwordInput = InputType.Text;
         }
     }
 }

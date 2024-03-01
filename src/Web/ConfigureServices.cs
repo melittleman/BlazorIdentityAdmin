@@ -103,7 +103,7 @@ public static class ConfigureServices
             [FromForm] string returnUrl) =>
         {
             await signInManager.SignOutAsync();
-            return TypedResults.LocalRedirect($"/{returnUrl}");
+            return TypedResults.LocalRedirect(returnUrl.StartsWith('/') ? returnUrl : "/" + returnUrl);
         });
 
         endpoints.MapPost("/account/link-external-login", async (
