@@ -31,7 +31,7 @@
         <StatusMessage Message="@errorMessage" />
 
         @* TODO: I'm not sure if we actually need this "Enhance"" property here or not? *@
-        <EditForm Model="Input" method="post" OnValidSubmit="LoginUserAsync" FormName="login" Enhance="true">
+        <EditForm Model="Input" method="post" OnValidSubmit="LoginUserAsync" FormName="login">
 
             <DeviceInfoProvider />
             <GeolocationInfoProvider />
@@ -199,8 +199,6 @@
                 result = await custom.PasswordSignInDeviceAsync(user, device, Input.IsRememberMeEnabled);
             }
 
-            // TODO: Now need to update the user with this new Device if the Signin was successful before we redirect
-
             HandleSignInResult(result);
         }
     }
@@ -210,6 +208,7 @@
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
+
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.IsNotAllowed)
@@ -218,7 +217,7 @@
         }
         else if (result.RequiresTwoFactor)
         {
-            RedirectManager.RedirectTo("/login-with-2fa", new() 
+            RedirectManager.RedirectTo("/login-with-2fa", new Dictionary<string, object?>()
             { 
                 ["returnUrl"] = ReturnUrl,
                 ["rememberMe"] = Input.RememberMe 

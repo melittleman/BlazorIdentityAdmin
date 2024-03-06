@@ -15,7 +15,7 @@
 
                 <MudDivider DividerType="DividerType.Middle" Class="my-6" />
 
-                <form action="/logout" method="post" data-enhance="true">
+                <form action="/logout" method="post">
 
                     <AntiforgeryToken />
 
@@ -27,7 +27,7 @@
                     {
                         // We want to include any other form or QS parameters that are 
                         // included here back to the POST /login endpoint, however need 
-                        // to skip over  "ReturnUrl"  to avoid duplicating it.
+                        // to skip over  "ReturnUrl" to avoid duplicating it.
                         if (parameter.Key.Equals("ReturnUrl", StringComparison.OrdinalIgnoreCase)) continue;
 
                         <input type="hidden" name="@parameter.Key" value="@parameter.Value" />

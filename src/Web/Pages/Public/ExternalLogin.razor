@@ -173,7 +173,7 @@
                 // If account confirmation is required, we need to show the link if we don't have a real email sender
                 if (UserManager.Options.SignIn.RequireConfirmedAccount)
                 {
-                    RedirectManager.RedirectTo("/register-confirmation", new() 
+                    RedirectManager.RedirectTo("/register-confirmation", new Dictionary<string, object?>() 
                     { 
                         ["email"] = Input.Email 
                     });
