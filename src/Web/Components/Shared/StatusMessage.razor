@@ -9,13 +9,16 @@
 
 @code {
 
-    private string? messageFromCookie;
+    // Needs to be marked as static because this component could be rendered inside 
+    // either a Static SSR or InteractiveServer component, so this forces the error 
+    // message picked up from the HTTP Request to persist through to SignalR.
+    private static string? messageFromCookie;
 
     [Parameter]
     public string? Message { get; set; }
 
     [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
+    private HttpContext? HttpContext { get; set; }
 
     private string? DisplayMessage => Message ?? messageFromCookie;
 
