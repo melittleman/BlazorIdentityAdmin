@@ -9,6 +9,7 @@
 @inject ILogger<ExternalLogin> Logger
 
 @attribute [AllowAnonymous]
+@rendermode RenderMode.InteractiveServer
 
 <PageTitle>Register</PageTitle>
 
@@ -44,7 +45,18 @@
 
             <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-text-error" />
 
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true">
+            @* Link for T&C's / Privacy *@
+            <MudCheckBox T="bool" @bind-Value="agreeToTerms"
+                Label="I agree to Terms & Conditions" 
+                Color="Color.Primary" 
+                Class="ml-n1 my-3" />
+
+            <MudButton ButtonType="ButtonType.Submit" 
+                Variant="Variant.Filled" 
+                Color="Color.Primary"
+                Disabled="@(!agreeToTerms)" 
+                Size="Size.Large" 
+                FullWidth="true">
                 Register
             </MudButton>
         </EditForm>
@@ -53,6 +65,7 @@
 
 @code {
 
+    private bool agreeToTerms = false;
     public const string LoginCallbackAction = "LoginCallback";
 
     private string? message;

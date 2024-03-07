@@ -66,7 +66,7 @@ public static class ConfigureServices
                 // TODO: Move into user secrets...
                 options.ClientId = gitHubclientId;
                 options.ClientSecret = gitHubclientSecret;
-                options.CallbackPath = "/connect/callback/signin-github";
+                options.CallbackPath = "/signin-github";
 
                 // TODO: Save AvatarUrl from www.github.com/<username>.png
                 // What else do we want to save in our own claims?
@@ -74,6 +74,13 @@ public static class ConfigureServices
                 options.Scope.Add("read:user");
                 options.SaveTokens = true;
                 options.UsePkce = true;
+
+                options.Events.OnTicketReceived = (context) =>
+                {
+
+
+                    return Task.CompletedTask;
+                };
 
                 options.Events.OnCreatingTicket = (context) =>
                 {

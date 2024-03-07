@@ -1,6 +1,7 @@
 ﻿@page "/login"
 
 @attribute [AllowAnonymous]
+@rendermode RenderMode.InteractiveServer
 
 @using Microsoft.AspNetCore.Localization
 @using PSC.Blazor.Components.BrowserDetect
@@ -12,6 +13,7 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<Login> Logger
+@inject IJSRuntime JS
 
 <PageTitle>Login</PageTitle>
 
@@ -30,8 +32,17 @@
 
         <StatusMessage Message="@errorMessage" />
 
-        @* TODO: I'm not sure if we actually need this "Enhance"" property here or not? *@
-        <EditForm Model="Input" method="post" OnValidSubmit="LoginUserAsync" FormName="login">
+        <EditForm Model="Input" FormName="login" id="login-form" method="post" OnValidSubmit="LoginUserAsync">
+
+            @*
+            TODO: This is a bit of a hack at the moment so that we can still use a Static SSR / HTTP POST form submit whilst
+            inside an InteractiveServer rendered component. It looks as though this is planning on being fixed in .NET 9 though.
+            See: https://github.com/dotnet/aspnetcore/issues/53129
+            *@
+            @if (HttpContext is null)
+            {
+                <input type="hidden" name="_handler" value="login" />
+            }
 
             <DeviceInfoProvider />
             <GeolocationInfoProvider />
@@ -67,7 +78,7 @@
                 <MudLink Href="/forgot-password" Typo="Typo.subtitle1">Forgot password?</MudLink>
             </div>
 
-            <LoadingSubmitButton ButtonText="Login" />
+            <LoadingSubmitButton ButtonText="Login" IsProcessing="isProcessing" />
         </EditForm>
 
     </MudPaper>
@@ -94,6 +105,7 @@
 @code {
 
     // TODO: I think this is now large enough to be refactored into a 'code behind'.
+    private bool isProcessing;
     private string? errorMessage;
     private string registerLink = "/register";
 
@@ -131,6 +143,16 @@
 
     public async Task LoginUserAsync()
     {
+        // See: https://github.com/dotnet/aspnetcore/issues/53129
+        if (HttpContext is null)
+        {
+            isProcessing = true;
+
+            IJSObjectReference loginForm = await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "login-form");
+            await loginForm.InvokeVoidAsync("submit");
+            return;
+        }
+
         // TODO: Email addresses aren't actually unique within
         // the application so this may cause us some issues.
         User? user = await UserManager.FindByEmailAsync(Input.Email);
