@@ -6,7 +6,7 @@
 @using Microsoft.AspNetCore.Localization
 @using PSC.Blazor.Components.BrowserDetect
 @using BlazorAdminDashboard.Web.Validation
-@using BlazorAdminDashboard.Domain.Identity;
+@using BlazorAdminDashboard.Domain.Identity
 
 @inject UserManager<User> UserManager
 @inject SignInManager<User> SignInManager
@@ -65,9 +65,8 @@
 
             <ValidationMessage For="() => Input.Password" class="mud-alert mud-alert-text-error" />
 
-            @* TODO: Change this to a MudStack... *@
-            <div Class="d-flex justify-space-between align-center">
-
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            
                 <MudCheckBox @bind-Value="Input.RememberMe" @rendermode="RenderMode.InteractiveServer"
                     name="Input.RememberMe"
                     TriState="false"
@@ -76,9 +75,9 @@
                     Class="ml-n1 my-3" />
 
                 <MudLink Href="/forgot-password" Typo="Typo.subtitle1">Forgot password?</MudLink>
-            </div>
+            </MudStack>
 
-            <LoadingSubmitButton ButtonText="Login" IsProcessing="isProcessing" />
+            <LoadingSubmitButton Text="Login" Icon="@Icons.Material.Outlined.Login" IsProcessing="isProcessing" />
         </EditForm>
 
     </MudPaper>
@@ -86,7 +85,6 @@
 
         <!-- External logins -->
         <MudStack Spacing="1" AlignItems="AlignItems.Center">
-            <MudText Typo="Typo.subtitle1" GutterBottom="true">Or login with</MudText>
 
             <ExternalLoginPicker />
         </MudStack>
@@ -137,8 +135,10 @@
 
         registerLink = NavigationManager.GetUriWithQueryParameters(registerLink, new Dictionary<string, object?>
         {
-            ["returnUrl"] = string.IsNullOrEmpty(ReturnUrl) is false ? ReturnUrl : "/login"
+            ["return_url"] = string.IsNullOrEmpty(ReturnUrl) is false ? ReturnUrl : "/login"
         });
+
+        await base.OnInitializedAsync();
     }
 
     public async Task LoginUserAsync()
@@ -241,7 +241,7 @@
         {
             RedirectManager.RedirectTo("/login-with-2fa", new Dictionary<string, object?>()
             { 
-                ["returnUrl"] = ReturnUrl,
+                ["return_url"] = ReturnUrl,
                 ["rememberMe"] = Input.RememberMe 
             });
         }

@@ -39,7 +39,7 @@
     [SupplyParameterFromQuery]
     private string? Code { get; set; }
 
-    [SupplyParameterFromQuery]
+    [SupplyParameterFromQuery(Name = "return_url")]
     private string? ReturnUrl { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -51,7 +51,7 @@
 
         loginLink = NavigationManager.GetUriWithQueryParameters(loginLink, new Dictionary<string, object?>
         {
-            ["returnUrl"] = ReturnUrl
+            ["return_url"] = ReturnUrl
         });
 
         // TODO: This shouldn't really be passing the UserId through the URL

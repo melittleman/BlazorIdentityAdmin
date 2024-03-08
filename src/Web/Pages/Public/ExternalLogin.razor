@@ -7,61 +7,75 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<ExternalLogin> Logger
+@inject IJSRuntime JS
 
 @attribute [AllowAnonymous]
 @rendermode RenderMode.InteractiveServer
 
 <PageTitle>Register</PageTitle>
 
-<MudStack Spacing="4" AlignItems="AlignItems.Center">
-    <MudPaper Elevation="4" Class="pa-4" Width="100%">
+@if (externalLoginInfo is null)
+{
+    // TODO: 
+    <MudText>Loading...</MudText>
+}
+else
+{
+    <MudStack Spacing="4" AlignItems="AlignItems.Center">
+        <MudPaper Elevation="4" Class="pa-4" Width="100%">
 
-        <PublicFormHeader>
-            <MudText Typo="Typo.h1" GutterBottom="true">Register</MudText>
-            <MudText Typo="Typo.subtitle1">Associate your @ProviderDisplayName account.</MudText>
-        </PublicFormHeader>
+            <PublicFormHeader>
+                <MudText Typo="Typo.h1" GutterBottom="true">Register</MudText>
+                <MudText Typo="Typo.subtitle1">Associate your @ProviderDisplayName account.</MudText>
+            </PublicFormHeader>
 
-        <StatusMessage Message="@message" />
+            <StatusMessage Message="@message" />
 
-        @* TODO: We could probably just use the 'StatusMessage' component for this too? But it might need a RenderFragment passing in. *@
-        <MudAlert Severity="Severity.Info" Class="mt-8 mud-width-full" Elevation="4">
-            You've successfully authenticated with <strong>@ProviderDisplayName</strong>.
-            Please confirm or enter an email address below and click the Register button to finish logging in.
-        </MudAlert>
+            @* TODO: We could probably just use the 'StatusMessage' component for this too? But it might need a RenderFragment passing in. *@
+            <MudAlert Severity="Severity.Info" Class="mt-8 mud-width-full" Elevation="4">
+                You've successfully authenticated with <strong>@ProviderDisplayName</strong>.
+                Please confirm or enter an email address below and click the Register button to finish logging in.
+            </MudAlert>
 
-        <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post" Enhance="true">
+            <EditForm Model="Input" FormName="confirmation" id="confirmation-form" method="post" OnValidSubmit="OnValidSubmitAsync">
 
-            <DataAnnotationsValidator />
+                @if (HttpContext is null)
+                {
+                    <input type="hidden" name="_handler" value="confirmation" />
+                }
 
-            @* TODO: Need to also add the ability to enter a unique username if not provided. *@
+                <DataAnnotationsValidator />
 
-            <MudTextField T="string" @bind-Value="Input.Email"
-                Label="Email"
-                Variant="Variant.Outlined"
-                InputType="InputType.Email"
-                Class="mt-6"
-                autocomplete="email"
-                aria-required="true" />
+                @* TODO: Need to also add the ability to enter a unique username if not provided. *@
 
-            <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-text-error" />
+                <MudTextField T="string" @bind-Value="Input.Email"
+                    Label="Email"
+                    Variant="Variant.Outlined"
+                    InputType="InputType.Email"
+                    Class="mt-6"
+                    autocomplete="email"
+                    aria-required="true" />
 
-            @* Link for T&C's / Privacy *@
-            <MudCheckBox T="bool" @bind-Value="agreeToTerms"
-                Label="I agree to Terms & Conditions" 
-                Color="Color.Primary" 
-                Class="ml-n1 my-3" />
+                <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-text-error" />
 
-            <MudButton ButtonType="ButtonType.Submit" 
-                Variant="Variant.Filled" 
-                Color="Color.Primary"
-                Disabled="@(!agreeToTerms)" 
-                Size="Size.Large" 
-                FullWidth="true">
-                Register
-            </MudButton>
-        </EditForm>
-    </MudPaper>
-</MudStack>
+                @* Link for T&C's / Privacy *@
+                <MudCheckBox T="bool" @bind-Value="agreeToTerms"
+                    Label="I agree to Terms & Conditions" 
+                    Color="Color.Primary" 
+                    Class="ml-n1 my-3" />
+
+                <MudButton ButtonType="ButtonType.Submit" 
+                    Variant="Variant.Filled" 
+                    Color="Color.Primary"
+                    Disabled="@(!agreeToTerms)" 
+                    Size="Size.Large" 
+                    FullWidth="true">
+                    Register
+                </MudButton>
+            </EditForm>
+        </MudPaper>
+    </MudStack>
+}
 
 @code {
 
@@ -69,57 +83,65 @@
     public const string LoginCallbackAction = "LoginCallback";
 
     private string? message;
-    private ExternalLoginInfo externalLoginInfo = default!;
+    private static ExternalLoginInfo? externalLoginInfo;
+
+    private string? ProviderDisplayName => externalLoginInfo?.ProviderDisplayName;
 
     [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
+    private HttpContext? HttpContext { get; set; }
 
+    // Static property to persist values through to 
+    // SignalR after being set from HttpContext.
     [SupplyParameterFromForm]
-    private ExternalLoginFormInput Input { get; set; } = new();
+    private static ExternalLoginFormInput Input { get; set; } = new();
 
     [SupplyParameterFromQuery]
     private string? RemoteError { get; set; }
 
-    [SupplyParameterFromQuery]
+    [SupplyParameterFromQuery(Name = "return_url")]
     private string? ReturnUrl { get; set; }
 
     [SupplyParameterFromQuery]
     private string? Action { get; set; }
 
-    private string? ProviderDisplayName => externalLoginInfo.ProviderDisplayName;
-
     protected override async Task OnInitializedAsync()
     {
-        if (RemoteError is not null)
+        if (HttpContext is not null)
         {
-            RedirectManager.RedirectToWithStatus("/login", $"Error from external provider: {RemoteError}", HttpContext);
-        }
-
-        ExternalLoginInfo? info = await SignInManager.GetExternalLoginInfoAsync();
-        if (info is null)
-        {
-            RedirectManager.RedirectToWithStatus("/login", "Error loading external login information.", HttpContext);
-        }
-
-        externalLoginInfo = info;
-
-        if (HttpMethods.IsGet(HttpContext.Request.Method))
-        {
-            if (Action == LoginCallbackAction)
+            if (RemoteError is not null)
             {
-                await OnLoginCallbackAsync();
-                return;
+                RedirectManager.RedirectToWithStatus("/login", $"Error from external provider: {RemoteError}", HttpContext);
             }
 
-            // We should only reach this page via the login callback, so redirect back to
-            // the login page if we get here some other way.
-            RedirectManager.RedirectTo("/login");
+            ExternalLoginInfo? info = await SignInManager.GetExternalLoginInfoAsync();
+            if (info is null)
+            {
+                RedirectManager.RedirectToWithStatus("/login", "Error loading external login information.", HttpContext);
+            }
+
+            externalLoginInfo = info;
+
+            if (HttpMethods.IsGet(HttpContext.Request.Method))
+            {
+                if (Action == LoginCallbackAction)
+                {
+                    await OnLoginCallbackAsync();
+                    return;
+                }
+
+                // We should only reach this page via the login callback, so redirect back to
+                // the login page if we get here some other way.
+                RedirectManager.RedirectTo("/login");
+            }
         }
+
+        await base.OnInitializedAsync();
     }
 
     private async Task OnLoginCallbackAsync()
     {
         // Sign in the user with this external login provider if the user already has a login.
+        // TODO: This is going to need to be overwritten to allow us the ability to pass in device info.
         var result = await SignInManager.ExternalLoginSignInAsync(
             externalLoginInfo.LoginProvider,
             externalLoginInfo.ProviderKey,
@@ -141,14 +163,25 @@
         }
 
         // If the user does not have an account, then ask the user to create an account.
-        if (externalLoginInfo.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+        if (externalLoginInfo.Principal.HasClaim(c => c.Type == OpenIddictConstants.Claims.Email))
         {
-            Input.Email = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Email) ?? "";
+            Input.Email = externalLoginInfo.Principal.FindFirstValue(OpenIddictConstants.Claims.Email) ?? "";
         }
     }
 
     private async Task OnValidSubmitAsync()
     {
+        // See: https://github.com/dotnet/aspnetcore/issues/53129
+        if (HttpContext is null)
+        {
+            // TODO
+            //isProcessing = true;
+
+            IJSObjectReference loginForm = await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "confirmation-form");
+            await loginForm.InvokeVoidAsync("submit");
+            return;
+        }
+
         User user = new();
 
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
@@ -157,6 +190,8 @@
         {
             await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         }
+
+        // TODO: This is where we need to save the picture, name and preferred username of the external login also.
 
         IdentityResult result = await UserManager.CreateAsync(user);
 

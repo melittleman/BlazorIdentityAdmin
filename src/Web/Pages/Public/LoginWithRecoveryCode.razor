@@ -51,7 +51,7 @@
     [SupplyParameterFromForm]
     private LoginRecoveryCodeFormInput Input { get; set; } = new();
 
-    [SupplyParameterFromQuery]
+    [SupplyParameterFromQuery(Name = "return_url")]
     private string? ReturnUrl { get; set; }
 
     protected override async Task OnInitializedAsync()

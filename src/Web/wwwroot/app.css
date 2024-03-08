@@ -9,3 +9,27 @@
     color: var(--mud-palette-primary-text) !important;
     background-color: var(--mud-palette-primary) !important;
 }
+
+.google-button {
+    border: 2px solid #d24228;
+}
+
+.google-button svg {
+    color: #d24228;
+}
+
+.github-button {
+    border: 2px solid #0e1117;
+}
+
+.github-button svg {
+    color: #0e1117;
+}
+
+.microsoft-button {
+    border: 2px solid #007bb6;
+}
+
+.microsoft-button svg {
+    color: #007bb6;
+}

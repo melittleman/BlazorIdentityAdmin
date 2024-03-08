@@ -1,6 +1,9 @@
-﻿namespace BlazorAdminDashboard.Infrastructure;
+﻿using AspNet.Security.OAuth.GitHub;
+using BlazorAdminDashboard.Infrastructure.Extensions;
 
-public static class ConfigureServices
+namespace BlazorAdminDashboard.Infrastructure;
+
+public static partial class ConfigureServices
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration, IHostEnvironment env)
     {
@@ -50,51 +53,21 @@ public static class ConfigureServices
 
         // Authentication
 
-        AuthenticationBuilder builder = services.AddAuthentication(options =>
+        services.AddAuthentication(options =>
         {
             options.DefaultScheme = IdentityConstants.ApplicationScheme;
             options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-        });
+        })
+        .AddExternalLoginProviders(configuration)
+        .AddIdentityCookies();
 
-        string? gitHubclientId = configuration["Authentication:GitHub:ClientId"];
-        string? gitHubclientSecret = configuration["Authentication:GitHub:ClientSecret"];
-
-        if (string.IsNullOrEmpty(gitHubclientId) is false && string.IsNullOrEmpty(gitHubclientSecret) is false)
-        {
-            builder.AddGitHub(options =>
-            {
-                // TODO: Move into user secrets...
-                options.ClientId = gitHubclientId;
-                options.ClientSecret = gitHubclientSecret;
-                options.CallbackPath = "/signin-github";
-
-                // TODO: Save AvatarUrl from www.github.com/<username>.png
-                // What else do we want to save in our own claims?
-
-                options.Scope.Add("read:user");
-                options.SaveTokens = true;
-                options.UsePkce = true;
-
-                options.Events.OnTicketReceived = (context) =>
-                {
-
-
-                    return Task.CompletedTask;
-                };
-
-                options.Events.OnCreatingTicket = (context) =>
-                {
-                    // TODO:
-
-                    return Task.CompletedTask;
-                };
-            });
-        }
-
-        builder.AddIdentityCookies();
         services.ConfigureApplicationCookie(options =>
         {
             options.LoginPath = "/login";
+
+            // TODO: Probably need a constant for this as it is
+            // used in multiple places acrss the application.
+            options.ReturnUrlParameter = "return_url";
         });
 
         services.AddIdentityCore<User>(options =>

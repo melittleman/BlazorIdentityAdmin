@@ -1,21 +1,26 @@
 ﻿@using AspNet.Security.OAuth.GitHub
+@using Microsoft.AspNetCore.Authentication.Google
+@using Microsoft.AspNetCore.Authentication.MicrosoftAccount
 
 @inject SignInManager<User> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
 @if (externalLogins.Length is 0)
 {
-    <MudText>
-        There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-        about setting up this ASP.NET application to support logging in via external services</a>.
+    <MudText Typo="Typo.subtitle1">
+        There are no external authentication service providers configured. 
+        <br />
+        See <MudLink Typo="Typo.subtitle1" Href="https://go.microsoft.com/fwlink/?LinkID=532715">this article</MudLink> about setting up this .NET application to support logging in via external services.
     </MudText>
 }
 else
 {
+    <MudText Typo="Typo.subtitle1" GutterBottom="true">Or login with</MudText>
+
     <form class="form-horizontal" action="/perform-external-login" method="post">
 
         <AntiforgeryToken />
-        <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
+        <input type="hidden" name="returnUrl" value="@ReturnUrl" />
 
         @foreach (AuthenticationScheme provider in externalLogins)
         {
@@ -25,9 +30,35 @@ else
                 <MudButton ButtonType="ButtonType.Submit"
                     Variant="Variant.Outlined"
                     EndIcon="@Icons.Custom.Brands.GitHub"
-                    Size="Size.Medium" 
-                    Color="Color.Tertiary"
+                    Size="Size.Medium"
+                    Class="mx-2 github-button"
                     name="provider" 
+                    value="@provider.Name"
+                    title=@($"Login using your {provider.DisplayName} account")>
+                    @provider.DisplayName
+                </MudButton>
+            }
+            else if (provider.Name.Equals(GoogleDefaults.AuthenticationScheme))
+            {
+                <MudButton ButtonType="ButtonType.Submit"
+                    Variant="Variant.Outlined"
+                    EndIcon="@Icons.Custom.Brands.Google"
+                    Size="Size.Medium"
+                    Class="mx-2 google-button"
+                    name="provider"
+                    value="@provider.Name"
+                    title=@($"Login using your {provider.DisplayName} account")>
+                    @provider.DisplayName
+                </MudButton>
+            }
+            else if (provider.Name.Equals(MicrosoftAccountDefaults.AuthenticationScheme))
+            {
+                <MudButton ButtonType="ButtonType.Submit"
+                    Variant="Variant.Outlined"
+                    EndIcon="@Icons.Custom.Brands.Microsoft"
+                    Size="Size.Medium"
+                    Class="mx-2 microsoft-button"
+                    name="provider"
                     value="@provider.Name"
                     title=@($"Login using your {provider.DisplayName} account")>
                     @provider.DisplayName
@@ -38,6 +69,7 @@ else
                 <MudButton ButtonType="ButtonType.Submit" 
                     Variant="Variant.Outlined"
                     Size="Size.Medium"
+                    Class="mx-2"
                     Color="Color.Tertiary"
                     name="provider" 
                     value="@provider.Name"
@@ -51,9 +83,10 @@ else
 }
 
 @code {
+
     private AuthenticationScheme[] externalLogins = [];
 
-    [SupplyParameterFromQuery]
+    [SupplyParameterFromQuery(Name = "return_url")]
     private string? ReturnUrl { get; set; }
 
     protected override async Task OnInitializedAsync()

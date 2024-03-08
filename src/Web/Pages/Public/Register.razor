@@ -112,7 +112,7 @@
     [SupplyParameterFromForm]
     private RegisterFormInput Input { get; set; } = new();
 
-    [SupplyParameterFromQuery]
+    [SupplyParameterFromQuery(Name = "return_url")]
     private string? ReturnUrl { get; set; }
 
     private string? ErrorMessage => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
@@ -121,7 +121,7 @@
     {
         loginLink = NavigationManager.GetUriWithQueryParameters(loginLink, new Dictionary<string, object?>
         {
-            ["returnUrl"] = ReturnUrl
+            ["return_url"] = ReturnUrl
         });
 
         return base.OnInitializedAsync();
@@ -159,7 +159,7 @@
             {
                 ["userId"] = userId, 
                 ["code"] = code, 
-                ["returnUrl"] = ReturnUrl 
+                ["return_url"] = ReturnUrl 
             });
 
         await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
@@ -170,7 +170,7 @@
             RedirectManager.RedirectTo("/register-confirmation", new Dictionary<string, object?>() 
             {
                 ["email"] = Input.Email, 
-                ["returnUrl"] = ReturnUrl 
+                ["return_url"] = ReturnUrl 
             });
         }
 

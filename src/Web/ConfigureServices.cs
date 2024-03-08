@@ -85,7 +85,7 @@ public static class ConfigureServices
             [FromForm] string returnUrl) =>
         {
             IEnumerable<KeyValuePair<string, StringValues>> query = [
-                new("returnUrl", returnUrl),
+                new("return_url", returnUrl),
                 new("action", ExternalLogin.LoginCallbackAction)];
 
             string redirectUrl = UriHelper.BuildRelative(

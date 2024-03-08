@@ -19,7 +19,7 @@
 
                     <AntiforgeryToken />
 
-                    <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
+                    <input type="hidden" name="returnUrl" value="@ReturnUrl" />
 
                     @foreach (KeyValuePair<string, StringValues> parameter in HttpContext.Request.HasFormContentType
                         ? (IEnumerable<KeyValuePair<string, StringValues>>)HttpContext.Request.Form
@@ -27,8 +27,9 @@
                     {
                         // We want to include any other form or QS parameters that are 
                         // included here back to the POST /login endpoint, however need 
-                        // to skip over  "ReturnUrl" to avoid duplicating it.
-                        if (parameter.Key.Equals("ReturnUrl", StringComparison.OrdinalIgnoreCase)) continue;
+                        // to skip over the Return Url to avoid duplicating it.
+                        if (parameter.Key.Equals("ReturnUrl", StringComparison.OrdinalIgnoreCase) ||
+                            parameter.Key.Equals("return_url", StringComparison.OrdinalIgnoreCase)) continue;
 
                         <input type="hidden" name="@parameter.Key" value="@parameter.Value" />
                     }
@@ -54,7 +55,7 @@
     [CascadingParameter]
     public required HttpContext HttpContext { get; set; }
 
-    [SupplyParameterFromQuery]
+    [SupplyParameterFromQuery(Name = "return_url")]
     private string? ReturnUrl { get; set; }
 
     // TODO: Still lots to do to fully configure this as a "Single-logout" (SLO) page, e.g.

@@ -52,6 +52,7 @@ public class DefaultTheme : MudTheme
                 FontSize = "1rem",
                 FontWeight = 400
             },
+
             H1 = new()
             {
                 FontFamily = theme.FontFamily,

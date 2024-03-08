@@ -79,7 +79,7 @@ public partial class AddUserDialog : ComponentBase
             {
                 ["userId"] = userId,
                 ["code"] = code,
-                ["returnUrl"] = "/" // TODO: Is this even needed?
+                ["return_url"] = "/" // TODO: Is this even needed?
             });
 
 

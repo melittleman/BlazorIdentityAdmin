@@ -27,8 +27,8 @@
         <EditForm Model="Input" FormName="login-with-2fa" OnValidSubmit="OnValidSubmitAsync" method="post" Enhance="true">
             <DataAnnotationsValidator />
 
-            <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
-            <input type="hidden" name="RememberMe" value="@RememberMe" />
+            <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+            <input type="hidden" name="rememberMe" value="@RememberMe" />
 
             <MudTextField T="string" @bind-Value="Input.TwoFactorCode"
                 Label="Authenticator Code"
@@ -58,7 +58,7 @@
     [SupplyParameterFromForm]
     private Login2faFormInput Input { get; set; } = new();
 
-    [SupplyParameterFromQuery]
+    [SupplyParameterFromQuery(Name = "return_url")]
     private string? ReturnUrl { get; set; }
 
     [SupplyParameterFromQuery]
@@ -72,7 +72,7 @@
 
         recoveryCodeLink = NavigationManager.GetUriWithQueryParameters(recoveryCodeLink, new Dictionary<string, object?>
         {
-            ["returnUrl"] = ReturnUrl
+            ["return_url"] = ReturnUrl
         });
     }
 

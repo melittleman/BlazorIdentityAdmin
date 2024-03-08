@@ -73,7 +73,7 @@ else
 
     private static string? currentUrl;
     private string LogoutUrl => string.IsNullOrEmpty(currentUrl) is false && currentUrl.Contains("logout") is false
-        ? "/logout?returnUrl=" + currentUrl
+        ? "/logout?return_url=" + currentUrl
         : "/logout";
 
     protected override Task OnInitializedAsync()

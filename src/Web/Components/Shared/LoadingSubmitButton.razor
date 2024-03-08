@@ -5,24 +5,27 @@
     Color="Color.Primary" 
     Size="Size.Large" 
     FullWidth="true"
-    Disabled="@IsProcessing">
+    Disabled="@IsProcessing"
+    EndIcon="@Icon">
 
     @if (IsProcessing)
     {
         <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-        <MudText Class="ms-2" Typo="Typo.button">Please Wait</MudText>
     }
-    else
-    {
-        <MudText Typo="Typo.button">@ButtonText</MudText>
-    }
+
+    @DisplayText
 
 </MudButton>
 
 @code {
 
+    private string DisplayText => IsProcessing ? "Please Wait" : Text;
+
     [Parameter]
-    public string ButtonText { get; set; } = "Submit";
+    public string Text { get; set; } = "Submit";
+
+    [Parameter]
+    public string? Icon { get; set; } = null;
 
     [Parameter]
     public bool IsProcessing { get; set; } = false;
