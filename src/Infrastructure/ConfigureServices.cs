@@ -1,5 +1,4 @@
-﻿using AspNet.Security.OAuth.GitHub;
-using BlazorAdminDashboard.Infrastructure.Extensions;
+﻿using BlazorAdminDashboard.Infrastructure.Extensions;
 
 namespace BlazorAdminDashboard.Infrastructure;
 
@@ -59,15 +58,34 @@ public static partial class ConfigureServices
             options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
         })
         .AddExternalLoginProviders(configuration)
-        .AddIdentityCookies();
-
-        services.ConfigureApplicationCookie(options =>
+        .AddIdentityCookies(options =>
         {
-            options.LoginPath = "/login";
+            string cookiePrefix = "BlazorIdentityAdmin";
 
-            // TODO: Probably need a constant for this as it is
-            // used in multiple places acrss the application.
-            options.ReturnUrlParameter = "return_url";
+            options.ApplicationCookie?.Configure(options =>
+            {
+                options.LoginPath = "/login";
+                options.Cookie.Name = cookiePrefix + ".Application";
+
+                // TODO: Probably need a constant for this as it is
+                // used in multiple places acrss the application.
+                options.ReturnUrlParameter = "return_url";
+            });
+
+            options.ExternalCookie?.Configure(options =>
+            {
+                options.Cookie.Name = cookiePrefix + ".External";
+            });
+
+            options.TwoFactorRememberMeCookie?.Configure(options =>
+            {
+                options.Cookie.Name = cookiePrefix + "TwoFactorRememberMe";
+            });
+
+            options.TwoFactorUserIdCookie?.Configure(options =>
+            {
+                options.Cookie.Name = cookiePrefix + ".TwoFactorUserId";
+            });
         });
 
         services.AddIdentityCore<User>(options =>
