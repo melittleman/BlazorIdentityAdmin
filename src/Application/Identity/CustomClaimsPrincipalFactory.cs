@@ -1,4 +1,6 @@
-﻿namespace BlazorAdminDashboard.Application.Identity;
+﻿using OpenIddict.Abstractions;
+
+namespace BlazorAdminDashboard.Application.Identity;
 
 public sealed class CustomClaimsPrincipalFactory(
     UserManager<User> userManager,
@@ -11,19 +13,20 @@ public sealed class CustomClaimsPrincipalFactory(
     {
         ArgumentNullException.ThrowIfNull(user);
 
-        string userId = await UserManager.GetUserIdAsync(user);
-        string? userName = await UserManager.GetUserNameAsync(user);
-
         ClaimsIdentity id = new(
             IdentityConstants.ApplicationScheme,
             Options.ClaimsIdentity.UserNameClaimType,
             Options.ClaimsIdentity.RoleClaimType);
 
-        id.AddClaim(new Claim(Options.ClaimsIdentity.UserIdClaimType, userId));
+        string userId = await UserManager.GetUserIdAsync(user);
+
+        id.AddClaim(new Claim(OpenIddictConstants.Claims.Subject, userId));
+
+        string? userName = await UserManager.GetUserNameAsync(user);
 
         if (string.IsNullOrEmpty(userName) is false) 
         {
-            id.AddClaim(new Claim(Options.ClaimsIdentity.UserNameClaimType, userName));
+            id.AddClaim(new Claim(OpenIddictConstants.Claims.PreferredUsername, userName));
         }
 
         if (UserManager.SupportsUserEmail)
@@ -35,17 +38,17 @@ public sealed class CustomClaimsPrincipalFactory(
             }
         }
 
-        if (UserManager.SupportsUserSecurityStamp)
-        {
-            string securityStamp = await UserManager.GetSecurityStampAsync(user);
-            id.AddClaim(new Claim(Options.ClaimsIdentity.SecurityStampClaimType, securityStamp));
-        }
-
         // TODO: I don't think this is needed and would allow us to remove the IUserClaimStore implementation
         // from the RedisUserStore which would be better than storing the individual claims themselves.
         if (UserManager.SupportsUserClaim)
         {
             id.AddClaims(await UserManager.GetClaimsAsync(user));
+        }
+
+        if (UserManager.SupportsUserSecurityStamp)
+        {
+            string securityStamp = await UserManager.GetSecurityStampAsync(user);
+            id.AddClaim(new Claim(Options.ClaimsIdentity.SecurityStampClaimType, securityStamp));
         }
 
         if (UserManager.SupportsUserRole)

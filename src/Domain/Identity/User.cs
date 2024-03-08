@@ -37,9 +37,9 @@ public class User : IdentityUser<Ulid>
 
     public string? AvatarUrl { get; set; }
     
-    public string CultureName { get; set; } = "en-US"; // TODO: Constant
+    public string? CultureName { get; set; }
 
-    public string TimezoneId { get; set; } = "UTC"; // TODO: Constant
+    public string? TimezoneId { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 

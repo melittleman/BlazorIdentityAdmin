@@ -21,7 +21,18 @@ public static partial class ConfigureServices
                 // TODO: Is there a constant for this also?
                 options.CallbackPath = "/signin-google";
 
-                // TODO
+                options.ClaimActions.Clear();
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.Subject, "sub");
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.Name, "name");
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.GivenName, "given_name");
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.FamilyName, "family_name");
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.Email, "email");
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.Locale, "locale");
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.Picture, "picture");
+
+                // By default, the Google OAuth handler requests the "openid", "profile"
+                // and "email" scopes, so we can safely omit this here.
+                //options.Scope.Add("openid");
 
                 options.SaveTokens = true;
                 options.UsePkce = true;
@@ -45,6 +56,14 @@ public static partial class ConfigureServices
 
                 options.SaveTokens = true;
                 options.UsePkce = true;
+
+                options.Events.OnCreatingTicket = (context) =>
+                {
+
+
+
+                    return Task.CompletedTask;
+                };
             });
         }
 
@@ -68,11 +87,22 @@ public static partial class ConfigureServices
                 options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.Email, "email");
                 options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.PreferredUsername, "login");
                 options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.Picture, "avatar_url");
-                options.ClaimActions.MapJsonKey("urn:github:url", "url");
+                options.ClaimActions.MapJsonKey(GitHubAuthenticationConstants.Claims.Url, "url");
 
                 options.Scope.Add("read:user");
+                options.Scope.Add("user:email");
                 options.SaveTokens = true;
                 options.UsePkce = true;
+
+                options.Events.OnCreatingTicket = (context) =>
+                {
+                    // TODO: GitHub can actually return more than 1 email address
+                    // so it's potentially possible to add the secondary ones to the
+                    // Claims Principal here, and then allow the user to choose which
+                    // one they would like to register with.
+
+                    return Task.CompletedTask;
+                };
             });
         }
 

@@ -46,10 +46,12 @@ public sealed class IdentityRedirectManager(NavigationManager navigationManager)
 
     private string CurrentPath => navigationManager.ToAbsoluteUri(navigationManager.Uri).GetLeftPart(UriPartial.Path);
 
+    private string CurrentUri => navigationManager.ToAbsoluteUri(navigationManager.Uri).AbsoluteUri;
+
     [DoesNotReturn]
     public void RedirectToCurrentPage(bool forceLoad = false) => RedirectTo(CurrentPath, forceLoad);
 
     [DoesNotReturn]
     public void RedirectToCurrentPageWithStatus(string message, HttpContext context, bool forceLoad = false)
-        => RedirectToWithStatus(CurrentPath, message, context, forceLoad);
+        => RedirectToWithStatus(CurrentUri, message, context, forceLoad);
 }

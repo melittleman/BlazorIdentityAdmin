@@ -27,21 +27,7 @@ public sealed class CustomSignInManager(
     {
         if (await IsTwoFactorRequiredAsync(user)) return SignInResult.TwoFactorRequired;
 
-        // Need to make sure IsNewDevice executes first, as this is
-        // what adds or updates the 'devices' array for the user.
-        if (await IsNewDeviceAsync(user, device) && user.Email is not null)
-        {
-            // Using the forgot password URL here instead of the reset page, because resetting requires
-            // a unique code to be created up front which may not actually end up getting used.
-            string resetPasswordUrl = $"{Context.Request.Scheme}://{Context.Request.Host.Value}/Account/ForgotPassword";
-
-            bool isSuccess = await _deviceEmail.SendNewDeviceEmailAsync(user, user.Email, device, resetPasswordUrl);
-            if (isSuccess is false)
-            {
-                // TODO: What should we do here, continue to allow the sign in?
-                // Maybe just add this as a notification for the user instead via some UI.
-            }
-        }
+        await ValidateDeviceAsync(user, device);
 
         AuthenticationProperties props = new()
         {
@@ -51,35 +37,27 @@ public sealed class CustomSignInManager(
             AllowRefresh = true,
         };
 
-        long authTime = device.AccessedAt.ToUnixTimeSeconds();
+        string sessionId = CreateSessionId();
 
-        // TODO: Internally this still uses a BitConverter, but I think
-        // the newer Convert.ToHexString() method is more efficient?
-        string sessionId = CryptoRandom.CreateUniqueId(16, CryptoRandom.OutputFormat.Hex);
+        SetDeviceProperties(props, device, sessionId);
 
-        // Note too sure if we actually need / want the session id in both the claims principal and the authentication
-        // properties, but could come in handy down the line so leaving it in for now until we find a reason not to.
-        props.SetString("session_id", sessionId);
-        props.SetString("device.fingerprint", device.Fingerprint);
-        props.SetString("device.os", device.OperatingSystem);
-        props.SetString("device.browser", device.Browser);
-        props.SetString("device.ip", device.IpAddress);
-        props.SetString("device.location", device.Location);
-
-        // TODO: We want the ".last_activity" property set, but I think this can be handled directly in the TicketStore...
-
-        Claim[] claims = 
-        [
-            new Claim(JwtClaimTypes.Locale, user.CultureName),
-            new Claim(JwtClaimTypes.ZoneInfo, user.TimezoneId),
-            new Claim(JwtClaimTypes.IdentityProvider, "local"), // TODO: Constant?
-            new Claim(JwtClaimTypes.SessionId, sessionId),
-            new Claim(JwtClaimTypes.AuthenticationMethod, OidcConstants.AuthenticationMethods.Password),
-            new Claim(JwtClaimTypes.AuthenticationTime, authTime.ToString(), ClaimValueTypes.Integer64)
-        ];
+        ICollection<Claim> claims = GetAdditionalClaims(user, device, sessionId);
 
         await SignInWithClaimsAsync(user, props, claims);
         return SignInResult.Success;
+    }
+
+    public async Task ExternalSignInDeviceAsync(User user, Device device, AuthenticationProperties props, string loginProvider)
+    {
+        await ValidateDeviceAsync(user, device);
+
+        string sessionId = CreateSessionId();
+
+        SetDeviceProperties(props, device, sessionId);
+
+        ICollection<Claim> claims = GetAdditionalClaims(user, device, sessionId, loginProvider);
+
+        await SignInWithClaimsAsync(user, props, claims);
     }
 
     private async Task<bool> IsTwoFactorRequiredAsync(User user)
@@ -97,7 +75,7 @@ public sealed class CustomSignInManager(
 
                 ClaimsIdentity identity = new(IdentityConstants.TwoFactorUserIdScheme);
 
-                identity.AddClaim(new Claim(ClaimTypes.Name, userId));
+                identity.AddClaim(new Claim(JwtClaimTypes.Subject, userId));
 
                 await Context.SignInAsync(IdentityConstants.TwoFactorUserIdScheme, new ClaimsPrincipal(identity));
             }
@@ -118,5 +96,72 @@ public sealed class CustomSignInManager(
         }
 
         return false;
+    }
+
+    private async Task ValidateDeviceAsync(User user, Device device)
+    {
+        // Need to make sure IsNewDevice executes first, as this is
+        // what adds or updates the 'devices' array for the user.
+        if (await IsNewDeviceAsync(user, device) && user.Email is not null)
+        {
+            // Using the forgot password URL here instead of the reset page, because resetting requires
+            // a unique code to be created up front which may not actually end up getting used.
+            string resetPasswordUrl = $"{Context.Request.Scheme}://{Context.Request.Host.Value}/Account/ForgotPassword";
+
+            bool isSuccess = await _deviceEmail.SendNewDeviceEmailAsync(user, user.Email, device, resetPasswordUrl);
+            if (isSuccess is false)
+            {
+                // TODO: What should we do here, continue to allow the sign in?
+                // Maybe just add this as a notification for the user instead via some UI.
+            }
+        }
+    }
+
+    private static string CreateSessionId()
+    {
+        // TODO: Internally this still uses a BitConverter, but I think
+        // the newer Convert.ToHexString() method is more efficient?
+        return CryptoRandom.CreateUniqueId(16, CryptoRandom.OutputFormat.Hex);
+    }
+
+    private ICollection<Claim> GetAdditionalClaims(
+        User user,
+        Device device,
+        string sessionId,
+        string authenticationMethod = OidcConstants.AuthenticationMethods.Password)
+    {
+        long authTime = device.AccessedAt.ToUnixTimeSeconds();
+
+        ICollection<Claim> claims =
+        [
+            new Claim(JwtClaimTypes.IdentityProvider, "local"), // TODO: Constant?
+            new Claim(JwtClaimTypes.SessionId, sessionId),
+            new Claim(JwtClaimTypes.AuthenticationMethod, authenticationMethod),
+            new Claim(JwtClaimTypes.AuthenticationTime, authTime.ToString(), ClaimValueTypes.Integer64)
+        ];
+
+        //if (string.IsNullOrEmpty(user.CultureName) is false)
+        //{
+        //    claims.Add(new Claim(JwtClaimTypes.Locale, user.CultureName));
+        //}
+
+        //if (string.IsNullOrEmpty(user.TimezoneId) is false)
+        //{
+        //    claims.Add(new Claim(JwtClaimTypes.ZoneInfo, user.TimezoneId));
+        //}
+
+        return claims;
+    }
+
+    private static void SetDeviceProperties(AuthenticationProperties props, Device device, string sessionId)
+    {
+        // Note too sure if we actually need / want the session id in both the claims principal and the authentication
+        // properties, but could come in handy down the line so leaving it in for now until we find a reason not to.
+        props.SetString("session_id", sessionId);
+        props.SetString("device.fingerprint", device.Fingerprint);
+        props.SetString("device.os", device.OperatingSystem);
+        props.SetString("device.browser", device.Browser);
+        props.SetString("device.ip", device.IpAddress);
+        props.SetString("device.location", device.Location);
     }
 }

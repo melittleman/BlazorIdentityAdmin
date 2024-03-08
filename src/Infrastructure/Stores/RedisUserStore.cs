@@ -194,6 +194,66 @@ public class RedisUserStore(
         //    : IdentityResult.Failed(new IdentityError { Description = $"Unable to update Redis document for user {user.Id}." });
     }
 
+    public Task SetFirstNameAsync(User user, string firstName, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        ThrowIfDisposed();
+
+        ArgumentNullException.ThrowIfNull(user);
+
+        user.FirstName = firstName;
+
+        return Task.CompletedTask;
+    }
+
+    public Task SetLastNameAsync(User user, string lastName, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        ThrowIfDisposed();
+
+        ArgumentNullException.ThrowIfNull(user);
+
+        user.LastName = lastName;
+
+        return Task.CompletedTask;
+    }
+
+    public Task SetAvatarUrlAsync(User user, string avatarUrl, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        ThrowIfDisposed();
+
+        ArgumentNullException.ThrowIfNull(user);
+
+        user.AvatarUrl = avatarUrl;
+
+        return Task.CompletedTask;
+    }
+
+    public Task SetCultureNameAsync(User user, string cultureName, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        ThrowIfDisposed();
+
+        ArgumentNullException.ThrowIfNull(user);
+
+        user.CultureName = cultureName;
+
+        return Task.CompletedTask;
+    }
+
+    public Task SetTimezoneIdAsync(User user, string timezoneId, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        ThrowIfDisposed();
+
+        ArgumentNullException.ThrowIfNull(user);
+
+        user.TimezoneId = timezoneId;
+
+        return Task.CompletedTask;
+    }
+
     #region Claims
 
     public override Task AddClaimsAsync(User user, IEnumerable<Claim> claims, CancellationToken cancellationToken = default)
@@ -203,15 +263,11 @@ public class RedisUserStore(
 
     public override Task<IList<Claim>> GetClaimsAsync(User user, CancellationToken cancellationToken)
     {
-        // TODO: I hate this hard-coded approach to a SessionId... we need to investigate what other providers
-        // like Pixel, IdentityServer or OrchardCore actually do here because I don't think that a 'Store' should
-        // just keep a static list of Claims defined for a User?
-
         IList<Claim> claims = [];
 
-        if (string.IsNullOrWhiteSpace(user.Username) is false)
+        if (string.IsNullOrWhiteSpace(user.Name) is false)
         {
-            claims.Add(new Claim(OpenIddictConstants.Claims.PreferredUsername, user.Username));
+            claims.Add(new Claim(OpenIddictConstants.Claims.Name, user.Name));
         }
 
         if (string.IsNullOrWhiteSpace(user.FirstName) is false)
@@ -223,6 +279,26 @@ public class RedisUserStore(
         {
             claims.Add(new Claim(OpenIddictConstants.Claims.FamilyName, user.LastName));
         }
+
+        if (string.IsNullOrWhiteSpace(user.AvatarUrl) is false)
+        {
+            claims.Add(new Claim(OpenIddictConstants.Claims.Picture, user.AvatarUrl));
+        }
+
+        if (string.IsNullOrWhiteSpace(user.CultureName) is false)
+        {
+            claims.Add(new Claim(OpenIddictConstants.Claims.Locale, user.CultureName));
+        }
+
+        if (string.IsNullOrWhiteSpace(user.TimezoneId) is false)
+        {
+            claims.Add(new Claim(OpenIddictConstants.Claims.Zoneinfo, user.TimezoneId));
+        }
+
+        claims.Add(new Claim(
+            OpenIddictConstants.Claims.UpdatedAt, 
+            user.LastModifiedAt.ToUnixTimeSeconds().ToString(), 
+            ClaimValueTypes.Integer64));
 
         return Task.FromResult(claims);
     }
@@ -374,6 +450,7 @@ public class RedisUserStore(
 
         return login is null ? null : new UserLogin()
         {
+            UserId = userId,
             LoginProvider = login.Issuer,
             ProviderKey = login.Subject,
             ProviderDisplayName = login.DisplayName,
@@ -398,6 +475,7 @@ public class RedisUserStore(
 
         return new UserLogin()
         {
+            UserId = document.Id,
             LoginProvider = login.Issuer,
             ProviderKey = login.Subject,
             ProviderDisplayName = login.DisplayName,

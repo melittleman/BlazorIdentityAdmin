@@ -94,10 +94,12 @@ public static partial class ConfigureServices
             options.ClaimsIdentity.UserNameClaimType = OpenIddictConstants.Claims.Name;
             options.ClaimsIdentity.EmailClaimType = OpenIddictConstants.Claims.Email;
             options.ClaimsIdentity.RoleClaimType = OpenIddictConstants.Claims.Role;
-            options.ClaimsIdentity.SecurityStampClaimType = "sec_stamp"; // TODO: Is there a better alternative?
+            options.ClaimsIdentity.SecurityStampClaimType = "stamp"; // TODO: Is there a better alternative?
 
-            options.SignIn.RequireConfirmedEmail = true;
-            options.SignIn.RequireConfirmedAccount = true;
+            // TODO: Need to work out what we actually want to do here.
+            // I feel like logging in from an external provider without a confirmed email should be fine?
+            options.SignIn.RequireConfirmedEmail = false;
+            options.SignIn.RequireConfirmedAccount = false;
 
             options.Password.RequiredLength = 8;
             options.Password.RequiredUniqueChars = 4;
@@ -106,7 +108,10 @@ public static partial class ConfigureServices
             options.Password.RequireUppercase = true;
             options.Password.RequireDigit = true;
 
+            options.User.RequireUniqueEmail = false;
+
             options.Stores.MaxLengthForKeys = 128;
+            options.Stores.ProtectPersonalData = false;
         })
         .AddRoles<Role>()
         .AddClaimsPrincipalFactory<CustomClaimsPrincipalFactory>()

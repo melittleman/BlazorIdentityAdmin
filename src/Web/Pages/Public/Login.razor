@@ -72,7 +72,7 @@
                     TriState="false"
                     Label="Remember me?" 
                     Color="Color.Primary" 
-                    Class="ml-n1 my-3" />
+                    Class="ml-n1 mt-3" />
 
                 <MudLink Href="/forgot-password" Typo="Typo.subtitle1">Forgot password?</MudLink>
             </MudStack>
@@ -108,7 +108,7 @@
     private string registerLink = "/register";
 
     [CascadingParameter]
-    public required HttpContext HttpContext { get; set; }
+    public HttpContext? HttpContext { get; set; }
 
     [SupplyParameterFromForm]
     private LoginFormInput Input { get; set; } = new();
@@ -199,20 +199,13 @@
                 AccessedAt = authTime
             };
 
-            if (string.IsNullOrEmpty(DeviceInfo.TimeZone) is false)
+            if (user.TimezoneId is null && string.IsNullOrEmpty(DeviceInfo.TimeZone) is false)
             {
-                // TODO: What should we do about this setting?
-                // Should we always save it against the user, 
-                // or should we only save it if they have not set it before, 
-                // or should we never save it, and make them always do it manually?
                 user.TimezoneId = DeviceInfo.TimeZone;
             }
 
-            if (culture is not null)
+            if (user.CultureName is null && culture is not null)
             {
-                // TODO: Same here, need to figure out where this initially comes from 
-                // and how it is persisted to the users account. I think this is fine
-                // for the time being just to save it in the ClaimsPrincipal.
                 user.CultureName = culture.RequestCulture.UICulture.Name;
             }
 

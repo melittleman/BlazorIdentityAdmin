@@ -1,5 +1,11 @@
 ﻿@page "/external-login"
 
+@attribute [AllowAnonymous]
+@rendermode RenderMode.InteractiveServer
+
+@using BlazorAdminDashboard.Infrastructure.Stores
+@using Microsoft.AspNetCore.Localization
+
 @inject SignInManager<User> SignInManager
 @inject UserManager<User> UserManager
 @inject IUserStore<User> UserStore
@@ -8,9 +14,6 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<ExternalLogin> Logger
 @inject IJSRuntime JS
-
-@attribute [AllowAnonymous]
-@rendermode RenderMode.InteractiveServer
 
 <PageTitle>Register</PageTitle>
 
@@ -29,8 +32,6 @@ else
                 <MudText Typo="Typo.subtitle1">Associate your @ProviderDisplayName account.</MudText>
             </PublicFormHeader>
 
-            <StatusMessage Message="@message" />
-
             @* TODO: We could probably just use the 'StatusMessage' component for this too? But it might need a RenderFragment passing in. *@
             <MudAlert Severity="Severity.Info" Class="mt-8 mud-width-full" Elevation="4">
                 You've successfully authenticated with <strong>@ProviderDisplayName</strong>.
@@ -44,11 +45,23 @@ else
                     <input type="hidden" name="_handler" value="confirmation" />
                 }
 
+                <DeviceInfoProvider />
+                <GeolocationInfoProvider />
                 <DataAnnotationsValidator />
 
-                @* TODO: Need to also add the ability to enter a unique username if not provided. *@
+                @* TODO: Need to check for uniqueness *@
 
-                <MudTextField T="string" @bind-Value="Input.Email"
+                <MudTextField T="string" @bind-Value="Input.Username" name="Input.Username"
+                    Label="Username"
+                    Variant="Variant.Outlined"
+                    InputType="InputType.Text"
+                    Class="mt-6"
+                    autocomplete="username"
+                    aria-required="true" />
+
+                <ValidationMessage For="() => Input.Username" class="mud-alert mud-alert-text-error" />
+
+                <MudTextField T="string" @bind-Value="Input.Email" name="Input.Email"
                     Label="Email"
                     Variant="Variant.Outlined"
                     InputType="InputType.Email"
@@ -58,20 +71,41 @@ else
 
                 <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-text-error" />
 
+                <MudTextField T="string" @bind-Value="Input.FirstName" name="Input.FirstName"
+                    Label="First Name"
+                    Variant="Variant.Outlined"
+                    InputType="InputType.Text"
+                    Class="mt-6"
+                    autocomplete="first-name"
+                    aria-required="true" />
+
+                <ValidationMessage For="() => Input.FirstName" class="mud-alert mud-alert-text-error" />
+
+                <MudTextField T="string" @bind-Value="Input.LastName" name="Input.LastName"
+                    Label="Last Name"
+                    Variant="Variant.Outlined"
+                    InputType="InputType.Text"
+                    Class="mt-6"
+                    autocomplete="last-name"
+                    aria-required="true" />
+
+                <ValidationMessage For="() => Input.LastName" class="mud-alert mud-alert-text-error" />
+
+                <input type="hidden" name="Input.Picture" value="@Input.Picture" />
+                <input type="hidden" name="Input.Locale" value="@Input.Locale" />
+
                 @* Link for T&C's / Privacy *@
                 <MudCheckBox T="bool" @bind-Value="agreeToTerms"
                     Label="I agree to Terms & Conditions" 
                     Color="Color.Primary" 
-                    Class="ml-n1 my-3" />
+                    Class="ml-n1 mt-3" />
 
-                <MudButton ButtonType="ButtonType.Submit" 
-                    Variant="Variant.Filled" 
-                    Color="Color.Primary"
-                    Disabled="@(!agreeToTerms)" 
-                    Size="Size.Large" 
-                    FullWidth="true">
-                    Register
-                </MudButton>
+                <StatusMessage Message="@errorMessage" />
+
+                <LoadingSubmitButton Text="Register" 
+                    Icon="@Icons.Material.Outlined.AppRegistration" 
+                    IsProcessing="isProcessing" 
+                    IsDisabled="@(!agreeToTerms)" />
             </EditForm>
         </MudPaper>
     </MudStack>
@@ -79,10 +113,11 @@ else
 
 @code {
 
+    private bool isProcessing;
     private bool agreeToTerms = false;
     public const string LoginCallbackAction = "LoginCallback";
 
-    private string? message;
+    private string? errorMessage;
     private static ExternalLoginInfo? externalLoginInfo;
 
     private string? ProviderDisplayName => externalLoginInfo?.ProviderDisplayName;
@@ -94,6 +129,12 @@ else
     // SignalR after being set from HttpContext.
     [SupplyParameterFromForm]
     private static ExternalLoginFormInput Input { get; set; } = new();
+
+    [SupplyParameterFromForm]
+    private DeviceInfo DeviceInfo { get; set; } = new();
+
+    [SupplyParameterFromForm]
+    private GeolocationInfo? GeolocationInfo { get; set; }
 
     [SupplyParameterFromQuery]
     private string? RemoteError { get; set; }
@@ -140,9 +181,11 @@ else
 
     private async Task OnLoginCallbackAsync()
     {
+        if (externalLoginInfo is null) return;
+
         // Sign in the user with this external login provider if the user already has a login.
         // TODO: This is going to need to be overwritten to allow us the ability to pass in device info.
-        var result = await SignInManager.ExternalLoginSignInAsync(
+        SignInResult result = await SignInManager.ExternalLoginSignInAsync(
             externalLoginInfo.LoginProvider,
             externalLoginInfo.ProviderKey,
             isPersistent: false,
@@ -165,7 +208,45 @@ else
         // If the user does not have an account, then ask the user to create an account.
         if (externalLoginInfo.Principal.HasClaim(c => c.Type == OpenIddictConstants.Claims.Email))
         {
-            Input.Email = externalLoginInfo.Principal.FindFirstValue(OpenIddictConstants.Claims.Email) ?? "";
+            string email = externalLoginInfo.Principal.FindFirstValue(OpenIddictConstants.Claims.Email) ?? string.Empty;
+
+            Input.Username = email;
+            Input.Email = email;
+        }
+
+        // TODO: Enforce uniqueness on the 'Username', potentially via a custom validator?
+        if (externalLoginInfo.Principal.HasClaim(c => c.Type == OpenIddictConstants.Claims.PreferredUsername))
+        {
+            Input.Username = externalLoginInfo.Principal.FindFirstValue(OpenIddictConstants.Claims.PreferredUsername) ?? string.Empty;
+        }
+
+        if (externalLoginInfo.Principal.HasClaim(c => c.Type == OpenIddictConstants.Claims.Name))
+        {
+            string name = externalLoginInfo.Principal.FindFirstValue(OpenIddictConstants.Claims.Name) ?? string.Empty;
+            string[] firstAndLastNames = name.Split(' ', 2, StringSplitOptions.TrimEntries);
+
+            Input.FirstName = firstAndLastNames[0];
+            Input.LastName = firstAndLastNames[1];
+        }
+
+        if (externalLoginInfo.Principal.HasClaim(c => c.Type == OpenIddictConstants.Claims.GivenName))
+        {
+            Input.FirstName = externalLoginInfo.Principal.FindFirstValue(OpenIddictConstants.Claims.GivenName) ?? string.Empty;
+        }
+
+        if (externalLoginInfo.Principal.HasClaim(c => c.Type == OpenIddictConstants.Claims.FamilyName))
+        {
+            Input.LastName = externalLoginInfo.Principal.FindFirstValue(OpenIddictConstants.Claims.FamilyName) ?? string.Empty;
+        }
+
+        if (externalLoginInfo.Principal.HasClaim(c => c.Type == OpenIddictConstants.Claims.Picture))
+        {
+            Input.Picture = externalLoginInfo.Principal.FindFirstValue(OpenIddictConstants.Claims.Picture) ?? string.Empty;
+        }
+
+        if (externalLoginInfo.Principal.HasClaim(c => c.Type == OpenIddictConstants.Claims.Locale))
+        {
+            Input.Locale = externalLoginInfo.Principal.FindFirstValue(OpenIddictConstants.Claims.Locale) ?? string.Empty;
         }
     }
 
@@ -174,68 +255,161 @@ else
         // See: https://github.com/dotnet/aspnetcore/issues/53129
         if (HttpContext is null)
         {
-            // TODO
-            //isProcessing = true;
+            isProcessing = true;
 
             IJSObjectReference loginForm = await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "confirmation-form");
             await loginForm.InvokeVoidAsync("submit");
             return;
         }
 
+        if (externalLoginInfo is null) return;
+
+        User user = await CreateUserAsync();
+
+        IdentityResult result = await UserManager.CreateAsync(user);
+
+        if (result.Succeeded is false)
+        {
+            // TODO: We can't actually use the 'message' field because we aren't inside a SignalR circuit...
+            // So we might want to look into an alternative such as URL / Query String to persist the form state.
+            RedirectManager.RedirectToCurrentPageWithStatus($"Error: {string.Join(",", result.Errors.Select(error => error.Description))}", HttpContext);
+            return;
+        }
+
+        result = await UserManager.AddLoginAsync(user, externalLoginInfo);
+
+        if (result.Succeeded is false)
+        {
+            RedirectManager.RedirectToCurrentPageWithStatus($"Error: {string.Join(",", result.Errors.Select(error => error.Description))}", HttpContext);
+            return;
+        }
+
+        Logger.LogInformation("User created an account using {Name} provider.", externalLoginInfo.LoginProvider);
+
+        DateTimeOffset authTime = DateTimeOffset.UtcNow;
+        string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        IRequestCultureFeature? culture = HttpContext.Features.Get<IRequestCultureFeature>();
+        string? coordinates = GeolocationInfo?.GetCoordinates();
+
+        if (DeviceInfo is not null && string.IsNullOrEmpty(ipAddress) is false)
+        {
+            Device device = new()
+            {
+                OperatingSystem = $"{DeviceInfo.GetOperatingSystem()} {DeviceInfo.GetDeviceType()}",
+                Browser = DeviceInfo.GetBrowser(),
+                Fingerprint = DeviceInfo.GetFingerprint(),
+                IpAddress = ipAddress,
+                Location = coordinates,
+                AccessedAt = authTime
+            };
+
+            if (string.IsNullOrEmpty(DeviceInfo.TimeZone) is false)
+            {
+                // TODO: What should we do about this setting?
+                // Should we always save it against the user,
+                // or should we only save it if they have not set it before,
+                // or should we never save it, and make them always do it manually?
+                user.TimezoneId = DeviceInfo.TimeZone;
+            }
+
+            // TODO: Which 'culture / locale' do we actually want to prioritize here?
+            // The one provided by the users browser, vs directly from the 3rd party IDP.
+            if (culture is not null && string.IsNullOrEmpty(Input.Locale))
+            {
+                // TODO: Same here, need to figure out where this initially comes from
+                // and how it is persisted to the users account. I think this is fine
+                // for the time being just to save it in the ClaimsPrincipal.
+                user.CultureName = culture.RequestCulture.UICulture.Name;
+            }
+
+            // TODO: When should this be set to persistent = true, if ever? 
+            // Maybe if the email has been verified?
+            AuthenticationProperties props = new()
+            {
+                IsPersistent = false
+
+                // TODO: I don't think we want to set 'AllowRefresh'
+                // to true when this user hasn't logged in with a
+                // password and doesn't have a confirmed email?
+            };
+
+            if (externalLoginInfo.AuthenticationTokens is not null)
+            {
+                props.StoreTokens(externalLoginInfo.AuthenticationTokens);
+            }
+
+            string userId = await UserManager.GetUserIdAsync(user);
+            string code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+                NavigationManager.ToAbsoluteUri("/confirm-email").AbsoluteUri,
+                new Dictionary<string, object?>
+                {
+                    ["userId"] = userId,
+                    ["code"] = code
+                });
+
+            await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+            // If account confirmation is required, we need to show the link if we don't have a real email sender
+            if (UserManager.Options.SignIn.RequireConfirmedAccount)
+            {
+                RedirectManager.RedirectTo("/register-confirmation", new Dictionary<string, object?>()
+                {
+                    ["email"] = Input.Email
+                });
+            }
+
+            if (SignInManager is CustomSignInManager custom)
+            {
+                await custom.ExternalSignInDeviceAsync(user, device, props, externalLoginInfo.LoginProvider);
+            }
+
+            RedirectManager.RedirectTo(ReturnUrl);
+        }
+    }
+
+    private async Task<User> CreateUserAsync()
+    {
         User user = new();
 
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        // TODO: I feel like these should be using the 'Manager' instead?
+        // But the reasoning seems to be becuase the user hasn't actually been created yet.
+        await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
 
         if (UserStore is IUserEmailStore<User> emailStore)
         {
             await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         }
 
-        // TODO: This is where we need to save the picture, name and preferred username of the external login also.
-
-        IdentityResult result = await UserManager.CreateAsync(user);
-
-        if (result.Succeeded)
+        // TODO: Should potentially be changed to CustomUserStore to his implementation?
+        // Or even better, and ICustomUserStore interface?
+        if (UserStore is RedisUserStore store)
         {
-            result = await UserManager.AddLoginAsync(user, externalLoginInfo);
-
-            if (result.Succeeded)
+            if (string.IsNullOrWhiteSpace(Input.FirstName) is false)
             {
-                Logger.LogInformation("User created an account using {Name} provider.", externalLoginInfo.LoginProvider);
+                await store.SetFirstNameAsync(user, Input.FirstName, CancellationToken.None);
+            }
 
-                string userId = await UserManager.GetUserIdAsync(user);
-                string code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            if (string.IsNullOrWhiteSpace(Input.LastName) is false)
+            {
+                await store.SetLastNameAsync(user, Input.LastName, CancellationToken.None);
+            }
 
-                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            if (string.IsNullOrWhiteSpace(Input.Picture) is false)
+            {
+                await store.SetAvatarUrlAsync(user, Input.Picture, CancellationToken.None);
+            }
 
-                var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-                    NavigationManager.ToAbsoluteUri("/confirm-email").AbsoluteUri,
-                    new Dictionary<string, object?> 
-                    { 
-                        ["userId"] = userId, 
-                        ["code"] = code 
-                    });
-
-                await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
-
-                // If account confirmation is required, we need to show the link if we don't have a real email sender
-                if (UserManager.Options.SignIn.RequireConfirmedAccount)
-                {
-                    RedirectManager.RedirectTo("/register-confirmation", new Dictionary<string, object?>() 
-                    { 
-                        ["email"] = Input.Email 
-                    });
-                }
-
-                // TODO: I think this can be safely removed as we don't actually want the registration process
-                // to just automatically log the user in, as there is a lot of functionality on the Login page
-                // e.g. Device / Geo information and Remember Me that we want the user to pass through.
-                //await SignInManager.SignInAsync(user, isPersistent: false, externalLoginInfo.LoginProvider);
-
-                RedirectManager.RedirectTo(ReturnUrl);
+            // TODO: Should we actually accept the 'locale' coming from the IDP?
+            if (string.IsNullOrWhiteSpace(Input.Locale) is false)
+            {
+                await store.SetCultureNameAsync(user, Input.Locale, CancellationToken.None);
             }
         }
 
-        message = $"Error: {string.Join(",", result.Errors.Select(error => error.Description))}";
+        return user;
     }
 }

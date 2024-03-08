@@ -5,8 +5,9 @@
     Color="Color.Primary" 
     Size="Size.Large" 
     FullWidth="true"
-    Disabled="@IsProcessing"
-    EndIcon="@Icon">
+    Disabled="IsDisabled || IsProcessing"
+    EndIcon="@Icon"
+    Class="mt-6">
 
     @if (IsProcessing)
     {
@@ -29,4 +30,7 @@
 
     [Parameter]
     public bool IsProcessing { get; set; } = false;
+
+    [Parameter]
+    public bool IsDisabled { get; set; } = false;
 }
