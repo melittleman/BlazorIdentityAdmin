@@ -1,4 +1,6 @@
-﻿using AspNet.Security.OAuth.GitHub;
+﻿using IdentityModel.Client;
+using AspNet.Security.OAuth.GitHub;
+using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 
 namespace BlazorAdminDashboard.Infrastructure.Extensions;
 
@@ -52,17 +54,38 @@ public static partial class ConfigureServices
                 options.ClientSecret = microsoftclientSecret;
                 options.CallbackPath = "/signin-microsoft";
 
-                // TODO
+                options.ClaimActions.Clear();
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.Subject, "id");
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.Name, "displayName");
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.GivenName, "givenName");
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.FamilyName, "surname");
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.Email, "mail");
+                options.ClaimActions.MapJsonKey(OpenIddictConstants.Claims.Locale, "preferredLanguage");
 
+                options.Scope.Add("User.Read.All");
                 options.SaveTokens = true;
                 options.UsePkce = true;
 
-                options.Events.OnCreatingTicket = (context) =>
+                options.Events.OnCreatingTicket = async (context) =>
                 {
+                    if (context.AccessToken is null) return;
 
+                    string url = $"{MicrosoftAccountDefaults.UserInformationEndpoint}/photo/$value";
 
+                    context.Backchannel.SetBearerToken(context.AccessToken);
+                    byte[] response = await context.Backchannel.GetByteArrayAsync(url);
 
-                    return Task.CompletedTask;
+                    if (response.Length is 0) return;
+
+                    // TODO: This is just the raw image binary data, 
+                    // so to actually display this we would need to convert
+                    // into a blob in the browser using the jS:
+                    //
+                    //  const url = window.URL || window.webkitURL;
+                    //  const blobUrl = url.createObjectURL(image.data);
+                    //  document.getElementById(imageElement).setAttribute("src", blobUrl);
+                    //
+                    // There must be an easier way than this that MS supports?
                 };
             });
         }
