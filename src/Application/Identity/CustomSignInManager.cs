@@ -20,6 +20,41 @@ public sealed class CustomSignInManager(
     private readonly IDeviceEmailSender _deviceEmail = deviceEmail;
     private readonly IAuthenticationSchemeProvider _schemes = schemes;
 
+    protected override async Task<SignInResult> SignInOrTwoFactorAsync(
+        User user, 
+        bool isPersistent, 
+        string? loginProvider = null, 
+        bool bypassTwoFactor = false)
+    {
+        if (bypassTwoFactor is false && await IsTwoFactorRequiredAsync(user, loginProvider))
+        {
+            return SignInResult.TwoFactorRequired;
+        }
+
+        AuthenticationProperties props = new()
+        {
+            IsPersistent = isPersistent
+        };
+
+        string sessionId = CreateSessionId(props);
+        ICollection<Claim> claims;
+
+        if (loginProvider is not null)
+        {
+            // Cleanup external cookie
+            await Context.SignOutAsync(IdentityConstants.ExternalScheme);
+
+            claims = GetAdditionalClaims(sessionId, loginProvider);
+        }
+        else
+        {
+            claims = GetAdditionalClaims(sessionId);
+        }
+
+        await SignInWithClaimsAsync(user, props, claims);
+        return SignInResult.Success;
+    }
+
     public async Task<SignInResult> PasswordSignInDeviceAsync(
         User user,
         Device device,
@@ -37,11 +72,11 @@ public sealed class CustomSignInManager(
             AllowRefresh = true,
         };
 
-        string sessionId = CreateSessionId();
+        string sessionId = CreateSessionId(props);
 
-        SetDeviceProperties(props, device, sessionId);
+        SetDeviceProperties(props, device);
 
-        ICollection<Claim> claims = GetAdditionalClaims(user, device, sessionId);
+        ICollection<Claim> claims = GetAdditionalClaims(sessionId);
 
         await SignInWithClaimsAsync(user, props, claims);
         return SignInResult.Success;
@@ -51,16 +86,16 @@ public sealed class CustomSignInManager(
     {
         await ValidateDeviceAsync(user, device);
 
-        string sessionId = CreateSessionId();
+        string sessionId = CreateSessionId(props);
 
-        SetDeviceProperties(props, device, sessionId);
+        SetDeviceProperties(props, device);
 
-        ICollection<Claim> claims = GetAdditionalClaims(user, device, sessionId, loginProvider);
+        ICollection<Claim> claims = GetAdditionalClaims(sessionId, loginProvider);
 
         await SignInWithClaimsAsync(user, props, claims);
     }
 
-    private async Task<bool> IsTwoFactorRequiredAsync(User user)
+    private async Task<bool> IsTwoFactorRequiredAsync(User user, string? loginProvider = null)
     {
         // TODO: Investigate if there's a better way to sort this. I hate that we have to 
         // implement our own two factor logic here just because there's no better method to
@@ -76,6 +111,10 @@ public sealed class CustomSignInManager(
                 ClaimsIdentity identity = new(IdentityConstants.TwoFactorUserIdScheme);
 
                 identity.AddClaim(new Claim(JwtClaimTypes.Subject, userId));
+                if (loginProvider != null)
+                {
+                    identity.AddClaim(new Claim(JwtClaimTypes.AuthenticationMethod, loginProvider));
+                }
 
                 await Context.SignInAsync(IdentityConstants.TwoFactorUserIdScheme, new ClaimsPrincipal(identity));
             }
@@ -117,20 +156,24 @@ public sealed class CustomSignInManager(
         }
     }
 
-    private static string CreateSessionId()
+    private static string CreateSessionId(AuthenticationProperties props)
     {
         // TODO: Internally this still uses a BitConverter, but I think
         // the newer Convert.ToHexString() method is more efficient?
-        return CryptoRandom.CreateUniqueId(16, CryptoRandom.OutputFormat.Hex);
+        string sessionId = CryptoRandom.CreateUniqueId(16, CryptoRandom.OutputFormat.Hex);
+
+        // Note too sure if we actually need / want the session id in both the claims principal and the authentication
+        // properties, but could come in handy down the line so leaving it in for now until we find a reason not to.
+        props.SetString("session_id", sessionId);
+
+        return sessionId;
     }
 
     private ICollection<Claim> GetAdditionalClaims(
-        User user,
-        Device device,
         string sessionId,
         string authenticationMethod = OidcConstants.AuthenticationMethods.Password)
     {
-        long authTime = device.AccessedAt.ToUnixTimeSeconds();
+        long authTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
         ICollection<Claim> claims =
         [
@@ -140,24 +183,11 @@ public sealed class CustomSignInManager(
             new Claim(JwtClaimTypes.AuthenticationTime, authTime.ToString(), ClaimValueTypes.Integer64)
         ];
 
-        //if (string.IsNullOrEmpty(user.CultureName) is false)
-        //{
-        //    claims.Add(new Claim(JwtClaimTypes.Locale, user.CultureName));
-        //}
-
-        //if (string.IsNullOrEmpty(user.TimezoneId) is false)
-        //{
-        //    claims.Add(new Claim(JwtClaimTypes.ZoneInfo, user.TimezoneId));
-        //}
-
         return claims;
     }
 
-    private static void SetDeviceProperties(AuthenticationProperties props, Device device, string sessionId)
+    private static void SetDeviceProperties(AuthenticationProperties props, Device device)
     {
-        // Note too sure if we actually need / want the session id in both the claims principal and the authentication
-        // properties, but could come in handy down the line so leaving it in for now until we find a reason not to.
-        props.SetString("session_id", sessionId);
         props.SetString("device.fingerprint", device.Fingerprint);
         props.SetString("device.os", device.OperatingSystem);
         props.SetString("device.browser", device.Browser);

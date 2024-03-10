@@ -36,10 +36,10 @@ public sealed class UserDocumentV1
     public ICollection<PhoneNumberDocumentV1>? PhoneNumbers { get; set; }
 
     [JsonPropertyName("culture_name")]
-    public string CultureName { get; set; } = "en-US"; // TODO: Constant
+    public string? CultureName { get; set; }
 
     [JsonPropertyName("timezone_id")]
-    public string TimezoneId { get; set; } = "UTC"; // TODO: Constant
+    public string? TimezoneId { get; set; }
 
     [JsonPropertyName("password_hash")]
     public string? PasswordHash { get; set; }
@@ -87,8 +87,8 @@ public sealed class UserDocumentV1
             Username = user.UserName,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            EmailAddresses = [
-            
+            EmailAddresses = 
+            [
                 new EmailAddressDocumentV1()
                 {
                     Email = user.Email,

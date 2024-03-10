@@ -24,8 +24,8 @@ else
         <MudText Typo="Typo.h2" GutterBottom="true">Session Information</MudText>
 
         <MudGrid Class="mb-8" Spacing="2">
-            <MudItem Class="flex-auto">
-                <MudCard Class="pa-4" Style="height: 100%">
+            <MudItem Class="flex-auto" xs="12" lg="6">
+                <MudCard Class="pa-4 mud-height-full" Style="word-wrap: break-word;">
                     <MudCardHeader>
                         <CardHeaderContent>
                             <MudText Typo="Typo.h3">Claims</MudText>
@@ -44,8 +44,8 @@ else
                     </MudCardContent>
                 </MudCard>
             </MudItem>
-            <MudItem Class="flex-auto">
-                <MudCard Class="pa-4" Style="height: 100%">
+            <MudItem Class="flex-auto" xs="12" lg="6">
+                <MudCard Class="pa-4 mud-height-full" Style="word-wrap: break-word;">
                     <MudCardHeader>
                         <CardHeaderContent>
                             <MudText Typo="Typo.h3">Properties</MudText>
@@ -83,20 +83,23 @@ else
     private AuthenticateResult? auth;
 
     [CascadingParameter]
-    public required HttpContext HttpContext { get; set; }
+    public HttpContext? HttpContext { get; set; }
 
     private IPagedList<AuthenticationTicket>? tickets;
 
     protected override async Task OnInitializedAsync()
     {
-        auth = await HttpContext.AuthenticateAsync();
+        if (HttpContext is not null)
+        {
+            auth = await HttpContext.AuthenticateAsync();
+        }
 
         // TODO: These should definitely also be extension methods...
-        auth.Ticket?.Properties.Items.TryGetValue("session_id", out sessionId);
+        auth?.Ticket?.Properties.Items.TryGetValue("session_id", out sessionId);
 
         // string? userId = auth.Principal?.GetClaim(OpenIddictConstants.Claims.Subject);
         // vs.
-        userId = auth.Principal?.FindFirstValue(OpenIddictConstants.Claims.Subject);
+        userId = auth?.Principal?.FindFirstValue(OpenIddictConstants.Claims.Subject);
         // ^^ Which is better / more efficient?
 
         await base.OnInitializedAsync();
