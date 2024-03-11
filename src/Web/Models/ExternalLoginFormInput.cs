@@ -5,15 +5,12 @@ internal sealed record ExternalLoginFormInput
     [Required]
     public string Username { get; set; } = string.Empty;
 
-    [Required]
     [EmailAddress]
-    public string Email { get; set; } = string.Empty;
+    public string? Email { get; set; }
 
-    [Required]
-    public string FirstName { get; set; } = string.Empty;
+    public string? FirstName { get; set; }
 
-    [Required]
-    public string LastName { get; set; } = string.Empty;
+    public string? LastName { get; set; }
 
     public string? Picture { get; set; }
 

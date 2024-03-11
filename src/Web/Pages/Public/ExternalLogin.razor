@@ -17,10 +17,54 @@
 
 <PageTitle>Register</PageTitle>
 
+@* TODO: Break these down into separate components... *@
+
 @if (externalLoginInfo is null)
 {
-    // TODO: 
-    <MudText>Loading...</MudText>
+    // TODO: Skeleton?
+    <MudText Typo="Typo.h6">Loading...</MudText>
+    <MudProgressCircular Color="Color.Inherit" Indeterminate="true" />
+}
+else if (existingUser is not null)
+{
+    <MudStack Spacing="4" AlignItems="AlignItems.Center">
+        <MudPaper Elevation="4" Class="pa-4" Width="100%">
+
+            <PublicFormHeader AvatarUrl="@existingUser.AvatarUrl">
+
+                <MudText Typo="Typo.h1" GutterBottom="true">Welcome Back!</MudText>
+                <MudText Typo="Typo.subtitle1">Logging in as @existingUser.Name</MudText>
+            </PublicFormHeader>
+
+            <MudStack Spacing="2" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.h6">Please wait whilst we login to your @ProviderDisplayName account...</MudText>
+                <MudProgressCircular Color="Color.Inherit" Indeterminate="true" />
+            </MudStack>
+        </MudPaper>
+    </MudStack>
+
+    <EditForm Model="Input" FormName="confirmation" id="confirmation-form" method="post" OnSubmit="LoginExistingUserAsync">
+
+        @if (HttpContext is null)
+        {
+            <input type="hidden" name="_handler" value="confirmation" />
+        }
+
+        @*
+            TODO: Do we also want to 'wait' for the Geolocation information from the browser?
+            Definitely not as important as the Device Info because the user can deny access
+            to their location so this may never actually complete.
+        *@
+        <GeolocationInfoProvider InfoChanged="HandleGeoInfoChanged"/>
+        <DeviceInfoProvider OnInfoComplete="HandleDeviceInfoComplete" />
+
+        <input type="hidden" name="Input.Username" value="@Input.Username" />
+        <input type="hidden" name="Input.Email" value="@Input.Email" />
+        <input type="hidden" name="Input.FirstName" value="@Input.FirstName" />
+        <input type="hidden" name="Input.LastName" value="@Input.LastName" />
+        <input type="hidden" name="Input.Picture" value="@Input.Picture" />
+        <input type="hidden" name="Input.Locale" value="@Input.Locale" />
+    </EditForm>
 }
 else
 {
@@ -35,10 +79,10 @@ else
             @* TODO: We could probably just use the 'StatusMessage' component for this too? But it might need a RenderFragment passing in. *@
             <MudAlert Severity="Severity.Info" Class="mt-8 mud-width-full" Elevation="4">
                 You've successfully authenticated with <strong>@ProviderDisplayName</strong>.
-                Please confirm or enter an email address below and click the Register button to finish logging in.
+                Please enter or amend your details below and click Register to finish logging in.
             </MudAlert>
 
-            <EditForm Model="Input" FormName="confirmation" id="confirmation-form" method="post" OnValidSubmit="OnValidSubmitAsync">
+            <EditForm Model="Input" FormName="confirmation" id="confirmation-form" method="post" OnValidSubmit="RegisterNewUserAsync">
 
                 @if (HttpContext is null)
                 {
@@ -48,8 +92,6 @@ else
                 <DeviceInfoProvider />
                 <GeolocationInfoProvider />
                 <DataAnnotationsValidator />
-
-                @* TODO: Need to check for uniqueness *@
 
                 <MudTextField T="string" @bind-Value="Input.Username" name="Input.Username"
                     Label="Username"
@@ -113,11 +155,16 @@ else
 
 @code {
 
-    private bool isProcessing;
-    private bool agreeToTerms = false;
     public const string LoginCallbackAction = "LoginCallback";
 
     private string? errorMessage;
+    private bool isProcessing = false;
+    private bool agreeToTerms = false;
+
+    private bool deviceInfoComplete = false;
+    private bool geoInfoComplete = false;
+
+    private static User? existingUser;
     private static ExternalLoginInfo? externalLoginInfo;
 
     private string? ProviderDisplayName => externalLoginInfo?.ProviderDisplayName;
@@ -147,7 +194,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        if (HttpContext is not null)
+        // We only want to execute this on the very first HTTP Request, 
+        // not the subsequent SignalR initialization or any form POSTs.
+        if (HttpContext is not null && HttpMethods.IsGet(HttpContext.Request.Method))
         {
             if (RemoteError is not null)
             {
@@ -162,48 +211,77 @@ else
 
             externalLoginInfo = info;
 
-            if (HttpMethods.IsGet(HttpContext.Request.Method))
+            existingUser = await UserManager.FindByLoginAsync(
+                externalLoginInfo.LoginProvider,
+                externalLoginInfo.ProviderKey);
+
+            if (existingUser is not null)
+            {
+                // User already exists.
+                // Need to stop here to allow the browser render to continue
+                // which will send back the Device and Geolocation info.
+
+                Input.Username = existingUser.UserName ?? string.Empty;
+                Input.Email = existingUser.Email;
+                Input.FirstName = existingUser.FirstName;
+                Input.LastName = existingUser.FirstName;
+
+                if (SignInManager is CustomSignInManager custom) 
+                {
+                    SignInResult? result = await custom.CheckSignInAsync(existingUser);
+
+                    if (result?.IsLockedOut is true) 
+                    {
+                        RedirectManager.RedirectTo("/lockout");
+                    }
+                }
+            }
+            else
             {
                 if (Action == LoginCallbackAction)
                 {
-                    await OnLoginCallbackAsync();
-                    return;
+                    OnLoginCallback();
                 }
-
-                // We should only reach this page via the login callback, so redirect back to
-                // the login page if we get here some other way.
-                RedirectManager.RedirectTo("/login");
+                else
+                {
+                    // We should only reach this page via the login callback, so redirect back to
+                    // the login page if we get here some other way.
+                    RedirectManager.RedirectTo("/login");
+                }
             }
         }
 
         await base.OnInitializedAsync();
     }
 
-    private async Task OnLoginCallbackAsync()
+    private async Task HandleDeviceInfoComplete(DeviceInfo info)
+    {
+        deviceInfoComplete = true;
+
+        // TODO: Do we need to be concerned about the fact that this will 'hang' until
+        // the user either accepts or rejects the sharing of their location?
+        if (deviceInfoComplete && geoInfoComplete) 
+        {
+            // We can automatically submit the form in this instance because the
+            // user already exists, we just needed to wait for the render to complete
+            // in order to capture the device information.
+            await SubmitFormAsync();
+        }   
+    }
+
+    private async Task HandleGeoInfoChanged(GeolocationInfo info)
+    {
+        geoInfoComplete = true;
+
+        if (deviceInfoComplete && geoInfoComplete)
+        {
+            await SubmitFormAsync();
+        }
+    }
+
+    private void OnLoginCallback()
     {
         if (externalLoginInfo is null) return;
-
-        // Sign in the user with this external login provider if the user already has a login.
-        // TODO: This is going to need to be overwritten to allow us the ability to pass in device info.
-        SignInResult result = await SignInManager.ExternalLoginSignInAsync(
-            externalLoginInfo.LoginProvider,
-            externalLoginInfo.ProviderKey,
-            isPersistent: false,
-            bypassTwoFactor: true);
-
-        if (result.Succeeded)
-        {
-            Logger.LogInformation(
-                "{Name} logged in with {LoginProvider} provider.",
-                externalLoginInfo.Principal.Identity?.Name,
-                externalLoginInfo.LoginProvider);
-
-            RedirectManager.RedirectTo(ReturnUrl);
-        }
-        else if (result.IsLockedOut)
-        {
-            RedirectManager.RedirectTo("/lockout");
-        }
 
         // If the user does not have an account, then ask the user to create an account.
         if (externalLoginInfo.Principal.HasClaim(c => c.Type == OpenIddictConstants.Claims.Email))
@@ -250,15 +328,23 @@ else
         }
     }
 
-    private async Task OnValidSubmitAsync()
+    private async Task LoginExistingUserAsync()
     {
-        // See: https://github.com/dotnet/aspnetcore/issues/53129
+        if (existingUser is null || externalLoginInfo is null) return;
+
+        Logger.LogInformation(
+            "Logging in {User} with their {Name} account.", 
+            existingUser.Name,
+            externalLoginInfo.LoginProvider);
+
+        await LoginDeviceAsync(existingUser);
+    }
+
+    private async Task RegisterNewUserAsync()
+    {
         if (HttpContext is null)
         {
-            isProcessing = true;
-
-            IJSObjectReference loginForm = await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "confirmation-form");
-            await loginForm.InvokeVoidAsync("submit");
+            await SubmitFormAsync();
             return;
         }
 
@@ -286,89 +372,7 @@ else
 
         Logger.LogInformation("User created an account using {Name} provider.", externalLoginInfo.LoginProvider);
 
-        DateTimeOffset authTime = DateTimeOffset.UtcNow;
-        string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        IRequestCultureFeature? culture = HttpContext.Features.Get<IRequestCultureFeature>();
-        string? coordinates = GeolocationInfo?.GetCoordinates();
-
-        if (DeviceInfo is not null && string.IsNullOrEmpty(ipAddress) is false)
-        {
-            Device device = new()
-            {
-                OperatingSystem = $"{DeviceInfo.GetOperatingSystem()} {DeviceInfo.GetDeviceType()}",
-                Browser = DeviceInfo.GetBrowser(),
-                Fingerprint = DeviceInfo.GetFingerprint(),
-                IpAddress = ipAddress,
-                Location = coordinates,
-                AccessedAt = authTime
-            };
-
-            if (string.IsNullOrEmpty(DeviceInfo.TimeZone) is false)
-            {
-                // TODO: What should we do about this setting?
-                // Should we always save it against the user,
-                // or should we only save it if they have not set it before,
-                // or should we never save it, and make them always do it manually?
-                user.TimezoneId = DeviceInfo.TimeZone;
-            }
-
-            // TODO: Which 'culture / locale' do we actually want to prioritize here?
-            // The one provided by the users browser, vs directly from the 3rd party IDP.
-            if (culture is not null && string.IsNullOrEmpty(Input.Locale))
-            {
-                // TODO: Same here, need to figure out where this initially comes from
-                // and how it is persisted to the users account. I think this is fine
-                // for the time being just to save it in the ClaimsPrincipal.
-                user.CultureName = culture.RequestCulture.UICulture.Name;
-            }
-
-            // TODO: When should this be set to persistent = true, if ever? 
-            // Maybe if the email has been verified?
-            AuthenticationProperties props = new()
-            {
-                IsPersistent = false
-
-                // TODO: I don't think we want to set 'AllowRefresh'
-                // to true when this user hasn't logged in with a
-                // password and doesn't have a confirmed email?
-            };
-
-            if (externalLoginInfo.AuthenticationTokens is not null)
-            {
-                props.StoreTokens(externalLoginInfo.AuthenticationTokens);
-            }
-
-            string userId = await UserManager.GetUserIdAsync(user);
-            string code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-
-            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-                NavigationManager.ToAbsoluteUri("/confirm-email").AbsoluteUri,
-                new Dictionary<string, object?>
-                {
-                    ["userId"] = userId,
-                    ["code"] = code
-                });
-
-            await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
-
-            // If account confirmation is required, we need to show the link if we don't have a real email sender
-            if (UserManager.Options.SignIn.RequireConfirmedAccount)
-            {
-                RedirectManager.RedirectTo("/register-confirmation", new Dictionary<string, object?>()
-                {
-                    ["email"] = Input.Email
-                });
-            }
-
-            if (SignInManager is CustomSignInManager custom)
-            {
-                await custom.ExternalSignInDeviceAsync(user, device, props, externalLoginInfo.LoginProvider);
-            }
-
-            RedirectManager.RedirectTo(ReturnUrl);
-        }
+        await LoginDeviceAsync(user);
     }
 
     private async Task<User> CreateUserAsync()
@@ -411,5 +415,109 @@ else
         }
 
         return user;
+    }
+
+    private async Task SubmitFormAsync()
+    {
+        // We are not in a SignalR circuit if HttpContext is valid.
+        if (HttpContext is not null) return;
+
+        isProcessing = true;
+
+        // See: https://github.com/dotnet/aspnetcore/issues/53129
+        IJSObjectReference loginForm = await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "confirmation-form");
+        await loginForm.InvokeVoidAsync("submit");
+    }
+
+    private async Task LoginDeviceAsync(User user)
+    {
+        if (HttpContext is null || externalLoginInfo is null) return;
+
+        DateTimeOffset authTime = DateTimeOffset.UtcNow;
+        string? ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        IRequestCultureFeature? culture = HttpContext.Features.Get<IRequestCultureFeature>();
+        string? coordinates = GeolocationInfo?.GetCoordinates();
+
+        if (DeviceInfo is not null && string.IsNullOrEmpty(ipAddress) is false)
+        {
+            Device device = new()
+            {
+                OperatingSystem = $"{DeviceInfo.GetOperatingSystem()} {DeviceInfo.GetDeviceType()}",
+                Browser = DeviceInfo.GetBrowser(),
+                Fingerprint = DeviceInfo.GetFingerprint(),
+                IpAddress = ipAddress,
+                Location = coordinates,
+                AccessedAt = authTime
+            };
+
+            if (string.IsNullOrEmpty(DeviceInfo.TimeZone) is false)
+            {
+                // TODO: What should we do about this setting?
+                // Should we always save it against the user,
+                // or should we only save it if they have not set it before,
+                // or should we never save it, and make them always do it manually?
+                user.TimezoneId = DeviceInfo.TimeZone;
+            }
+
+            // TODO: Which 'culture / locale' do we actually want to prioritize here?
+            // The one provided by the users browser, vs directly from the 3rd party IDP.
+            if (culture is not null && string.IsNullOrEmpty(Input.Locale))
+            {
+                // TODO: Same here, need to figure out where this initially comes from
+                // and how it is persisted to the users account. I think this is fine
+                // for the time being just to save it in the ClaimsPrincipal.
+                user.CultureName = culture.RequestCulture.UICulture.Name;
+            }
+
+            // TODO: When should this be set to persistent = true, if ever?
+            // Maybe if the email has been verified?
+            AuthenticationProperties props = new()
+            {
+                IsPersistent = false
+
+                // TODO: I don't think we want to set 'AllowRefresh'
+                // to true when this user hasn't logged in with a
+                // password and doesn't have a confirmed email?
+            };
+
+            if (externalLoginInfo.AuthenticationTokens is not null)
+            {
+                props.StoreTokens(externalLoginInfo.AuthenticationTokens);
+            }
+
+            string userId = await UserManager.GetUserIdAsync(user);
+            string code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+            string callbackUrl = NavigationManager.GetUriWithQueryParameters(
+                NavigationManager.ToAbsoluteUri("/confirm-email").AbsoluteUri,
+                new Dictionary<string, object?>
+                {
+                    ["userId"] = userId,
+                    ["code"] = code
+                });
+
+            if (string.IsNullOrEmpty(Input.Email) is false)
+            {
+                await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+            }
+
+            // If account confirmation is required, we need to show the link if we don't have a real email sender
+            if (UserManager.Options.SignIn.RequireConfirmedAccount)
+            {
+                RedirectManager.RedirectTo("/register-confirmation", new Dictionary<string, object?>()
+                {
+                    ["email"] = Input.Email
+                });
+            }
+
+            if (SignInManager is CustomSignInManager custom)
+            {
+                await custom.SignInDeviceOrTwoFactorAsync(user, device, props, externalLoginInfo.LoginProvider, true);
+            }
+
+            RedirectManager.RedirectTo(ReturnUrl);
+        }
     }
 }

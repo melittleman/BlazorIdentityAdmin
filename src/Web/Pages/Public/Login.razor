@@ -209,9 +209,14 @@
                 user.CultureName = culture.RequestCulture.UICulture.Name;
             }
 
+            AuthenticationProperties props = new()
+            {
+                IsPersistent = Input.IsRememberMeEnabled                    
+            };
+
             if (SignInManager is CustomSignInManager custom)
             {                
-                result = await custom.PasswordSignInDeviceAsync(user, device, Input.IsRememberMeEnabled);
+                result = await custom.SignInDeviceOrTwoFactorAsync(user, device, props);
             }
 
             HandleSignInResult(result);

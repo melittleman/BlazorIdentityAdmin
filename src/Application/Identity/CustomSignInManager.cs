@@ -20,9 +20,10 @@ public sealed class CustomSignInManager(
     private readonly IDeviceEmailSender _deviceEmail = deviceEmail;
     private readonly IAuthenticationSchemeProvider _schemes = schemes;
 
-    protected override async Task<SignInResult> SignInOrTwoFactorAsync(
+    public async Task<SignInResult> SignInDeviceOrTwoFactorAsync(
         User user, 
-        bool isPersistent, 
+        Device device, 
+        AuthenticationProperties props, 
         string? loginProvider = null, 
         bool bypassTwoFactor = false)
     {
@@ -31,10 +32,8 @@ public sealed class CustomSignInManager(
             return SignInResult.TwoFactorRequired;
         }
 
-        AuthenticationProperties props = new()
-        {
-            IsPersistent = isPersistent
-        };
+        await ValidateDeviceAsync(user, device);
+        SetDeviceProperties(props, device);
 
         string sessionId = CreateSessionId(props);
         ICollection<Claim> claims;
@@ -55,74 +54,36 @@ public sealed class CustomSignInManager(
         return SignInResult.Success;
     }
 
-    public async Task<SignInResult> PasswordSignInDeviceAsync(
-        User user,
-        Device device,
-        bool isPersistent)
+    public Task<SignInResult?> CheckSignInAsync(User user)
     {
-        if (await IsTwoFactorRequiredAsync(user)) return SignInResult.TwoFactorRequired;
+        ArgumentNullException.ThrowIfNull(user);
 
-        await ValidateDeviceAsync(user, device);
-
-        AuthenticationProperties props = new()
-        {
-            // This actually translates to ".persistent": "" which is a bit
-            // annoying so we may have to see if there's a way to enforce a bool.
-            IsPersistent = isPersistent,
-            AllowRefresh = true,
-        };
-
-        string sessionId = CreateSessionId(props);
-
-        SetDeviceProperties(props, device);
-
-        ICollection<Claim> claims = GetAdditionalClaims(sessionId);
-
-        await SignInWithClaimsAsync(user, props, claims);
-        return SignInResult.Success;
-    }
-
-    public async Task ExternalSignInDeviceAsync(User user, Device device, AuthenticationProperties props, string loginProvider)
-    {
-        await ValidateDeviceAsync(user, device);
-
-        string sessionId = CreateSessionId(props);
-
-        SetDeviceProperties(props, device);
-
-        ICollection<Claim> claims = GetAdditionalClaims(sessionId, loginProvider);
-
-        await SignInWithClaimsAsync(user, props, claims);
+        return PreSignInCheck(user);
     }
 
     private async Task<bool> IsTwoFactorRequiredAsync(User user, string? loginProvider = null)
     {
-        // TODO: Investigate if there's a better way to sort this. I hate that we have to 
-        // implement our own two factor logic here just because there's no better method to
-        // override for us to do our password signin with custom properties etc.
+        if (await IsTwoFactorEnabledAsync(user) is false) return false;
 
-        if (await IsTwoFactorEnabledAsync(user) && await IsTwoFactorClientRememberedAsync(user) is false)
+        if (await IsTwoFactorClientRememberedAsync(user)) return false;
+
+        if (await _schemes.GetSchemeAsync(IdentityConstants.TwoFactorUserIdScheme) != null)
         {
-            if (await _schemes.GetSchemeAsync(IdentityConstants.TwoFactorUserIdScheme) != null)
+            // Store the userId for use after two factor check
+            string userId = await UserManager.GetUserIdAsync(user);
+
+            ClaimsIdentity identity = new(IdentityConstants.TwoFactorUserIdScheme);
+
+            identity.AddClaim(new Claim(JwtClaimTypes.Subject, userId));
+            if (loginProvider != null)
             {
-                // Store the userId for use after two factor check
-                string userId = await UserManager.GetUserIdAsync(user);
-
-                ClaimsIdentity identity = new(IdentityConstants.TwoFactorUserIdScheme);
-
-                identity.AddClaim(new Claim(JwtClaimTypes.Subject, userId));
-                if (loginProvider != null)
-                {
-                    identity.AddClaim(new Claim(JwtClaimTypes.AuthenticationMethod, loginProvider));
-                }
-
-                await Context.SignInAsync(IdentityConstants.TwoFactorUserIdScheme, new ClaimsPrincipal(identity));
+                identity.AddClaim(new Claim(JwtClaimTypes.AuthenticationMethod, loginProvider));
             }
 
-            return true;
+            await Context.SignInAsync(IdentityConstants.TwoFactorUserIdScheme, new ClaimsPrincipal(identity));
         }
 
-        return false;
+        return true;
     }
 
     private async Task<bool> IsNewDeviceAsync(User user, Device device)

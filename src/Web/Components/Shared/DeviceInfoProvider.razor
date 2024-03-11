@@ -130,21 +130,39 @@
 
 @code {
 
+    private bool isBraveChecked = false;
+    private bool isBrowserChecked = false;
+    private bool isCpuUpdated = false;
+    private bool isVersionUpdated = false;
+
+    private bool IsInfoComplete => 
+        isBraveChecked && 
+        isBrowserChecked && 
+        isCpuUpdated && 
+        isVersionUpdated;
+
     [Parameter]
     public DeviceInfo Info { get; set; } = new();
 
     [Parameter]
     public EventCallback<DeviceInfo> InfoChanged { get; set; }
 
+    [Parameter]
+    public CancellationToken Token { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<DeviceInfo> OnInfoComplete { get; set; }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender) 
         {
-            if (Info is not null) 
-            {
-                Info.IsBraveBrowser = await JS.InvokeAsync<bool>("isBraveBrowser");
-                await InfoChanged.InvokeAsync(Info);
-            }
+            Info.IsBraveBrowser = await JS.InvokeAsync<bool>("isBraveBrowser");
+
+            await InfoChanged.InvokeAsync(Info);
+            isBraveChecked = true;
+
+            await CheckComplete();
         }
     }
 
@@ -156,6 +174,9 @@
         }
 
         await InfoChanged.InvokeAsync(Info);
+        isCpuUpdated = true;
+
+        await CheckComplete();
     }
 
     private async Task OsVersionUpdated(string version)
@@ -166,6 +187,9 @@
         }
 
         await InfoChanged.InvokeAsync(Info);
+        isVersionUpdated = true;
+
+        await CheckComplete();
     }
 
     private async Task BrowserInfoChanged(BrowserInfo info)
@@ -175,7 +199,7 @@
         Info.BrowserName = Info.IsBraveBrowser is true 
             ? "Brave" 
             : info.BrowserName;
-        
+
         Info.BrowserMajor = info.BrowserMajor;
         Info.BrowserVersion = info.BrowserVersion;
         Info.CPUArchitect = info.CPUArchitect;
@@ -198,5 +222,18 @@
         Info.TimeZone = info.TimeZone;
 
         await InfoChanged.InvokeAsync(Info);
+        isBrowserChecked = true;
+
+        await CheckComplete();
+    }
+
+    private async Task CheckComplete()
+    {
+        // TODO: Need to figure out the right wait of putting a timeout
+        // in place, just in case all the events never actually get fired.
+        if (IsInfoComplete)
+        {
+            await OnInfoComplete.InvokeAsync(Info);
+        }
     }
 }

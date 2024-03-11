@@ -75,10 +75,13 @@
                 Info.AltitudeAccuracy = coordinates.AltitudeAccuracy;
                 Info.Heading = coordinates.Heading;
                 Info.Speed = coordinates.Speed;
-
-                await InfoChanged.InvokeAsync(Info);
-                StateHasChanged();
             }
+
+            // Fire off the callback regardless of whether it was successful or not,
+            // as the user may have opted not to share their location but we can still
+            // tell the parent components that we are finished.
+            await InfoChanged.InvokeAsync(Info);
+            StateHasChanged();
         }
 
         await base.OnAfterRenderAsync(firstRender);

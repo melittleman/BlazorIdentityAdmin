@@ -1,16 +1,25 @@
 ﻿<MudStack Row="true" AlignItems="AlignItems.Start">
 
-    @* TODO: This icon should actually be the tenant's logo URL if available. *@
-    <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Color="Color.Secondary" Size="Size.Large" Style="width:80px; height:80px;" />
+    @if (string.IsNullOrEmpty(AvatarUrl) is false)
+    {
+        <MudAvatar Size="Size.Large">
+            <MudImage Src="@AvatarUrl"></MudImage>
+        </MudAvatar>
+    }
+    else
+    {
+        @* TODO: This icon should actually be the tenant's logo URL if available. *@
+        <MudIcon Icon="@HeaderIcon" Color="Color.Secondary" Size="Size.Large" Style="width:80px; height:80px;" />
+    }
 
-        @if (ChildContent is not null)
-        {
-            <MudStack Justify="Justify.Center" AlignItems="AlignItems.Stretch" Spacing="0">
+    @if (ChildContent is not null)
+    {
+        <MudStack Justify="Justify.Center" AlignItems="AlignItems.Stretch" Spacing="0">
 
-                @ChildContent
+            @ChildContent
 
-            </MudStack>
-        }
+        </MudStack>
+    }
 
     <MudSpacer />
     <CustomThemeProvider Theme="theme" />
@@ -21,6 +30,12 @@
 @code {
 
     private static CustomTheme theme = new();
+
+    [Parameter]
+    public string? AvatarUrl { get; set; }
+
+    [Parameter]
+    public string HeaderIcon { get; set; } = Icons.Custom.Brands.MudBlazor;
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
