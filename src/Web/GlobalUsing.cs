@@ -49,4 +49,3 @@ global using BlazorAdminDashboard.Web.Models;
 global using BlazorAdminDashboard.Web.Components;
 global using BlazorAdminDashboard.Web.Components.Admin;
 global using BlazorAdminDashboard.Web.Pages.Account;
-global using BlazorAdminDashboard.Web.Pages.Account.Manage;

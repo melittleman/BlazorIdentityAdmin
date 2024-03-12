@@ -1,0 +1,84 @@
+﻿@inherits LayoutComponentBase
+@layout MainLayout
+
+@inject SignInManager<User> SignInManager
+@inject IdentityUserAccessor UserAccessor
+
+@if (user is not null)
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex align-center">
+        <div class="d-flex flex-column mud-width-full">
+
+            <MudText Typo="Typo.h1" GutterBottom="true">Account Settings</MudText>
+
+            <MudGrid>
+                <MudItem xs="12" sm="12" md="5" lg="4" xl="3">
+                    <MudCard>
+                        <MudCardHeader>
+                            <CardHeaderContent>
+
+                                <MudAvatar Size="Size.Large">
+                                    <MudImage Src="@user.AvatarUrl" Style="height:100px; width:100px;"></MudImage>
+                                </MudAvatar>
+
+                                <MudText Align="Align.Center">@user.FirstName @user.LastName</MudText>
+
+                                @* TODO: Change to role when available *@
+                                <MudText Align="Align.Center">@user.UserName</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudNavMenu Rounded="true" Margin="Margin.Normal" Color="Color.Tertiary" Class="pa-2">
+
+                                <MudNavLink Match="NavLinkMatch.All" Href="/account/profile" Icon="@Icons.Material.Outlined.Person">
+                                    Profile
+                                </MudNavLink>
+
+                                <MudNavLink Match="NavLinkMatch.All" Href="/account/email" Icon="@Icons.Material.Outlined.Email">
+                                    Emails
+                                </MudNavLink>
+
+                                <MudNavLink Match="NavLinkMatch.All" Href="/account/change-password" Icon="@Icons.Material.Outlined.Password">
+                                    Password
+                                </MudNavLink>
+
+                                <MudNavLink Match="NavLinkMatch.All" Href="/account/logins" Icon="@Icons.Material.Outlined.Login">
+                                    Logins
+                                </MudNavLink>
+
+                                <MudNavLink Match="NavLinkMatch.All" Href="/account/mfa" Icon="@Icons.Material.Outlined.LockReset">
+                                    Authenticator
+                                </MudNavLink>
+
+                                <MudNavLink Match="NavLinkMatch.All" Href="/account/personal-data" Icon="@Icons.Material.Outlined.LockPerson">
+                                    Personal Data
+                                </MudNavLink>
+                            </MudNavMenu>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="7" lg="8" xl="9">
+
+                    @Body
+
+                </MudItem>
+            </MudGrid>
+        </div>
+    </MudContainer>
+}
+
+@code {
+
+    private User? user;
+    private bool hasExternalLogins;
+
+    [CascadingParameter]
+    public required HttpContext HttpContext { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+    }
+}

@@ -114,10 +114,14 @@ public static class ConfigureServices
             // Clear the existing external cookie to ensure a clean login process
             await context.SignOutAsync(IdentityConstants.ExternalScheme);
 
+            // TODO: Need to figure out why the reference to this constant isn't working...
+            //string linkLoginCallbackAction = ExternalLogins.LinkLoginCallbackAction;
+            string linkLoginCallbackAction = "LinkLoginCallback";
+
             string redirectUrl = UriHelper.BuildRelative(
                 context.Request.PathBase,
                 "/account/external-logins",
-                QueryString.Create("Action", ExternalLogins.LinkLoginCallbackAction));
+                QueryString.Create("Action", linkLoginCallbackAction));
 
             AuthenticationProperties properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl, signInManager.UserManager.GetUserId(context.User));
             return TypedResults.Challenge(properties, [provider]);
