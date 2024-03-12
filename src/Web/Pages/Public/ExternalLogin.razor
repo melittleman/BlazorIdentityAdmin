@@ -142,7 +142,7 @@ else
                     Color="Color.Primary" 
                     Class="ml-n1 mt-3" />
 
-                <StatusMessage Message="@errorMessage" />
+                <StatusMessage Message="@ErrorMessage" />
 
                 <LoadingSubmitButton Text="Register" 
                     Icon="@Icons.Material.Outlined.AppRegistration" 
@@ -157,15 +157,21 @@ else
 
     public const string LoginCallbackAction = "LoginCallback";
 
-    private string? errorMessage;
     private bool isProcessing = false;
     private bool agreeToTerms = false;
 
     private bool deviceInfoComplete = false;
     private bool geoInfoComplete = false;
 
+    private static User? validatedUser;
     private static User? existingUser;
     private static ExternalLoginInfo? externalLoginInfo;
+
+    private IEnumerable<IdentityError>? identityErrors;
+
+    private string? ErrorMessage => identityErrors is null 
+        ? null 
+        : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
 
     private string? ProviderDisplayName => externalLoginInfo?.ProviderDisplayName;
 
@@ -342,37 +348,61 @@ else
 
     private async Task RegisterNewUserAsync()
     {
+        if (externalLoginInfo is null) return;
+
+        IdentityResult result = new();
+
         if (HttpContext is null)
         {
+            User user = await CreateUserAsync();
+
+            // This is the initial SignalR form submit.
+            if (UserManager is CustomUserManager custom)
+            {
+                result = await custom.ValidateAsync(user);
+            }
+
+            if (result.Succeeded is false)
+            {
+                // We want to perform the validation first before actually creating the user so that we can use SignalR
+                // to update with the error messages should there be any, which in turn keeps the state of the form.
+                identityErrors = result.Errors;
+                return;
+            }
+
+            validatedUser = user;
+
+            // If we made it this far, we now need to properly submit the form as
+            // the login process requires the HttpContext to set identity cookies.
             await SubmitFormAsync();
             return;
         }
 
-        if (externalLoginInfo is null) return;
+        if (validatedUser is null) return;
 
-        User user = await CreateUserAsync();
-
-        IdentityResult result = await UserManager.CreateAsync(user);
+        result = await UserManager.CreateAsync(validatedUser);
 
         if (result.Succeeded is false)
         {
-            // TODO: We can't actually use the 'message' field because we aren't inside a SignalR circuit...
+            // However, by this point we can't actually use the 'ErrorMessage' field because we aren't inside a SignalR circuit...
             // So we might want to look into an alternative such as URL / Query String to persist the form state.
-            RedirectManager.RedirectToCurrentPageWithStatus($"Error: {string.Join(",", result.Errors.Select(error => error.Description))}", HttpContext);
+            identityErrors = result.Errors;
+            RedirectManager.RedirectToCurrentPageWithStatus(ErrorMessage!, HttpContext);
             return;
         }
 
-        result = await UserManager.AddLoginAsync(user, externalLoginInfo);
+        result = await UserManager.AddLoginAsync(validatedUser, externalLoginInfo);
 
         if (result.Succeeded is false)
         {
-            RedirectManager.RedirectToCurrentPageWithStatus($"Error: {string.Join(",", result.Errors.Select(error => error.Description))}", HttpContext);
+            identityErrors = result.Errors;
+            RedirectManager.RedirectToCurrentPageWithStatus(ErrorMessage!, HttpContext);
             return;
         }
 
         Logger.LogInformation("User created an account using {Name} provider.", externalLoginInfo.LoginProvider);
 
-        await LoginDeviceAsync(user);
+        await LoginDeviceAsync(validatedUser);
     }
 
     private async Task<User> CreateUserAsync()

@@ -50,4 +50,18 @@ public sealed class CustomUserManager(
 
         return (isAdded, isUpdated);
     }
+
+    public async Task<IdentityResult> ValidateAsync(User user, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+
+        // This is pretty sucky to be honest, because the 'UpdateSecurityStamp' method on UserManager is
+        // private it's impossible to have our own validation method without finding a way to set the stamp.
+        if (Store is IUserSecurityStampStore<User> security)
+        {
+            await security.SetSecurityStampAsync(user, GenerateNewAuthenticatorKey(), ct);
+        }
+
+        return await ValidateUserAsync(user);
+    }
 }

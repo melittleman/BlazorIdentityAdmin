@@ -32,13 +32,22 @@
 
             <DataAnnotationsValidator />
 
-            @* TODO: Need a way to provide a username but check it for uniqueness before registration *@
+            <MudTextField T="string" @bind-Value="Input.Username" name="Input.Username"
+                Label="Username"
+                Variant="Variant.Outlined"
+                InputType="InputType.Text"
+                Class="mt-6"
+                autocomplete="username"
+                aria-required="true" />
+
+            <ValidationMessage For="() => Input.Username" class="mud-alert mud-alert-text-error" />
+            
             <MudTextField T="string" @bind-Value="Input.Email"
                 Label="Email"
                 Variant="Variant.Outlined"
                 InputType="InputType.Email"
                 Class="mt-6"
-                autocomplete="username"
+                autocomplete="email"
                 aria-required="true" />
 
             <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-text-error" />
@@ -87,7 +96,6 @@
 
         <!-- External logins -->
         <MudStack Spacing="1" AlignItems="AlignItems.Center">
-            <MudText Typo="Typo.subtitle1" GutterBottom="true">Or register with</MudText>
 
             <ExternalLoginPicker />
         </MudStack>
@@ -131,7 +139,7 @@
     {
         User user = new();
 
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
 
         if (UserStore is IUserEmailStore<User> emailStore)
         {
