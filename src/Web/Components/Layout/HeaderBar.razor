@@ -1,22 +1,35 @@
 ﻿<MudAppBar Elevation="0" Dense="true" Fixed="true" DisableGutters="true">
+    <MudToolBar>
 
-    @if (IncludeIcon) 
-    {
-        <MudIconButton Href="/"
-            Icon="@Icons.Custom.Brands.MudBlazor"
-            Size="Size.Large"
-            Color="Color.Primary" />
-    }
-
-    <MudToolBar DisableGutters="true">
-
-        <!-- TODO: Search input to go into the middle? -->
+        @if (IncludeIcon)
+        {
+            <MudIconButton Href="/"
+                Icon="@Icons.Custom.Brands.MudBlazor"
+                Size="Size.Large"
+                Color="Color.Primary" />
+        }
 
     </MudToolBar>
 
     <MudSpacer />
 
-    <MudToolBar DisableGutters="true">
+    <MudToolBar>
+
+        @if (IncludeSearch)
+        {
+            <MudTextField T="string"
+                ValueChanged="@(t => OnSearchAsync(t))"
+                Placeholder="Search"
+                Margin="Margin.Dense"
+                Variant="Variant.Outlined"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Outlined.Search"
+                IconSize="Size.Small"
+                Class="my-0"
+                Clearable="true"
+                Immediate="true"
+                DebounceInterval="500" />
+        }
 
         <CustomThemeProvider Theme="theme" />
 
@@ -34,4 +47,12 @@
 
     [Parameter]
     public bool IncludeIcon { get; set; } = true;
+
+    [Parameter]
+    public bool IncludeSearch { get; set; } = false;
+
+    private Task OnSearchAsync(string value)
+    {
+        return Task.CompletedTask;
+    }
 }

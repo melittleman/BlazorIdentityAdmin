@@ -1,6 +1,8 @@
 ﻿@implements IDisposable
-@inject NavigationManager Navigation
+
 @rendermode RenderMode.InteractiveServer
+
+@inject NavigationManager Navigation
 
 @if (user is not null)
 {
@@ -11,7 +13,7 @@
     @* TODO: Add check for Admin role. This could actually be moved into the 'HeaderBar' component also? *@
     <MudIconButton Icon="@Icons.Material.Outlined.Settings" Color="Color.Inherit" Href="/admin" />
 
-    <MudMenu AnchorOrigin="Origin.CenterCenter" Dense="true" Class="mt-1 ml-4">
+    <MudMenu AnchorOrigin="Origin.CenterCenter" Dense="true">
         <ActivatorContent>
 
             @if (string.IsNullOrEmpty(AvatarUrl) is false)
@@ -22,7 +24,9 @@
             }
             else
             {
-                <MudAvatar>@user.Identity?.Name?.First()</MudAvatar>
+                <MudAvatar Variant="Variant.Outlined">
+                    @user.Identity?.Name?.First()
+                </MudAvatar>
             }
 
         </ActivatorContent>

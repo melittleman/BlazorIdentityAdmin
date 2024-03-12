@@ -33,3 +33,9 @@
 .microsoft-button svg {
     color: #007bb6;
 }
+
+.mud-input > input.mud-input-root-outlined.mud-input-root-margin-dense, 
+div.mud-input-slot.mud-input-root-outlined.mud-input-root-margin-dense {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}

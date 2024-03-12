@@ -17,9 +17,28 @@
                         <MudCardHeader>
                             <CardHeaderContent>
 
-                                <MudAvatar Size="Size.Large">
-                                    <MudImage Src="@user.AvatarUrl" Style="height:100px; width:100px;"></MudImage>
-                                </MudAvatar>
+                                @* TODO: This should all be moved into a separate component *@
+                                @if (string.IsNullOrEmpty(user.AvatarUrl) is false)
+                                {
+                                    <MudAvatar Size="Size.Large" Style="height:250px; width:250px; font-size: 2rem;">
+                                        <MudImage Src="@user.AvatarUrl" Style="height:100%; width:100%;"></MudImage>
+                                    </MudAvatar>
+                                }
+                                else
+                                {
+                                    if (string.IsNullOrEmpty(user.FirstName) is false && string.IsNullOrEmpty(user.LastName) is false) 
+                                    {
+                                        <MudAvatar Variant="Variant.Outlined">
+                                            @user.FirstName?.First() @user.LastName?.First()
+                                        </MudAvatar>
+                                    }
+                                    else
+                                    {
+                                        <MudAvatar Variant="Variant.Outlined">
+                                            @user.Name.First()
+                                        </MudAvatar>
+                                    }
+                                }
 
                                 <MudText Align="Align.Center">@user.FirstName @user.LastName</MudText>
 
@@ -28,6 +47,8 @@
                             </CardHeaderContent>
                         </MudCardHeader>
                         <MudCardContent>
+                            <MudDivider DividerType="DividerType.Middle" />
+
                             <MudNavMenu Rounded="true" Margin="Margin.Normal" Color="Color.Tertiary" Class="pa-2">
 
                                 <MudNavLink Match="NavLinkMatch.All" Href="/account/profile" Icon="@Icons.Material.Outlined.Person">
