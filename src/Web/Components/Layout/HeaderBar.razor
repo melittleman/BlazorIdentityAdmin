@@ -1,4 +1,12 @@
-﻿<MudAppBar Elevation="0" Dense="true" Fixed="true">
+﻿<MudAppBar Elevation="0" Dense="true" Fixed="true" DisableGutters="true">
+
+    @if (IncludeIcon) 
+    {
+        <MudIconButton Href="/"
+            Icon="@Icons.Custom.Brands.MudBlazor"
+            Size="Size.Large"
+            Color="Color.Primary" />
+    }
 
     <MudToolBar DisableGutters="true">
 
@@ -23,4 +31,7 @@
 
     // TODO: Figure out where this is loaded from? Somewhere on the tenant ideally.
     private static CustomTheme theme = new();
+
+    [Parameter]
+    public bool IncludeIcon { get; set; } = true;
 }
