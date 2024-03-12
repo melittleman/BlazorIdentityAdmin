@@ -17,39 +17,60 @@
                         <MudCardHeader>
                             <CardHeaderContent>
 
-                                @* TODO: This should all be moved into a separate component *@
-                                @if (string.IsNullOrEmpty(user.AvatarUrl) is false)
-                                {
-                                    <MudAvatar Size="Size.Large" Style="height:250px; width:250px; font-size: 2rem;">
-                                        <MudImage Src="@user.AvatarUrl" Style="height:100%; width:100%;"></MudImage>
-                                    </MudAvatar>
-                                }
-                                else
-                                {
-                                    if (string.IsNullOrEmpty(user.FirstName) is false && string.IsNullOrEmpty(user.LastName) is false) 
+                                <MudStack Row="true" Justify="Justify.Center" Class="mb-4">
+
+                                    @* TODO: This should all be moved into a separate component *@
+                                    @if (string.IsNullOrEmpty(user.AvatarUrl) is false)
                                     {
-                                        <MudAvatar Variant="Variant.Outlined">
-                                            @user.FirstName?.First() @user.LastName?.First()
+                                        <MudAvatar Size="Size.Large" Style="height:200px; width:200px;">
+                                            <MudImage Src="@user.AvatarUrl"></MudImage>
                                         </MudAvatar>
                                     }
                                     else
                                     {
-                                        <MudAvatar Variant="Variant.Outlined">
-                                            @user.Name.First()
-                                        </MudAvatar>
+                                        if (string.IsNullOrEmpty(user.FirstName) is false && string.IsNullOrEmpty(user.LastName) is false) 
+                                        {
+                                            <MudAvatar Variant="Variant.Outlined" 
+                                                Color="Color.Primary" 
+                                                Size="Size.Large" 
+                                                Style="height:200px; width:200px; font-size: 6rem;">
+                                                @user.FirstName?.First() @user.LastName?.First()
+                                            </MudAvatar>
+                                        }
+                                        else
+                                        {
+                                            <MudAvatar Variant="Variant.Outlined" 
+                                                Color="Color.Primary" 
+                                                Size="Size.Large" 
+                                                Style="height:200px; width:200px; font-size: 6rem;">
+                                                @user.Name.First()
+                                            </MudAvatar>
+                                        }
                                     }
-                                }
 
-                                <MudText Align="Align.Center">@user.FirstName @user.LastName</MudText>
+                                    @* TODO: Add a tooltip... *@
+                                    <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles" Style="position: absolute; margin-left: 150px;">
+                                        <ButtonTemplate>
+                                            <MudFab HtmlTag="label"
+                                                Color="Color.Primary"
+                                                StartIcon="@Icons.Material.Outlined.PhotoCamera"
+                                                for="@context.Id" />
+                                        </ButtonTemplate>
+                                    </MudFileUpload>
+  
+                                </MudStack>
 
-                                @* TODO: Change to role when available *@
-                                <MudText Align="Align.Center">@user.UserName</MudText>
+                                <MudText Align="Align.Center" Typo="Typo.h3" GutterBottom="true">@user.FirstName @user.LastName</MudText>
+
+                                @* TODO: Need to add role here when available *@
+                                <MudText Align="Align.Center" Typo="Typo.subtitle1" GutterBottom="true" Class="mud-secondary-text">@user.UserName</MudText>
+
                             </CardHeaderContent>
                         </MudCardHeader>
                         <MudCardContent>
-                            <MudDivider DividerType="DividerType.Middle" />
+                            <MudDivider DividerType="DividerType.Middle" Class="mb-6" />
 
-                            <MudNavMenu Rounded="true" Margin="Margin.Normal" Color="Color.Tertiary" Class="pa-2">
+                            <MudNavMenu Rounded="true" Margin="Margin.Normal" Color="Color.Primary" Class="pa-2">
 
                                 <MudNavLink Match="NavLinkMatch.All" Href="/account/profile" Icon="@Icons.Material.Outlined.Person">
                                     Profile
@@ -92,6 +113,7 @@
 
     private User? user;
     private bool hasExternalLogins;
+    IList<IBrowserFile> files = [];
 
     [CascadingParameter]
     public required HttpContext HttpContext { get; set; }
@@ -102,4 +124,11 @@
 
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
     }
+
+    private void UploadFiles(IBrowserFile file)
+    {
+        files.Add(file);
+
+        //TODO upload the files to the server
+    }    
 }
