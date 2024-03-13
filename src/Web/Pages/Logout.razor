@@ -2,7 +2,11 @@
 
 <PageTitle>Logout</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center">
+<!-- 
+    Negative 72px margin on the top ensures that the 100vh doesn't overflow. 
+    This is 48 from the header bar, and 24 from the margin of the parent container.
+-->
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center" Style="height: 100vh; margin-top: -72px">
 
     <div class="d-flex flex-column mud-width-full">
 
