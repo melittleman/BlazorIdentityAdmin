@@ -4,18 +4,18 @@ public sealed class AdminTheme : DefaultTheme
 {
     public AdminTheme(CustomTheme theme) : base(theme)
     {
-        Palette.DrawerBackground = Palette.Primary;
-        Palette.DrawerText = Palette.PrimaryContrastText;
-        Palette.DrawerIcon = Palette.Secondary;
+        Palette.DrawerBackground = Palette.Secondary;
+        Palette.DrawerText = Palette.SecondaryContrastText;
+        Palette.DrawerIcon = Palette.Primary;
 
-        Palette.AppbarBackground = Palette.Surface;
+        Palette.AppbarBackground = Palette.Background;
         Palette.AppbarText = Palette.TextPrimary;
 
-        PaletteDark.DrawerBackground = PaletteDark.Primary;
-        PaletteDark.DrawerText = PaletteDark.PrimaryContrastText;
-        PaletteDark.DrawerIcon = PaletteDark.Secondary;
+        PaletteDark.DrawerBackground = PaletteDark.Secondary;
+        PaletteDark.DrawerText = PaletteDark.SecondaryContrastText;
+        PaletteDark.DrawerIcon = PaletteDark.Primary;
 
-        PaletteDark.AppbarBackground = PaletteDark.Surface;
+        PaletteDark.AppbarBackground = PaletteDark.Background;
         PaletteDark.AppbarText = PaletteDark.TextPrimary;
 
         ZIndex = new()

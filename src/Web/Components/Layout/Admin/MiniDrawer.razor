@@ -4,7 +4,7 @@
 
     <MudDrawer @bind-Open="_drawerOpen"
                Class="mud-drawer-fixed"
-               Elevation="1"
+               Elevation="3"
                ClipMode="DrawerClipMode.Never"
                Variant="@DrawerVariant.Temporary"
                DisableOverlay="true">
@@ -17,7 +17,7 @@
                 Using 'inherit' doesn't work as it uses the primary text color when it should be 
                 using the primary contrast text.
             *@
-            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Large" Color="Color.Secondary" />
+            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Large" Color="Color.Primary" />
             <MudSpacer />
 
             <MudIconButton Title="Close menu" Size="Size.Small" Icon="@Icons.Material.Outlined.Close" OnClick="(() => _drawerOpen = false)" />
@@ -42,7 +42,7 @@
 
     <MudDrawer Open="_drawerOpen"
                Class="mud-drawer-fixed"
-               Elevation="1"
+               Elevation="3"
                ClipMode="DrawerClipMode.Never"
                Variant="@DrawerVariant.Mini"
                OpenMiniOnHover="true"
@@ -51,7 +51,7 @@
 
         <MudDrawerHeader LinkToIndex="true" Dense="true" Style="padding: 10px">
 
-            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Large" Color="Color.Secondary" />
+            <MudIcon Icon="@Icons.Custom.Brands.MudBlazor" Size="Size.Large" Color="Color.Primary" />
         </MudDrawerHeader>
 
         <NavMenu />

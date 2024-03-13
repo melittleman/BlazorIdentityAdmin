@@ -4,10 +4,10 @@ public sealed class MainTheme : DefaultTheme
 {
     public MainTheme(CustomTheme theme) : base(theme)
     {
-        Palette.AppbarBackground = Palette.Secondary;
-        Palette.AppbarText = Palette.SecondaryContrastText;
+        Palette.AppbarBackground = Palette.Background;
+        Palette.AppbarText = Palette.TextPrimary;
 
-        PaletteDark.AppbarBackground = PaletteDark.Secondary;
-        PaletteDark.AppbarText = PaletteDark.SecondaryContrastText;
+        PaletteDark.AppbarBackground = PaletteDark.Background;
+        PaletteDark.AppbarText = PaletteDark.TextPrimary;
     }
 }

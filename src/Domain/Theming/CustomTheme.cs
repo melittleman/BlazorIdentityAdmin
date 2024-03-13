@@ -1,34 +1,38 @@
 ﻿namespace BlazorAdminDashboard.Domain.Theming;
 
-public class CustomTheme
+public sealed record CustomTheme
 {
-    public string LightPrimaryColor { get; set; } = "#262937";
+    public string[] FontFamily { get; set; } = [ "Lexend", "Roboto", "Helvetica", "Arial", "sans-serif" ];
 
-    public string LightPrimaryAccentColor { get; set; } = "#f8f8f6";
+    public string BorderRadius { get; set; } = "0.5rem";
 
-    public string LightSecondaryColor { get; set; } = "#f4b43a";
+    public string? LogoImageUrl { get; set; }
 
-    public string LightSecondaryAccentColor { get; set; } = "#262937";
+    // Light Theme
+
+    public string LightPrimaryColor { get; set; } = "#f4b43a";
+
+    public string LightPrimaryAccentColor { get; set; } = "#262937";
+
+    public string LightSecondaryColor { get; set; } = "#262937";
+
+    public string LightSecondaryAccentColor { get; set; } = "#f8f8f6";
 
     public string LightTertiaryColor { get; set; } = "#df2073";
 
     public string LightTertiaryAccentColor { get; set; } = "#ffffff";
 
+    // Dark Theme
+
     public string DarkPrimaryColor { get; set; } = "#f4b43a";
 
     public string DarkPrimaryAccentColor { get; set; } = "#262937";
 
-    public string DarkSecondaryColor { get; set; } = "#262937";
+    public string DarkSecondaryColor { get; set; } = "#2c2f3f";
 
     public string DarkSecondaryAccentColor { get; set; } = "#f8f8f6";
 
     public string DarkTertiaryColor { get; set; } = "#df2073";
 
-    public string DarkTertiaryAccentColor { get; set; } = "#ffffff";
-
-    public string BorderRadius { get; set; } = "0.5rem";
-
-    public string[] FontFamily { get; set; } = ["Roboto", "Helvetica", "Arial", "sans-serif"];
-
-    public string? LogoImageUrl { get; set; }
+    public string DarkTertiaryAccentColor { get; set; } = "#f8f8f6";
 }

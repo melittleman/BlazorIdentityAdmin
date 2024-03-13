@@ -22,12 +22,12 @@
 *@
 
 <MudStack Spacing="4" AlignItems="AlignItems.Center">
-    <MudPaper Elevation="4" Class="pa-4" Width="100%">
+    <MudPaper Elevation="3" Class="pa-4" Width="100%">
 
         <!-- Login form -->
         <PublicFormHeader>
             <MudText Typo="Typo.h1" GutterBottom="true">Login</MudText>
-            <MudText Typo="Typo.subtitle1">Don't have an account? <MudLink Typo="Typo.subtitle1" Href="@registerLink">Register</MudLink></MudText>
+            <MudText>Don't have an account? <MudLink Href="@registerLink" Color="Color.Info">Register</MudLink></MudText>
         </PublicFormHeader>
 
         <StatusMessage Message="@errorMessage" />
@@ -71,17 +71,17 @@
                     name="Input.RememberMe"
                     TriState="false"
                     Label="Remember me?" 
-                    Color="Color.Primary" 
+                    Color="Color.Tertiary"
                     Class="ml-n1 mt-3" />
 
-                <MudLink Href="/forgot-password" Typo="Typo.subtitle1">Forgot password?</MudLink>
+                <MudLink Href="/forgot-password" Color="Color.Info">Forgot password?</MudLink>
             </MudStack>
 
             <LoadingSubmitButton Text="Login" Icon="@Icons.Material.Outlined.Login" IsProcessing="isProcessing" />
         </EditForm>
 
     </MudPaper>
-    <MudPaper Elevation="4" Class="pa-4" Width="100%">
+    <MudPaper Elevation="3" Class="pa-4" Width="100%">
 
         <!-- External logins -->
         <MudStack Spacing="1" AlignItems="AlignItems.Center">
@@ -90,7 +90,7 @@
         </MudStack>
     </MudPaper>
 
-    <MudLink Href="/resend-email-confirmation" Typo="Typo.subtitle1">Resend email confirmation</MudLink>
+    <MudLink Href="/resend-email-confirmation" Color="Color.Info">Resend email confirmation</MudLink>
 </MudStack>
 
 @* 

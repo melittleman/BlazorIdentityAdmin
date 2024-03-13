@@ -9,6 +9,13 @@ public class DefaultTheme : MudTheme
 
         Palette = new PaletteLight()
         {
+            Black = "#262937",
+            White = "ffffff",
+
+            // Using this web safe blue for links against both the background and
+            // surface whites, still ensures a WCAG AAA contrast ratio compliance.
+            Info = "#0066ff",
+
             Background = "#f8f8f6",
             Surface = "ffffff",
             TextPrimary = "#262937",
@@ -25,8 +32,15 @@ public class DefaultTheme : MudTheme
 
         PaletteDark = new PaletteDark()
         {
+            Black = "#000000",
+            White = "#f8f8f6",
+
+            // Same as above, this web safe blue gets an AA contrast ratio of 4.5:1 against
+            // the surface color, we can go a lot lighter as it's on a dark background.
+            Info = "#3399ff",
+
             Background = "#262937",
-            Surface = "#2e313f",
+            Surface = "#2c2f3f",
             TextPrimary = "#f8f8f6",
 
             Primary = theme.DarkPrimaryColor,
@@ -69,7 +83,7 @@ public class DefaultTheme : MudTheme
             {
                 FontFamily = theme.FontFamily,
                 FontSize = "2rem",
-                FontWeight = 500
+                FontWeight = 600
             },
             H4 = new()
             {
@@ -81,13 +95,13 @@ public class DefaultTheme : MudTheme
             {
                 FontFamily = theme.FontFamily,
                 FontSize = "1.5rem",
-                FontWeight = 400
+                FontWeight = 500
             },
             H6 = new()
             {
                 FontFamily = theme.FontFamily,
                 FontSize = "1.25rem",
-                FontWeight = 300
+                FontWeight = 400
             }
         };
     }

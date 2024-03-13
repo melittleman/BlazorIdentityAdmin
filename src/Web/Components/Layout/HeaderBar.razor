@@ -13,7 +13,7 @@
 
     <MudSpacer />
 
-    <MudToolBar>
+    <MudToolBar Class="py-4">
 
         @if (IncludeSearch)
         {
@@ -29,6 +29,8 @@
                 Clearable="true"
                 Immediate="true"
                 DebounceInterval="500" />
+
+            <MudDivider DividerType="DividerType.Middle" Vertical="true" />
         }
 
         <CustomThemeProvider Theme="theme" />
