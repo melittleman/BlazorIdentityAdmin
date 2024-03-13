@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@using BlazorAdminDashboard.Web.Components.Account
+@inherits LayoutComponentBase
 @layout MainLayout
 
 @inject SignInManager<User> SignInManager
@@ -17,53 +18,15 @@
                         <MudCardHeader>
                             <CardHeaderContent>
 
-                                <MudStack Row="true" Justify="Justify.Center" Class="mb-4">
+                                <MudStack Row="true" Justify="Justify.Center" Class="mb-4" Style="position: relative;">
 
-                                    @* TODO: This should all be moved into a separate component *@
-                                    @if (string.IsNullOrEmpty(user.AvatarUrl) is false)
-                                    {
-                                        <MudAvatar Size="Size.Large" Style="height:200px; width:200px;">
-                                            <MudImage Src="@user.AvatarUrl"></MudImage>
-                                        </MudAvatar>
-                                    }
-                                    else
-                                    {
-                                        if (string.IsNullOrEmpty(user.FirstName) is false && string.IsNullOrEmpty(user.LastName) is false) 
-                                        {
-                                            <MudAvatar Variant="Variant.Outlined" 
-                                                Color="Color.Primary" 
-                                                Size="Size.Large" 
-                                                Style="height:200px; width:200px; font-size: 6rem;">
-                                                @user.FirstName?.First() @user.LastName?.First()
-                                            </MudAvatar>
-                                        }
-                                        else
-                                        {
-                                            <MudAvatar Variant="Variant.Outlined" 
-                                                Color="Color.Primary" 
-                                                Size="Size.Large" 
-                                                Style="height:200px; width:200px; font-size: 6rem;">
-                                                @user.Name.First()
-                                            </MudAvatar>
-                                        }
-                                    }
-
-                                    @* TODO: Add a tooltip... *@
-                                    <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles" Style="position: absolute; margin-left: 150px;">
-                                        <ButtonTemplate>
-                                            <MudFab HtmlTag="label"
-                                                Color="Color.Primary"
-                                                StartIcon="@Icons.Material.Outlined.PhotoCamera"
-                                                for="@context.Id" />
-                                        </ButtonTemplate>
-                                    </MudFileUpload>
-  
+                                    <EditProfileAvatar User="user" />
                                 </MudStack>
 
                                 <MudText Align="Align.Center" Typo="Typo.h3" GutterBottom="true">@user.FirstName @user.LastName</MudText>
 
                                 @* TODO: Need to add role here when available *@
-                                <MudText Align="Align.Center" Typo="Typo.subtitle1" GutterBottom="true" Class="mud-secondary-text">@user.UserName</MudText>
+                                <MudText Align="Align.Center" Typo="Typo.subtitle1" GutterBottom="true" Class="mud-text-secondary">@user.UserName</MudText>
 
                             </CardHeaderContent>
                         </MudCardHeader>
@@ -113,7 +76,6 @@
 
     private User? user;
     private bool hasExternalLogins;
-    IList<IBrowserFile> files = [];
 
     [CascadingParameter]
     public required HttpContext HttpContext { get; set; }
@@ -124,11 +86,4 @@
 
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
     }
-
-    private void UploadFiles(IBrowserFile file)
-    {
-        files.Add(file);
-
-        //TODO upload the files to the server
-    }    
 }

@@ -1,0 +1,76 @@
+﻿@rendermode RenderMode.InteractiveServer
+
+@if (string.IsNullOrEmpty(User.AvatarUrl) is false)
+{
+    <MudAvatar Size="Size.Large" Style="height:200px; width:200px;">
+        <MudImage Src="@User.AvatarUrl"></MudImage>
+    </MudAvatar>
+}
+else
+{
+    if (string.IsNullOrEmpty(User.FirstName) is false && string.IsNullOrEmpty(User.LastName) is false)
+    {
+        <MudAvatar Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   Style="height:200px; width:200px; font-size: 6rem;">
+            @User.FirstName?.First() @User.LastName?.First()
+        </MudAvatar>
+    }
+    else
+    {
+        <MudAvatar Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   Style="height:200px; width:200px; font-size: 6rem;">
+            @User.Name.First()
+        </MudAvatar>
+    }
+}
+
+<MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles" Style="position: absolute; bottom: 50px;">
+    <ButtonTemplate>
+        <MudFab HtmlTag="label"
+                Label="Upload"
+                Title="Upload a new profile image"
+                Color="Color.Primary"
+                Size="Size.Small"
+                IconSize="Size.Small"
+                StartIcon="@Icons.Material.Outlined.PhotoCamera"
+                Style="position: absolute; margin-left: 30px;"
+                for="@context.Id" />
+
+        <MudFab HtmlTag="label"
+                Label="Delete"
+                Title="Delete the current profile image"
+                Disabled="string.IsNullOrEmpty(User.AvatarUrl)"
+                Color="Color.Error"
+                Size="Size.Small"
+                IconSize="Size.Small"
+                StartIcon="@Icons.Material.Outlined.Delete"
+                Style="position: absolute; margin-left: -130px;"
+                OnClick="DeleteAvatarAsync" />
+    </ButtonTemplate>
+</MudFileUpload>
+
+@code {
+
+    IList<IBrowserFile> files = [];
+
+    [Parameter]
+    public required User User { get; set; }
+
+    private Task UploadFiles(IBrowserFile file)
+    {
+        files.Add(file);
+
+        //TODO upload the files to the server
+
+        return Task.CompletedTask;
+    }
+
+    private Task DeleteAvatarAsync(MouseEventArgs args)
+    {
+        return Task.CompletedTask;
+    }
+}
