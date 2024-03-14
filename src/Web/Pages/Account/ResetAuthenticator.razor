@@ -1,4 +1,4 @@
-﻿@page "/Account/Manage/ResetAuthenticator"
+﻿@page "/account/reset-authenticator"
 
 @inject UserManager<User> UserManager
 @inject SignInManager<User> SignInManager
@@ -42,7 +42,7 @@
         await SignInManager.RefreshSignInAsync(user);
 
         RedirectManager.RedirectToWithStatus(
-            "Account/Manage/EnableAuthenticator",
+            "/account/enable-authenticator",
             "Your authenticator app key has been reset, you will need to configure your authenticator app using the new key.",
             HttpContext);
     }

@@ -15,7 +15,7 @@
 
 @*     <AuthorizeView>
         <Authorized>
-            <MudNavLink Href="/account/manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Person">@context.User.Identity?.Name</MudNavLink>
+            <MudNavLink Href="/account" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Person">@context.User.Identity?.Name</MudNavLink>
         </Authorized>
         <NotAuthorized>
                 <MudNavLink Href="/register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.AppRegistration">Register</MudNavLink>

@@ -1,4 +1,4 @@
-﻿@page "/Account/Manage/EnableAuthenticator"
+﻿@page "/account/enable-authenticator"
 
 @using System.Globalization
 @using ZXing;
@@ -123,7 +123,7 @@ else
         }
         else
         {
-            RedirectManager.RedirectToWithStatus("Account/Manage/TwoFactorAuthentication", message, HttpContext);
+            RedirectManager.RedirectToWithStatus("/account/mfa", message, HttpContext);
         }
     }
 

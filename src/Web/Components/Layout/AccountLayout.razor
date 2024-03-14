@@ -39,7 +39,7 @@
                                     Profile
                                 </MudNavLink>
 
-                                <MudNavLink Match="NavLinkMatch.All" Href="/account/email" Icon="@Icons.Material.Outlined.Email">
+                                <MudNavLink Match="NavLinkMatch.All" Href="/account/emails" Icon="@Icons.Material.Outlined.Email">
                                     Emails
                                 </MudNavLink>
 
@@ -47,9 +47,12 @@
                                     Password
                                 </MudNavLink>
 
-                                <MudNavLink Match="NavLinkMatch.All" Href="/account/logins" Icon="@Icons.Material.Outlined.Login">
-                                    Logins
-                                </MudNavLink>
+                                @if (hasExternalLogins)
+                                {
+                                    <MudNavLink Match="NavLinkMatch.All" Href="/account/logins" Icon="@Icons.Material.Outlined.Login">
+                                        Logins
+                                    </MudNavLink>
+                                }
 
                                 <MudNavLink Match="NavLinkMatch.All" Href="/account/mfa" Icon="@Icons.Material.Outlined.LockReset">
                                     Authenticator
