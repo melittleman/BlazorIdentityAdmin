@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Infrastructure.Stores;
+﻿namespace BlazorIdentityAdmin.Infrastructure.Stores;
 
 public class RedisRoleStore(
     IRedisConnectionProvider redisProvider,

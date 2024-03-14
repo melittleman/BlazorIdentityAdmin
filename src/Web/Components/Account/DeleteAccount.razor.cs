@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Web.Components.Account;
+﻿namespace BlazorIdentityAdmin.Web.Components.Account;
 
 /// <summary>
 /// Component to facilitate user account deletion

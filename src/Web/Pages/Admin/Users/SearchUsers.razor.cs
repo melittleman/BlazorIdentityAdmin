@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Web.Pages.Admin.Users;
+﻿namespace BlazorIdentityAdmin.Web.Pages.Admin.Users;
 
 public partial class SearchUsers
 {

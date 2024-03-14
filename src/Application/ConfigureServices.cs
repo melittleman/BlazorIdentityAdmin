@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Application;
+﻿namespace BlazorIdentityAdmin.Application;
 
 public static class ConfigureServices
 {

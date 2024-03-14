@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Domain.Enums;
+﻿namespace BlazorIdentityAdmin.Domain.Enums;
 
 public enum PhoneNumberType
 {

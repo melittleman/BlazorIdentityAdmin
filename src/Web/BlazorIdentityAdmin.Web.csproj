@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <UserSecretsId>aspnet-BlazorAdminDashboard.Web-13785694-aae5-4794-ad9f-d36ba3dc9fc1</UserSecretsId>
+    <UserSecretsId>aspnet-BlazorIdentityAdmin.Web-13785694-aae5-4794-ad9f-d36ba3dc9fc1</UserSecretsId>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="C:\Users\MattLindsay\.nuget\packages\psc.blazor.components.browserdetect\1.0.14\contentFiles\any\net6.0\psc_logo.ico" />
+    <Content Remove="C:\Users\$(USERNAME)\.nuget\packages\psc.blazor.components.browserdetect\1.0.14\contentFiles\any\net6.0\psc_logo.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,8 +27,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Application\BlazorAdminDashboard.Application.csproj" />
-    <ProjectReference Include="..\Infrastructure\BlazorAdminDashboard.Infrastructure.csproj" />
+    <ProjectReference Include="..\Application\BlazorIdentityAdmin.Application.csproj" />
+    <ProjectReference Include="..\Infrastructure\BlazorIdentityAdmin.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

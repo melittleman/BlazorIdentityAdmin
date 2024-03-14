@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Web.Validation;
+﻿namespace BlazorIdentityAdmin.Web.Validation;
 
 public sealed class NotRequiredAttribute : ValidationAttribute
 {

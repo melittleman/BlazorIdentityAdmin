@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
-using BlazorAdminDashboard.Web.Pages.Public;
+using BlazorIdentityAdmin.Web.Pages.Public;
 using Darnton.Blazor.DeviceInterop.Geolocation;
 
-namespace BlazorAdminDashboard.Web;
+namespace BlazorIdentityAdmin.Web;
 
 public static class ConfigureServices
 {

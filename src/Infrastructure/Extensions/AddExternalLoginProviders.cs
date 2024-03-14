@@ -2,7 +2,7 @@
 using AspNet.Security.OAuth.GitHub;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 
-namespace BlazorAdminDashboard.Infrastructure.Extensions;
+namespace BlazorIdentityAdmin.Infrastructure.Extensions;
 
 public static partial class ConfigureServices
 {

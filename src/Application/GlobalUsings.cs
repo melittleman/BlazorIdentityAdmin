@@ -16,6 +16,6 @@ global using IdentityModel;
 global using RedisKit.Querying;
 global using RedisKit.Querying.Abstractions;
 
-global using BlazorAdminDashboard.Domain.Identity;
-global using BlazorAdminDashboard.Application.Identity;
-global using BlazorAdminDashboard.Application.Identity.Abstractions;
+global using BlazorIdentityAdmin.Domain.Identity;
+global using BlazorIdentityAdmin.Application.Identity;
+global using BlazorIdentityAdmin.Application.Identity.Abstractions;

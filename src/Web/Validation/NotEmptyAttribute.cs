@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Web.Validation;
+﻿namespace BlazorIdentityAdmin.Web.Validation;
 
 /// <summary>
 /// https://andrewlock.net/creating-an-empty-guid-validation-attribute/

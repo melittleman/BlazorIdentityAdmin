@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Domain.Identity;
+﻿namespace BlazorIdentityAdmin.Domain.Identity;
 
 public class User : IdentityUser<Ulid>
 {

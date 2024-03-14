@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Web.Controllers;
+﻿namespace BlazorIdentityAdmin.Web.Controllers;
 
 [ApiController]
 [Route("connect/userinfo")]

@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using PSC.Blazor.Components.BrowserDetect;
 
-namespace BlazorAdminDashboard.Web.Models;
+namespace BlazorIdentityAdmin.Web.Models;
 
 /// <inheritdoc />
 public sealed class DeviceInfo : BrowserInfo

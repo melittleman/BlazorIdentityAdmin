@@ -3,6 +3,6 @@ global using System.Text.Json.Serialization;
 
 global using Microsoft.AspNetCore.Identity;
 
-global using BlazorAdminDashboard.Domain.Enums;
-global using BlazorAdminDashboard.Domain.Identity;
-global using BlazorAdminDashboard.Domain.Documents.v1;
+global using BlazorIdentityAdmin.Domain.Enums;
+global using BlazorIdentityAdmin.Domain.Identity;
+global using BlazorIdentityAdmin.Domain.Documents.v1;

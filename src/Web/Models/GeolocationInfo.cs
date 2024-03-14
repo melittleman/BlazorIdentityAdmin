@@ -1,6 +1,6 @@
 ﻿using Darnton.Blazor.DeviceInterop.Geolocation;
 
-namespace BlazorAdminDashboard.Web.Models;
+namespace BlazorIdentityAdmin.Web.Models;
 
 /// <inheritdoc />
 public sealed class GeolocationInfo : GeolocationCoordinates

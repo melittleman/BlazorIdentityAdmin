@@ -5,13 +5,13 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{848E3E43-EEF6-4D9F-8004-8CFEF8AFA7CA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorAdminDashboard.Application", "src\Application\BlazorAdminDashboard.Application.csproj", "{38485AF2-EA82-45BD-AC1D-7733BEECD5CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorIdentityAdmin.Application", "src\Application\BlazorIdentityAdmin.Application.csproj", "{38485AF2-EA82-45BD-AC1D-7733BEECD5CF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorAdminDashboard.Infrastructure", "src\Infrastructure\BlazorAdminDashboard.Infrastructure.csproj", "{2E909677-3875-4C26-9787-A24525DF7389}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorIdentityAdmin.Infrastructure", "src\Infrastructure\BlazorIdentityAdmin.Infrastructure.csproj", "{2E909677-3875-4C26-9787-A24525DF7389}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorAdminDashboard.Domain", "src\Domain\BlazorAdminDashboard.Domain.csproj", "{01BC97B7-1005-4969-B278-3A6E4F74B769}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorIdentityAdmin.Domain", "src\Domain\BlazorIdentityAdmin.Domain.csproj", "{01BC97B7-1005-4969-B278-3A6E4F74B769}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorAdminDashboard.Web", "src\Web\BlazorAdminDashboard.Web.csproj", "{305F0417-53DE-44F0-8DD9-01B3216EF89D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorIdentityAdmin.Web", "src\Web\BlazorIdentityAdmin.Web.csproj", "{305F0417-53DE-44F0-8DD9-01B3216EF89D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

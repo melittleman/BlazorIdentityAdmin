@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Domain.Documents.v1;
+﻿namespace BlazorIdentityAdmin.Domain.Documents.v1;
 
 // TODO: Should these 'Documents' be records instead?
 public sealed class RoleDocumentV1

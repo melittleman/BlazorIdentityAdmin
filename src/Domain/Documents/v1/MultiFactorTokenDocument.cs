@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Domain.Documents.v1;
+﻿namespace BlazorIdentityAdmin.Domain.Documents.v1;
 
 public sealed class MultiFactorTokenDocumentV1
 {

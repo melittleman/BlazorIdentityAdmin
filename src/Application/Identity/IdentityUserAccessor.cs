@@ -1,4 +1,4 @@
-namespace BlazorAdminDashboard.Application.Identity;
+namespace BlazorIdentityAdmin.Application.Identity;
 
 public sealed class IdentityUserAccessor(UserManager<User> userManager, IdentityRedirectManager redirectManager)
 {

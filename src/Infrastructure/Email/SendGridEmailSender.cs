@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Infrastructure.Email;
+﻿namespace BlazorIdentityAdmin.Infrastructure.Email;
 
 public sealed class SendGridEmailSender(
     IOptions<SendGridConfiguration> options,

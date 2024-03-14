@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/Web/bin/Debug/net8.0/BlazorAdminDashboard.Web.dll",
+            "program": "${workspaceFolder}/src/Web/bin/Debug/net8.0/BlazorIdentityAdmin.Web.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,

@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Web.Models;
+﻿namespace BlazorIdentityAdmin.Web.Models;
 
 internal sealed record ResendEmailFormInput
 {

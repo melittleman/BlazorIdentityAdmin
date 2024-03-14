@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Infrastructure.Hosted;
+﻿namespace BlazorIdentityAdmin.Infrastructure.Hosted;
 
 internal sealed class RedisIndexCreationService : BackgroundService
 {

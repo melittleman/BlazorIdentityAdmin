@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Application.Identity.Abstractions;
+﻿namespace BlazorIdentityAdmin.Application.Identity.Abstractions;
 
 public interface IDeviceEmailSender
 {

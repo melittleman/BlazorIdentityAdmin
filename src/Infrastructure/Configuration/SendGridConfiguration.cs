@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Infrastructure.Configuration;
+﻿namespace BlazorIdentityAdmin.Infrastructure.Configuration;
 
 public sealed record SendGridConfiguration
 {

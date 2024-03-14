@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Domain\BlazorAdminDashboard.Domain.csproj" />
+    <ProjectReference Include="..\Domain\BlazorIdentityAdmin.Domain.csproj" />
   </ItemGroup>
 
 </Project>

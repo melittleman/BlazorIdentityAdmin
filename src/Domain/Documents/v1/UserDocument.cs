@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Domain.Documents.v1;
+﻿namespace BlazorIdentityAdmin.Domain.Documents.v1;
 
 // TODO: Need further testing of Redis.OM as it doesn't yet seem
 // to support JSON pathing via the JsonPropertyName attributes.

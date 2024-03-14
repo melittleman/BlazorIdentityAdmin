@@ -1,6 +1,6 @@
 ﻿using OpenIddict.Abstractions;
 
-namespace BlazorAdminDashboard.Application.Identity;
+namespace BlazorIdentityAdmin.Application.Identity;
 
 public sealed class CustomClaimsPrincipalFactory(
     UserManager<User> userManager,

@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Domain.Theming;
+﻿namespace BlazorIdentityAdmin.Domain.Theming;
 
 public sealed record CustomTheme
 {

@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Domain.Enums;
+﻿namespace BlazorIdentityAdmin.Domain.Enums;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum EmailAddressType

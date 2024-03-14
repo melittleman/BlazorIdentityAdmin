@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Web.Theming;
+﻿namespace BlazorIdentityAdmin.Web.Theming;
 
 public sealed class AdminTheme : DefaultTheme
 {

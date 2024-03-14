@@ -1,6 +1,6 @@
-﻿using BlazorAdminDashboard.Infrastructure.Extensions;
+﻿using BlazorIdentityAdmin.Infrastructure.Extensions;
 
-namespace BlazorAdminDashboard.Infrastructure;
+namespace BlazorIdentityAdmin.Infrastructure;
 
 public static partial class ConfigureServices
 {
@@ -20,7 +20,7 @@ public static partial class ConfigureServices
         {
             // TODO: Get from appsettings
             options.ConnectionString = "localhost:6379";
-            options.ClientName = "BlazorAdminDashboard.Client";
+            options.ClientName = "BlazorIdentityAdmin.Client";
 
         }).AddRedisDataProtection(env, options =>
         {

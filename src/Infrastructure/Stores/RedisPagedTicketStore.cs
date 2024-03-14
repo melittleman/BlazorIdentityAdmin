@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using RedisKit.Querying.Enums;
 
-namespace BlazorAdminDashboard.Infrastructure.Stores;
+namespace BlazorIdentityAdmin.Infrastructure.Stores;
 
 // TODO: What elements of this class should actually exist within the RedisKit library?
 // We could get the library to implement the index within a HostedService,

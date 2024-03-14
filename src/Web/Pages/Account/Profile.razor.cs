@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Web.Pages.Account;
+﻿namespace BlazorIdentityAdmin.Web.Pages.Account;
 
 /// <summary>
 /// Component to manage profile

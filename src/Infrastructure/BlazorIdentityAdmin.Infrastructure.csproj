@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Application\BlazorAdminDashboard.Application.csproj" />
+    <ProjectReference Include="..\Application\BlazorIdentityAdmin.Application.csproj" />
   </ItemGroup>
 
 </Project>

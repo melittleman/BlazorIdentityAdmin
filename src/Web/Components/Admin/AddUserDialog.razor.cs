@@ -1,4 +1,4 @@
-﻿namespace BlazorAdminDashboard.Web.Components.Admin;
+﻿namespace BlazorIdentityAdmin.Web.Components.Admin;
 
 public partial class AddUserDialog : ComponentBase
 {
