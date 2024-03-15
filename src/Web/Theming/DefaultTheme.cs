@@ -14,7 +14,7 @@ public class DefaultTheme : MudTheme
 
             // Using this web safe blue for links against both the background and
             // surface whites, still ensures a WCAG AAA contrast ratio compliance.
-            Info = "#0066ff",
+            Info = "#0066ff", // or #0033ff
 
             Background = "#f8f8f6",
             Surface = "ffffff",
@@ -37,7 +37,7 @@ public class DefaultTheme : MudTheme
 
             // Same as above, this web safe blue gets an AA contrast ratio of 4.5:1 against
             // the surface color, we can go a lot lighter as it's on a dark background.
-            Info = "#3399ff",
+            Info = "#3399ff", // or #33ccff
 
             Background = "#262937",
             Surface = "#2c2f3f",

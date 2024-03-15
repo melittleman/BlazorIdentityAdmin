@@ -17,81 +17,94 @@
 
 <PageTitle>Login</PageTitle>
 
-@*
-    TODO: This should be wrapped in an AuthorizeView...
-*@
+<AuthorizeView>
+    <NotAuthorized Context="notAuthorized">
 
-<MudStack Spacing="4" AlignItems="AlignItems.Center">
-    <MudPaper Elevation="3" Class="pa-4" Width="100%">
+        <MudStack Spacing="4" AlignItems="AlignItems.Center">
+            <MudPaper Elevation="3" Class="pa-4" Width="100%">
 
-        <!-- Login form -->
-        <PublicFormHeader>
-            <MudText Typo="Typo.h1" GutterBottom="true">Login</MudText>
-            <MudText>Don't have an account? <MudLink Href="@registerLink" Color="Color.Info">Register</MudLink></MudText>
-        </PublicFormHeader>
+                <!-- Login form -->
+                <PublicFormHeader>
+                    <MudText Typo="Typo.h1" GutterBottom="true">Login</MudText>
+                    <MudText>Don't have an account? <MudLink Href="@registerLink" Color="Color.Info">Register</MudLink></MudText>
+                </PublicFormHeader>
 
-        <StatusMessage Message="@errorMessage" />
+                <StatusMessage Message="@errorMessage" />
 
-        <EditForm Model="Input" FormName="login" id="login-form" method="post" OnValidSubmit="LoginUserAsync">
+                <EditForm Model="Input" FormName="login" id="login-form" method="post" OnValidSubmit="LoginUserAsync">
 
-            @*
-            TODO: This is a bit of a hack at the moment so that we can still use a Static SSR / HTTP POST form submit whilst
-            inside an InteractiveServer rendered component. It looks as though this is planning on being fixed in .NET 9 though.
-            See: https://github.com/dotnet/aspnetcore/issues/53129
-            *@
-            @if (HttpContext is null)
-            {
-                <input type="hidden" name="_handler" value="login" />
-            }
+                    @*
+                    TODO: This is a bit of a hack at the moment so that we can still use a Static SSR / HTTP POST form submit whilst
+                    inside an InteractiveServer rendered component. It looks as though this is planning on being fixed in .NET 9 though.
+                    See: https://github.com/dotnet/aspnetcore/issues/53129
+                    *@
+                    @if (HttpContext is null)
+                    {
+                        <input type="hidden" name="_handler" value="login" />
+                    }
 
-            <DeviceInfoProvider />
-            <GeolocationInfoProvider />
-            <DataAnnotationsValidator />
+                    <DeviceInfoProvider />
+                    <GeolocationInfoProvider />
+                    <DataAnnotationsValidator />
 
-            @* TODO: Update this to username or email lookup *@
-            <MudTextField @bind-Value="Input.Email" name="Input.Email" @rendermode="RenderMode.InteractiveServer"
-                Label="Username / Email" 
-                Variant="Variant.Outlined" 
-                InputType="InputType.Email"
-                Class="mt-6"
-                autocomplete="username"
-                aria-required="true" />
+                    @* TODO: Update this to username or email lookup *@
+                    <MudTextField @bind-Value="Input.Email" For="() => Input.Email" id="loginEmailInput" name="Input.Email"
+                        Label="Username / Email" 
+                        Variant="Variant.Outlined" 
+                        InputType="InputType.Email"
+                        Class="mt-6"
+                        autocomplete="username"
+                        aria-required="true" />
 
-            <ValidationMessage For="() => Input.Email" class="mud-alert mud-alert-text-error" />
+                    @* TODO: We can potentially remove this component and use the field directly now as this is an interactive component. *@
+                    <PasswordInput @bind-Value="Input.Password"
+                        AutoComplete="current-password"
+                        Label="Password" />
 
-            <PasswordInput @bind-Value="Input.Password"
-                AutoComplete="current-password"
-                Label="Password" />
-
-            <ValidationMessage For="() => Input.Password" class="mud-alert mud-alert-text-error" />
-
-            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
             
-                <MudCheckBox @bind-Value="Input.RememberMe" @rendermode="RenderMode.InteractiveServer"
-                    name="Input.RememberMe"
-                    TriState="false"
-                    Label="Remember me?" 
-                    Color="Color.Tertiary"
-                    Class="ml-n1 mt-3" />
+                        <MudCheckBox @bind-Value="Input.RememberMe"
+                            name="Input.RememberMe"
+                            TriState="false"
+                            Label="Remember me?" 
+                            Color="Color.Tertiary"
+                            Class="ml-n1 mt-3" />
 
-                <MudLink Href="/forgot-password" Color="Color.Info">Forgot password?</MudLink>
-            </MudStack>
+                        <MudLink Href="/forgot-password" Color="Color.Info">Forgot password?</MudLink>
+                    </MudStack>
 
-            <LoadingSubmitButton Text="Login" Icon="@Icons.Material.Outlined.Login" IsProcessing="isProcessing" />
-        </EditForm>
+                    <LoadingSubmitButton Text="Login" Icon="@Icons.Material.Outlined.Login" IsProcessing="isProcessing" />
+                </EditForm>
 
-    </MudPaper>
-    <MudPaper Elevation="3" Class="pa-4" Width="100%">
+            </MudPaper>
+            <MudPaper Elevation="3" Class="pa-4" Width="100%">
 
-        <!-- External logins -->
-        <MudStack Spacing="1" AlignItems="AlignItems.Center">
+                <!-- External logins -->
+                <MudStack Spacing="1" AlignItems="AlignItems.Center">
 
-            <ExternalLoginPicker />
+                    <ExternalLoginPicker />
+                </MudStack>
+            </MudPaper>
+
+            <MudLink Href="/resend-email-confirmation" Color="Color.Info">Resend email confirmation</MudLink>
         </MudStack>
-    </MudPaper>
 
-    <MudLink Href="/resend-email-confirmation" Color="Color.Info">Resend email confirmation</MudLink>
-</MudStack>
+    </NotAuthorized>
+    <Authorized>
+
+        @if (string.IsNullOrEmpty(ReturnUrl) is false && ReturnUrl.Contains("login") is false)
+        {
+            // Need to prevent redirecting to ourself otherwise 
+            // we could get stuck in an infinite loop.
+            RedirectManager.RedirectTo(ReturnUrl);
+        }
+        else
+        {
+            RedirectManager.RedirectTo("/");
+        }
+
+    </Authorized>
+</AuthorizeView>
 
 @* 
     TODO: Add this in once we have static user data that we can pre-populate the form with.
