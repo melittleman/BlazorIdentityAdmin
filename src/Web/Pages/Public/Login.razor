@@ -5,8 +5,6 @@
 
 @using Microsoft.AspNetCore.Localization
 @using PSC.Blazor.Components.BrowserDetect
-@using BlazorIdentityAdmin.Web.Validation
-@using BlazorIdentityAdmin.Domain.Identity
 
 @inject UserManager<User> UserManager
 @inject SignInManager<User> SignInManager
@@ -161,8 +159,7 @@
         {
             isProcessing = true;
 
-            IJSObjectReference loginForm = await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "login-form");
-            await loginForm.InvokeVoidAsync("submit");
+            await JS.SubmitFormAsync("login-form");
             return;
         }
 

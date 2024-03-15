@@ -455,8 +455,7 @@ else
         isProcessing = true;
 
         // See: https://github.com/dotnet/aspnetcore/issues/53129
-        IJSObjectReference loginForm = await JS.InvokeAsync<IJSObjectReference>("document.getElementById", "confirmation-form");
-        await loginForm.InvokeVoidAsync("submit");
+        await JS.SubmitFormAsync("confirmation-form");
     }
 
     private async Task LoginDeviceAsync(User user)
