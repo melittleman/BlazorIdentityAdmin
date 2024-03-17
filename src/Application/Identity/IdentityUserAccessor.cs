@@ -13,4 +13,19 @@ public sealed class IdentityUserAccessor(UserManager<User> userManager, Identity
 
         return user;
     }
+
+    public async Task<User> GetRequiredUserAsync(AuthenticationState state)
+    {
+        User? user = await userManager.GetUserAsync(state.User);
+
+        if (user is null)
+        {
+            redirectManager.RedirectToWithStatus(
+                "/invalid-user", $"Error: Unable to load user with ID '{userManager.GetUserId(state.User)}'.",
+                null!, 
+                forceLoad: true);
+        }
+
+        return user;
+    }
 }

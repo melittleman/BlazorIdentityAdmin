@@ -1,14 +1,36 @@
 ﻿@page "/account/mfa"
+@using BlazorIdentityAdmin.Web.Components.Account
 
 @inject UserManager<User> UserManager
 @inject SignInManager<User> SignInManager
 @inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Two-factor authentication (2FA)</PageTitle>
+<PageTitle>Multi-factor authentication (MFA)</PageTitle>
 
 <StatusMessage />
-<h3>Two-factor authentication (2FA)</h3>
+<h3>Multi-factor authentication (MFA)</h3>
+
+
+<MudExpansionPanels Elevation="3">
+    <MudExpansionPanel Text="Generate Recovery Codes">
+
+        <RecoveryCodes />
+
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Reset Authenticator">
+
+       <ResetAuthenticator />
+
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Disable Authenticator">
+
+       <DisableAuthenticator />
+
+    </MudExpansionPanel>   
+</MudExpansionPanels>
+
+
 @if (canTrack)
 {
     if (is2faEnabled)
@@ -84,6 +106,12 @@ else
         is2faEnabled = await UserManager.GetTwoFactorEnabledAsync(user);
         isMachineRemembered = await SignInManager.IsTwoFactorClientRememberedAsync(user);
         recoveryCodesLeft = await UserManager.CountRecoveryCodesAsync(user);
+
+
+        // if (!await Service.CheckIsAuthenticatorEnabledAsync())
+        // {
+        //     Navigator.NavigateTo("account/authenticator/enable");
+        // }
     }
 
     private async Task OnSubmitForgetBrowserAsync()

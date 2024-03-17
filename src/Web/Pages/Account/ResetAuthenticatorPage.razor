@@ -1,0 +1,9 @@
+﻿@page "/account/reset-authenticator"
+
+@inject UserManager<User> UserManager
+@inject SignInManager<User> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject ILogger<ResetAuthenticatorPage> Logger
+
+<PageTitle>Reset authenticator key</PageTitle>

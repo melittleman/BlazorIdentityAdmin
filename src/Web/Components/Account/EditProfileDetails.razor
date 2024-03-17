@@ -1,0 +1,143 @@
+﻿@using System.Globalization
+
+@rendermode RenderMode.InteractiveServer
+
+@inject IdentityUserAccessor UserAccessor
+
+@if (model is not null)
+{
+    <MudTextField @bind-Value="model.Username" For="@(() => model.Username)"
+        id="profileUsernameInput" name="Model.Username"
+        Label="Username"
+        Variant="Variant.Outlined"
+        InputType="InputType.Text"
+        Class="mb-4"
+        autocomplete="username"
+        aria-required="true" />
+
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+
+        <MudTextField @bind-Value="model.FirstName" For="@(() => model.FirstName)"
+            id="profileFirstNameInput" name="Model.FirstName"
+            Label="First Name"
+            Variant="Variant.Outlined"
+            InputType="InputType.Text"
+            Class="mb-4"
+            autocomplete="firstname" />
+
+        <MudTextField @bind-Value="model.LastName" For="@(() => model.LastName)"
+            id="profileLastNameInput" name="Model.LastName"
+            Label="Last Name"
+            Variant="Variant.Outlined"
+            InputType="InputType.Text"
+            Class="mb-4"
+            autocomplete="lastname" />
+
+    </MudStack>
+
+    @* TODO: Should these potentially be autocomplete components instead? *@
+    <MudSelect @bind-Value="model.Culture" For="@(() => model.Culture)"
+        id="profileCultureInput" name="Model.Culture"
+        Label="Language / Locale"
+        Variant="Variant.Outlined"
+        AnchorOrigin="Origin.BottomCenter"
+        Class="mb-4">
+
+        @foreach (CultureInfo culture in SpecificCultures.OrderBy(ci => ci.DisplayName))
+        {
+            <MudSelectItem Value="culture.Name">
+
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+
+                    <MudText Typo="Typo.body1">@culture.DisplayName</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mud-text-secondary">@culture.Name</MudText>
+                </MudStack>
+            </MudSelectItem>
+        }
+
+    </MudSelect>
+
+    <MudSelect @bind-Value="model.TimeZone" For="@(() => model.TimeZone)"
+        id="profileTimeZoneInput" name="Model.TimeZone"
+        Label="Time Zone"
+        Variant="Variant.Outlined"
+        AnchorOrigin="Origin.BottomCenter">
+
+        @foreach (TimeZoneInfo timeZone in TimeZones.OrderBy(tz => tz.DisplayName))
+        {
+            if (TimeZoneInfo.TryConvertWindowsIdToIanaId(timeZone.Id, out string? ianaId) && ianaId is not null)
+            {
+                <MudSelectItem Value="ianaId">
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+
+                        <MudText Typo="Typo.body1">@timeZone.DisplayName</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mud-text-secondary">@ianaId</MudText>
+                </MudStack>
+            </MudSelectItem>
+            }
+        }
+
+    </MudSelect>
+
+    @if (user is not null)
+    {
+        <MudDivider DividerType="DividerType.Middle" Class="my-6" />
+
+        <MudSwitch @bind-Value="user.EmailConfirmed" Label="Email Confirmed" Color="Color.Success" Disabled="true" />
+        <MudSwitch @bind-Value="user.PhoneNumberConfirmed" Label="Phone Number Confirmed" Color="Color.Success" Disabled="true" />
+        <MudSwitch @bind-Value="user.TwoFactorEnabled" Label="MFA Enabled" Color="Color.Success" Disabled="true" />
+        <MudSwitch @bind-Value="user.LockoutEnabled" Label="Lockout Enabled" Color="Color.Success" Disabled="true" />
+    }
+}
+else
+{
+    // TODO: Loading skeleton
+    <MudText>Loading...</MudText>
+}
+
+@code {
+    private User? user;
+    private EditProfileModel? model;
+
+    // We need to be very careful when marking properties / fields as "static" as they essentially become a Singleton
+    // across every circuit in the entire application. I think this is fine for here though as everyone will get the 
+    // same cached lists of Cultures and Time Zones to choose from.
+    private static readonly CultureInfo[] SpecificCultures = CultureInfo.GetCultures(CultureTypes.SpecificCultures);
+
+    private static readonly TimeZoneInfo[] TimeZones = [.. TimeZoneInfo.GetSystemTimeZones()];
+
+    [Parameter]
+    public string? DefaultCulture { get; set; }
+
+    [Parameter]
+    public string? DefaultTimeZone { get; set; }
+
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (AuthStateTask is not null)
+            {
+                AuthenticationState state = await AuthStateTask;
+                user = await UserAccessor.GetRequiredUserAsync(state);
+
+                model ??= new EditProfileModel()
+                {
+                    Username = user?.UserName ?? string.Empty,
+                    FirstName = user?.FirstName,
+                    LastName = user?.LastName,
+                    Culture = user?.CultureName ?? DefaultCulture,
+                    TimeZone = user?.TimezoneId ?? DefaultTimeZone
+                };
+
+                StateHasChanged();
+            }
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}

@@ -1,5 +1,9 @@
 ﻿@page "/account"
 
+@attribute [StreamRendering]
+
+@using BlazorIdentityAdmin.Web.Components.Account
+
 @inject UserManager<User> UserManager
 @inject SignInManager<User> SignInManager
 @inject IdentityUserAccessor UserAccessor
@@ -19,6 +23,7 @@
                 <input type="text" value="@username" class="form-control" placeholder="Please choose your username." disabled />
                 <label for="username" class="form-label">Username</label>
             </div>
+
             <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
                 <label for="phone-number" class="form-label">Phone number</label>
@@ -39,6 +44,9 @@
 
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromForm]
+    private EditProfileModel Model { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {

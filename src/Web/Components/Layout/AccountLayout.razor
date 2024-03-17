@@ -1,4 +1,5 @@
 ﻿@using BlazorIdentityAdmin.Web.Components.Account
+
 @inherits LayoutComponentBase
 @layout MainLayout
 
@@ -10,11 +11,12 @@
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex align-center">
         <div class="d-flex flex-column mud-width-full">
 
-            <MudText Typo="Typo.h1" GutterBottom="true">Account Settings</MudText>
+            <MudText Typo="Typo.h1">Account Settings</MudText>
+            <MudText Typo="Typo.body1" GutterBottom="true">Edit your account details and public profile</MudText>
 
-            <MudGrid>
+            <MudGrid Class="mt-6">
                 <MudItem xs="12" sm="12" md="5" lg="4" xl="3">
-                    <MudCard>
+                    <MudCard Elevation="3">
                         <MudCardHeader>
                             <CardHeaderContent>
 

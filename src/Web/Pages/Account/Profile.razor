@@ -1,60 +1,118 @@
 ﻿@page "/account/profile"
-@rendermode RenderMode.InteractiveServer
 
+@using BlazorIdentityAdmin.Infrastructure.Stores
 @using BlazorIdentityAdmin.Web.Components.Account
 
-@if (user is not null)
-{
-    <MudCard>
+@inject SignInManager<User> SignInManager
+@inject IdentityRedirectManager RedirectManager
+@inject IdentityUserAccessor UserAccessor
+@inject UserManager<User> UserManager
+@inject IUserStore<User> UserStore
+@inject ISnackbar SnackBar
+
+@* TODO: I think that this should be wrapped in a null check so we can present a loading spinner... *@
+<EditForm Model="Model" FormName="profile" id="profile-form" method="post" OnValidSubmit="UpdateAccountProfileAsync">
+
+    <DataAnnotationsValidator />
+
+    <MudCard Elevation="3" Class="pa-2">
+        <MudCardHeader>
+
+            <MudText Typo="Typo.h2">Profile</MudText>
+        </MudCardHeader>
         <MudCardContent>
-            <MudTextField Label="User Name" @bind-Value="user.UserName" For="@(() => user.UserName)" Disabled="true" />
-                @if (!isEditingEmail)
-                {
-                   <MudGrid Spacing="8" Justify="Justify.FlexStart">
-                        <MudItem xs="11">
-                             <MudTextField Label="Email" Class="mt-3" @bind-Value="user.Email" For="@(() => user.Email)" Disabled="true" />
-                        </MudItem>
-                        <MudItem xs="1">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
-                                @onclick="ToggleEditEmail"  Size="Size.Medium" Class="mt-3 ml-4"></MudIconButton>
-                        </MudItem>
-                   </MudGrid>   
-                }
-                else
-                {
-                    <EditForm Model="@changeEmailModel" Class="mt-4 mb-4">
-                        <DataAnnotationsValidator />
-                            <MudCard>
-                                <MudCardContent>
-                                    <MudTextField Label="New Email" Class="mt-3" @bind-Value="changeEmailModel.NewEmail" For="@(() => changeEmailModel.NewEmail)"/>
-                                </MudCardContent>
-                                <MudCardActions>
-                                     <MudGrid Justify="Justify.FlexEnd">
-                                     </MudGrid>
-                                     <MudItem xs="1">
-                                         <MudButton Variant="Variant.Filled" Color="Color.Warning"
-                                             @onclick="ChangeEmailAsync">Update</MudButton>
-                                     </MudItem>
-                                    <MudItem xs="1">
-                                         <MudButton Variant="Variant.Filled" Color="Color.Warning"
-                                            @onclick="ToggleEditEmail">Cancel</MudButton>
-                                     </MudItem>                                    
-                                </MudCardActions>
-                          </MudCard>
-                    </EditForm>  
-                }                                   
-               
-            <MudTextField Label="Phone Number" Class="mt-3" @bind-Value="user.PhoneNumber" For="@(() => user.PhoneNumber)" Disabled="true"/>
-            <br />
 
-            <MudSwitch @bind-Value="user.EmailConfirmed" Label="Email Confirmed" Color="Color.Success" Disabled="true" />
-            <MudSwitch @bind-Value="user.PhoneNumberConfirmed" Label="Phone Number Confirmed" Color="Color.Success" Disabled="true" />
-            <MudSwitch @bind-Value="user.TwoFactorEnabled" Label="Two Factor Enabled" Color="Color.Success" Disabled="true" />
-            <MudSwitch @bind-Value="user.LockoutEnabled" Label="Lock Out Enabled" Color="Color.Success" Disabled="true" />
+            <EditProfileDetails DefaultCulture="@defaultCulture" DefaultTimeZone="@defaultTimeZone" />
 
-        </MudCardContent>    
+            <MudDivider DividerType="DividerType.Middle" Class="mt-3" />
+
+            <StatusMessage Message="@ErrorMessage" />
+
+        </MudCardContent>
+        <MudCardActions>
+
+            @* TODO: Need a better way to disable the button if the form isn't valid. *@
+            <MudButton ButtonType="ButtonType.Submit"
+                Variant="Variant.Outlined"
+                StartIcon="@Icons.Material.Outlined.Save"
+                Color="Color.Primary"
+                Class="ml-auto">
+                Save Changes
+            </MudButton>
+        </MudCardActions>
     </MudCard>
+</EditForm>
 
-    <MudDivider />
-    <DeleteAccount />
+@code {
+
+    private User? user;
+    private string? defaultCulture;
+    private string? defaultTimeZone;
+
+    private IEnumerable<IdentityError>? identityErrors;
+
+    private string? ErrorMessage => identityErrors is not null 
+        ? $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}"
+        : null;
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromForm]
+    private EditProfileModel Model { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (HttpContext is not null)
+            {
+                defaultCulture = HttpContext.User.FindFirstValue(OpenIddictConstants.Claims.Locale);
+                defaultTimeZone = HttpContext.User.FindFirstValue(OpenIddictConstants.Claims.Zoneinfo);
+
+                user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add(ex.Message, Severity.Error, config =>
+            {
+                config.ShowCloseIcon = true;
+                config.RequireInteraction = true;
+            });
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task UpdateAccountProfileAsync()
+    {
+        // TODO: Show error...
+        if (user is null || HttpContext is null) return;
+
+        // TODO: I feel like these should be using the 'Manager' instead?
+        // But the reasoning seems to be becuase the user hasn't actually been created yet.
+        await UserStore.SetUserNameAsync(user, Model.Username, CancellationToken.None);
+
+        if (UserStore is RedisUserStore store)
+        {
+            await store.SetFirstNameAsync(user, Model.FirstName, CancellationToken.None);
+            await store.SetLastNameAsync(user, Model.LastName, CancellationToken.None);
+            await store.SetCultureNameAsync(user, Model.Culture, CancellationToken.None);
+            await store.SetTimezoneIdAsync(user, Model.TimeZone, CancellationToken.None);
+        }
+
+        // TODO: Can this actually just be 'Store.UpdateAsync'?
+        IdentityResult result = await UserManager.UpdateSecurityStampAsync(user);
+
+        if (result.Succeeded is false)
+        {
+            identityErrors = result.Errors;
+            RedirectManager.RedirectToCurrentPageWithStatus(ErrorMessage!, HttpContext);
+            return;
+        }
+
+        await SignInManager.RefreshSignInAsync(user);
+        RedirectManager.RedirectToCurrentPageWithStatus("Success: Your profile has been updated", HttpContext);
+    }
 }

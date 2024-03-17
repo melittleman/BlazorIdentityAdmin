@@ -194,7 +194,7 @@ public class RedisUserStore(
         //    : IdentityResult.Failed(new IdentityError { Description = $"Unable to update Redis document for user {user.Id}." });
     }
 
-    public Task SetFirstNameAsync(User user, string firstName, CancellationToken ct = default)
+    public Task SetFirstNameAsync(User user, string? firstName, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
         ThrowIfDisposed();
@@ -206,7 +206,7 @@ public class RedisUserStore(
         return Task.CompletedTask;
     }
 
-    public Task SetLastNameAsync(User user, string lastName, CancellationToken ct = default)
+    public Task SetLastNameAsync(User user, string? lastName, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
         ThrowIfDisposed();
@@ -218,7 +218,7 @@ public class RedisUserStore(
         return Task.CompletedTask;
     }
 
-    public Task SetAvatarUrlAsync(User user, string avatarUrl, CancellationToken ct = default)
+    public Task SetAvatarUrlAsync(User user, string? avatarUrl, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
         ThrowIfDisposed();
@@ -230,7 +230,7 @@ public class RedisUserStore(
         return Task.CompletedTask;
     }
 
-    public Task SetCultureNameAsync(User user, string cultureName, CancellationToken ct = default)
+    public Task SetCultureNameAsync(User user, string? cultureName, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
         ThrowIfDisposed();
@@ -242,7 +242,7 @@ public class RedisUserStore(
         return Task.CompletedTask;
     }
 
-    public Task SetTimezoneIdAsync(User user, string timezoneId, CancellationToken ct = default)
+    public Task SetTimezoneIdAsync(User user, string? timezoneId, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
         ThrowIfDisposed();

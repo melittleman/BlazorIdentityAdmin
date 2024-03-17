@@ -1,6 +1,7 @@
 ﻿@if (string.IsNullOrEmpty(DisplayMessage) is false)
 {
-    <MudAlert Severity="@Severity" Class="mt-6 mud-width-full" Elevation="3">
+    @* TODO: Can we / should we just use the Snackbar instead of a static alert? *@
+    <MudAlert Variant="Variant.Outlined" Severity="@Severity" Dense="true" Class="my-3" Elevation="3">
 
         @DisplayMessage
 
@@ -22,11 +23,14 @@
 
     private string? DisplayMessage => Message ?? messageFromCookie;
 
-    private bool IsError => DisplayMessage?.StartsWith("Error") is true;
+    private Severity Severity => DisplayMessage switch
+    {
+        (string message) when message.StartsWith("Error") => Severity.Error,
+        (string message) when message.StartsWith("Success") => Severity.Success,
+        (string message) when message.StartsWith("Warning") => Severity.Warning,
 
-    private Severity Severity => IsError 
-        ? Severity.Error 
-        : Severity.Info;
+        _ => Severity.Info
+    };
 
     protected override void OnInitialized()
     {

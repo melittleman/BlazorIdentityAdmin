@@ -189,9 +189,6 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // OnInitializedAsync gets called twice due to pre-rendering to this
-        // provides the most explicit way to ensure we only call async code once.
-        // TODO: Is there actually a better alternative here though?
         if (firstRender)
         {
             tickets = await PagedTickets.GetByUserIdAsync(UserId);
