@@ -19,7 +19,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.DocumentTitle = "Blazor Admin Dashboard | Swagger UI";
+        options.DocumentTitle = "Blazor Identity Admin | Swagger UI";
     });
 }
 else

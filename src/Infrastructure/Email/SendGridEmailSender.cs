@@ -13,7 +13,7 @@ public sealed class SendGridEmailSender(
     {
         SendGridMessage message = new()
         {
-            From = new EmailAddress(_config.EmailFromAddress, "Blazor Admin Dashboard"),
+            From = new EmailAddress(_config.EmailFromAddress, "Blazor Identity Admin"),
             Subject = subject,
             PlainTextContent = htmlMessage,
             HtmlContent = htmlMessage
