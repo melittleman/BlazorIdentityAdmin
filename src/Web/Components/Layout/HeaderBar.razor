@@ -1,4 +1,6 @@
-﻿<MudAppBar Elevation="0" Dense="true" Fixed="true" DisableGutters="true">
+﻿@inject IdentityUserAccessor UserAccessor
+
+<MudAppBar Elevation="0" Dense="true" Fixed="true" DisableGutters="true">
     <MudToolBar>
 
         @if (IncludeIcon)
@@ -37,7 +39,7 @@
 
         <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/melittleman/BlazorIdentityAdmin" Target="_blank" />
 
-        <LoginDisplay />
+        <LoginDisplay User="user" />
 
     </MudToolBar>
 </MudAppBar>
@@ -45,13 +47,28 @@
 @code {
 
     // TODO: Figure out where this is loaded from? Somewhere on the tenant ideally.
-    private static CustomTheme theme = new();
+    private CustomTheme theme = new();
+
+    private User? user;
 
     [Parameter]
     public bool IncludeIcon { get; set; } = true;
 
     [Parameter]
     public bool IncludeSearch { get; set; } = false;
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpContext is not null)
+        {
+            user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        }
+
+        await base.OnInitializedAsync();
+    }
 
     private Task OnSearchAsync(string value)
     {

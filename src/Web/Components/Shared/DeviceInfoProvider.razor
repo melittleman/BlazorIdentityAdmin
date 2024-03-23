@@ -1,6 +1,6 @@
 ﻿@using PSC.Blazor.Components.BrowserDetect
 
-@rendermode RenderMode.InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @inject IJSRuntime JS
 
 <BrowserDetect BrowserInfoChanged="BrowserInfoChanged"

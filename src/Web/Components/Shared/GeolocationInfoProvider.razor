@@ -1,6 +1,6 @@
 ﻿@using Darnton.Blazor.DeviceInterop.Geolocation
 
-@rendermode RenderMode.InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @inject IGeolocationService Geolocation
 
 @if (Info is not null)

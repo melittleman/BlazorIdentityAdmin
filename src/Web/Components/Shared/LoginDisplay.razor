@@ -4,28 +4,24 @@
 
 @inject NavigationManager Navigation
 
-@if (user is not null)
+@if (User is not null)
 {
-    // We are authenticated.
-    // TODO: Need to investigate some more on why <AuthorizeView> doesn't really work for us here.
-    // I think it has something to do with the fact that it's a Blazor component that's rendered after the request.
-
     @* TODO: Add check for Admin role. This could actually be moved into the 'HeaderBar' component also? *@
     <MudIconButton Icon="@Icons.Material.Outlined.Settings" Color="Color.Inherit" Href="/admin" />
 
     <MudMenu AnchorOrigin="Origin.CenterCenter" Dense="true">
         <ActivatorContent>
 
-            @if (string.IsNullOrEmpty(AvatarUrl) is false)
+            @if (string.IsNullOrEmpty(User.AvatarUrl) is false)
             {
                 <MudAvatar>
-                    <MudImage Src="@AvatarUrl"></MudImage>
+                    <MudImage Src="@User.AvatarUrl"></MudImage>
                 </MudAvatar>
             }
             else
             {
                 <MudAvatar Variant="Variant.Outlined">
-                    @user.Identity?.Name?.First()
+                    @User.FirstName?.First() @User.LastName?.First()
                 </MudAvatar>
             }
 
@@ -34,20 +30,27 @@
             <MudCard Elevation="0">
                 <MudCardHeader>
                     <CardHeaderAvatar>
-                        @if (string.IsNullOrEmpty(AvatarUrl) is false)
+                        @if (string.IsNullOrEmpty(User.AvatarUrl) is false)
                         {
                             <MudAvatar>
-                                <MudImage Src="@AvatarUrl"></MudImage>
+                                <MudImage Src="@User.AvatarUrl"></MudImage>
                             </MudAvatar>
                         }
                         else
                         {
-                            <MudAvatar>@user.Identity?.Name?.First()</MudAvatar>
+                            <MudAvatar Variant="Variant.Outlined">
+                                @User.FirstName?.First() @User.LastName?.First()
+                            </MudAvatar>
                         }
                     </CardHeaderAvatar>
                     <CardHeaderContent>
-                        <MudText Typo="Typo.body2">@user.Identity?.Name</MudText>
-                            <MudText Typo="Typo.caption">@user.FindFirstValue(OpenIddictConstants.Claims.Role)</MudText>
+                        <MudText Typo="Typo.body1">@User.Name</MudText>
+                        <MudText Typo="Typo.subtitle2" Class="mud-text-secondary">@User.UserName</MudText>
+
+                        @* 
+                            TODO: Add the role here if available...
+                            <MudText Typo="Typo.caption">@User.FindFirstValue(OpenIddictConstants.Claims.Role)</MudText>
+                        *@
                     </CardHeaderContent>
                 </MudCardHeader>
             </MudCard>
@@ -59,21 +62,14 @@
         </ChildContent>
     </MudMenu>
 }
-else
-{
-    <MudButton Href="/register" StartIcon="@Icons.Material.Outlined.AppRegistration" Variant="Variant.Outlined" Class="mr-5">Register</MudButton>
-    <MudButton Href="/login" StartIcon="@Icons.Material.Outlined.Login" Variant="Variant.Outlined" Class="mr-5">Login</MudButton>
-}
 
 @code {
 
-    // Needs to be static to be persisted from the HTTP Request
-    // through to after the SignalR circuit is established.
-    private static ClaimsPrincipal? user;
-    private string? AvatarUrl => user?.FindFirstValue(OpenIddictConstants.Claims.Picture);
+    [Parameter]
+    public User? User { get; set; }
 
     [CascadingParameter]
-    public required HttpContext HttpContext { get; set; }
+    public HttpContext? HttpContext { get; set; }
 
     private static string? currentUrl;
     private string LogoutUrl => string.IsNullOrEmpty(currentUrl) is false && currentUrl.Contains("logout") is false
@@ -89,11 +85,6 @@ else
         if (HttpContext is not null)
         {
             currentUrl = HttpContext.Request.GetEncodedPathAndQuery();
-
-            if (HttpContext.User.Identity?.IsAuthenticated is true)
-            {
-                user = HttpContext.User;
-            }
         }
 
         return base.OnInitializedAsync();

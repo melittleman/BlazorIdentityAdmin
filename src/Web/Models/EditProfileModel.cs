@@ -2,9 +2,9 @@
 
 public sealed class EditProfileModel
 {
-    [Required(AllowEmptyStrings = false)]
+    [Required]
     [Display(Name = "Username")]
-    public string Username { get; set; } = string.Empty;
+    public string? Username { get; set; }
 
     [Display(Name = "First Name")]
     public string? FirstName { get; set; }

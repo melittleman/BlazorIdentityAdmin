@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Authentication.Cookies
 @using BlazorIdentityAdmin.Application.Identity.Abstractions
 
-@rendermode RenderMode.InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: true))
 
 @inject IPagedTicketStore PagedTickets
 @inject ITicketStore Tickets
@@ -187,15 +187,19 @@ else
     [Parameter]
     public required string UserId { get; set; }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
+        // HTTP Context will be null on the second time around (after the pre-render)
+        // so this guard prevents us from making the call out to the store twice.
+        if (HttpContext is null)
         {
             tickets = await PagedTickets.GetByUserIdAsync(UserId);
-            StateHasChanged();
         }
 
-        await base.OnAfterRenderAsync(firstRender);
+        await base.OnInitializedAsync();
     }
 
     private async Task DeleteSession(AuthenticationTicket ticket)
@@ -215,6 +219,7 @@ else
         if (dialogMessage.GetValueOrDefault())
         {
             await Tickets.RemoveAsync(sessionId);
+
             if (tickets?.Remove(ticket) is true)
             {
                 Snackbar.Add("Session was successfully logged out.", Severity.Success);

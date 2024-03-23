@@ -3,13 +3,15 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
-<MudPopoverProvider @rendermode="RenderMode.InteractiveServer" />
-<MudDialogProvider @rendermode="RenderMode.InteractiveServer" />
-<MudSnackbarProvider @rendermode="RenderMode.InteractiveServer" />
+<MudPopoverProvider @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
+<MudDialogProvider @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
+<MudSnackbarProvider @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
 
 @if (HttpContext is null)
 {
-    <MudProgressCircular @rendermode="RenderMode.InteractiveServer" 
+    @*  I don't think this will ever actually be seen, but if it did I think prerendering 
+        makes sense to ensure we still show something on the page immediately. *@
+    <MudProgressCircular @rendermode="@(new InteractiveServerRenderMode(prerender: true))"
         Color="Color.Default"
         Indeterminate="true" />
 }

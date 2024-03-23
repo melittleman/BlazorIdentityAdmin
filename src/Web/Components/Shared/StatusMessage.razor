@@ -1,7 +1,7 @@
 ﻿@if (string.IsNullOrEmpty(DisplayMessage) is false)
 {
     @* TODO: Can we / should we just use the Snackbar instead of a static alert? *@
-    <MudAlert Variant="Variant.Outlined" Severity="@Severity" Dense="true" Class="my-3" Elevation="3">
+    <MudAlert Variant="Variant.Outlined" Severity="@Severity" Dense="true" Class="my-3" Elevation="3" ShowCloseIcon="@ShowCloseIcon">
 
         @DisplayMessage
 
@@ -17,6 +17,9 @@
 
     [Parameter]
     public string? Message { get; set; }
+
+    [Parameter]
+    public bool ShowCloseIcon { get; set; } = false;
 
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }

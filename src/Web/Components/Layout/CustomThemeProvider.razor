@@ -1,4 +1,8 @@
-﻿@rendermode RenderMode.InteractiveServer
+﻿@*  
+    We MUST prerender this theme provider otherwise there's a flash 
+    of un-styled content before the SignalR connection is made.
+*@
+@rendermode @(new InteractiveServerRenderMode(prerender: true))
 
 @implements IDisposable
 

@@ -85,8 +85,6 @@ else
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
-    private IPagedList<AuthenticationTicket>? tickets;
-
     protected override async Task OnInitializedAsync()
     {
         if (HttpContext is not null)

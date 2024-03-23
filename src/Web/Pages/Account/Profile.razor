@@ -8,40 +8,46 @@
 @inject IdentityUserAccessor UserAccessor
 @inject UserManager<User> UserManager
 @inject IUserStore<User> UserStore
-@inject ISnackbar SnackBar
 
-@* TODO: I think that this should be wrapped in a null check so we can present a loading spinner... *@
-<EditForm Model="Model" FormName="profile" id="profile-form" method="post" OnValidSubmit="UpdateAccountProfileAsync">
+<PageTitle>Profile</PageTitle>
 
-    <DataAnnotationsValidator />
+<MudPaper Elevation="3">
 
-    <MudCard Elevation="3" Class="pa-2">
-        <MudCardHeader>
+    @* We MUST have the 'Enhace' attribute on this form as otherwise the 'RedirectManger' doesn't work when it is submitted. *@
+    <EditForm Model="Model" FormName="profile" id="profile-form" method="post" OnValidSubmit="UpdateAccountProfileAsync" Enhance="true">
 
-            <MudText Typo="Typo.h2">Profile</MudText>
-        </MudCardHeader>
-        <MudCardContent>
+        <DataAnnotationsValidator />
 
-            <EditProfileDetails DefaultCulture="@defaultCulture" DefaultTimeZone="@defaultTimeZone" />
+        <MudCard Class="pa-2">
+            <MudCardHeader>
 
-            <MudDivider DividerType="DividerType.Middle" Class="mt-3" />
+                <MudText Typo="Typo.h2">Profile</MudText>
+            </MudCardHeader>
+            <MudCardContent>
 
-            <StatusMessage Message="@ErrorMessage" />
+                <EditProfileDetails User="user"
+                    DefaultCulture="@defaultCulture"
+                    DefaultTimeZone="@defaultTimeZone" />
 
-        </MudCardContent>
-        <MudCardActions>
+                <StatusMessage Message="@ErrorMessage" />
+            </MudCardContent>
+            <MudCardActions>
 
-            @* TODO: Need a better way to disable the button if the form isn't valid. *@
-            <MudButton ButtonType="ButtonType.Submit"
-                Variant="Variant.Outlined"
-                StartIcon="@Icons.Material.Outlined.Save"
-                Color="Color.Primary"
-                Class="ml-auto">
-                Save Changes
-            </MudButton>
-        </MudCardActions>
-    </MudCard>
-</EditForm>
+                @* 
+                    TODO: This isn't actually wired up correctly, because we have no way to 
+                    bind to the 'IsDisabled' property in this static page. Would potentially mean 
+                    it makes sense to refactor this into an interactive pre-rendered one.
+                *@
+                <LoadingSubmitButton Variant="Variant.Outlined"
+                    Icon="@Icons.Material.Outlined.Save"
+                    Size="Size.Medium"
+                    Text="Save Changes"
+                    Class="ml-auto" 
+                    IsFullWidth="false" />
+            </MudCardActions>
+        </MudCard>
+    </EditForm>
+</MudPaper>
 
 @code {
 
@@ -63,23 +69,12 @@
 
     protected override async Task OnInitializedAsync()
     {
-        try
+        if (HttpContext is not null)
         {
-            if (HttpContext is not null)
-            {
-                defaultCulture = HttpContext.User.FindFirstValue(OpenIddictConstants.Claims.Locale);
-                defaultTimeZone = HttpContext.User.FindFirstValue(OpenIddictConstants.Claims.Zoneinfo);
+            defaultCulture = HttpContext.User.FindFirstValue(OpenIddictConstants.Claims.Locale);
+            defaultTimeZone = HttpContext.User.FindFirstValue(OpenIddictConstants.Claims.Zoneinfo);
 
-                user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-            }
-        }
-        catch (Exception ex)
-        {
-            SnackBar.Add(ex.Message, Severity.Error, config =>
-            {
-                config.ShowCloseIcon = true;
-                config.RequireInteraction = true;
-            });
+            user = await UserAccessor.GetRequiredUserAsync(HttpContext);
         }
 
         await base.OnInitializedAsync();

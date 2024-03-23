@@ -1,13 +1,13 @@
 ﻿@rendermode RenderMode.InteractiveServer
 
-<MudButton ButtonType="ButtonType.Submit" 
-    Variant="Variant.Filled" 
-    Color="Color.Primary" 
-    Size="Size.Large" 
-    FullWidth="true"
+<MudButton ButtonType="ButtonType.Submit"
+    Color="Color.Primary"
+    Variant="@Variant" 
+    Size="@Size" 
+    FullWidth="@IsFullWidth"
     Disabled="IsDisabled || IsProcessing"
-    EndIcon="@Icon"
-    Class="mt-6">
+    StartIcon="@Icon"
+    Class="@Class">
 
     @if (IsProcessing)
     {
@@ -29,8 +29,20 @@
     public string? Icon { get; set; } = null;
 
     [Parameter]
+    public string? Class { get; set; } = "mt-6";
+
+    [Parameter]
     public bool IsProcessing { get; set; } = false;
 
     [Parameter]
     public bool IsDisabled { get; set; } = false;
+
+    [Parameter]
+    public bool IsFullWidth { get; set; } = true;
+
+    [Parameter]
+    public Variant Variant { get; set; } = Variant.Filled;
+
+    [Parameter]
+    public Size Size { get; set; } = Size.Large;
 }

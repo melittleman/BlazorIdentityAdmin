@@ -1,10 +1,45 @@
 ﻿@using System.Globalization
 
-@rendermode RenderMode.InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: true))
 
 @inject IdentityUserAccessor UserAccessor
 
-@if (model is not null)
+@if (model is null)
+{
+    <!-- Username -->
+    <MudSkeleton Animation="Animation.Wave" Width="100%" Height="56px" Class="mb-4" />
+
+    <MudStack Row="true" AlignItems="AlignItems.Center">
+
+        <!-- First Name -->
+        <MudSkeleton Animation="Animation.Wave" Width="100%" Height="78px" Class="mb-4" />
+
+        <!-- Last Name -->
+        <MudSkeleton Animation="Animation.Wave" Width="100%" Height="78px" Class="mb-4" />
+
+    </MudStack>
+
+    <!-- Culture -->
+    <MudSkeleton Animation="Animation.Wave" Width="100%" Height="78px" Class="mb-4" />
+
+    <!-- Time Zone -->
+    <MudSkeleton Animation="Animation.Wave" Width="100%" Height="62px" />
+
+    <MudDivider DividerType="DividerType.Middle" Class="my-6" />
+
+    <!-- Email Confirmed -->
+    <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Wave" Width="20px" Height="20px" Class="ma-3" />
+
+    <!-- Phone Number Confirmed -->
+    <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Wave" Width="20px" Height="20px" Class="ma-3" />
+
+    <!-- Authenticator Enabled -->
+    <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Wave" Width="20px" Height="20px" Class="ma-3" />
+
+    <!-- Lockout Enabled -->
+    <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Wave" Width="20px" Height="20px" Class="ma-3" />
+}
+else
 {
     <MudTextField @bind-Value="model.Username" For="@(() => model.Username)"
         id="profileUsernameInput" name="Model.Username"
@@ -35,7 +70,7 @@
 
     </MudStack>
 
-    @* TODO: Should these potentially be autocomplete components instead? *@
+    <!-- TODO: Should these potentially be autocomplete components instead? -->
     <MudSelect @bind-Value="model.Culture" For="@(() => model.Culture)"
         id="profileCultureInput" name="Model.Culture"
         Label="Language / Locale"
@@ -80,24 +115,19 @@
 
     </MudSelect>
 
-    @if (user is not null)
+    @if (User is not null)
     {
         <MudDivider DividerType="DividerType.Middle" Class="my-6" />
 
-        <MudSwitch @bind-Value="user.EmailConfirmed" Label="Email Confirmed" Color="Color.Success" Disabled="true" />
-        <MudSwitch @bind-Value="user.PhoneNumberConfirmed" Label="Phone Number Confirmed" Color="Color.Success" Disabled="true" />
-        <MudSwitch @bind-Value="user.TwoFactorEnabled" Label="MFA Enabled" Color="Color.Success" Disabled="true" />
-        <MudSwitch @bind-Value="user.LockoutEnabled" Label="Lockout Enabled" Color="Color.Success" Disabled="true" />
+        <MudSwitch @bind-Value="User.EmailConfirmed" Label="Email Confirmed" Color="Color.Success" Disabled="true" />
+        <MudSwitch @bind-Value="User.PhoneNumberConfirmed" Label="Phone Number Confirmed" Color="Color.Success" Disabled="true" />
+        <MudSwitch @bind-Value="User.TwoFactorEnabled" Label="Authenticator Enabled" Color="Color.Success" Disabled="true" />
+        <MudSwitch @bind-Value="User.LockoutEnabled" Label="Lockout Enabled" Color="Color.Success" Disabled="true" />
     }
-}
-else
-{
-    // TODO: Loading skeleton
-    <MudText>Loading...</MudText>
 }
 
 @code {
-    private User? user;
+
     private EditProfileModel? model;
 
     // We need to be very careful when marking properties / fields as "static" as they essentially become a Singleton
@@ -108,36 +138,28 @@ else
     private static readonly TimeZoneInfo[] TimeZones = [.. TimeZoneInfo.GetSystemTimeZones()];
 
     [Parameter]
+    public User? User { get; set; }
+
+    [Parameter]
     public string? DefaultCulture { get; set; }
 
     [Parameter]
     public string? DefaultTimeZone { get; set; }
 
-    [CascadingParameter]
-    public Task<AuthenticationState>? AuthStateTask { get; set; }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
+        if (User is not null)
         {
-            if (AuthStateTask is not null)
+            model = new EditProfileModel()
             {
-                AuthenticationState state = await AuthStateTask;
-                user = await UserAccessor.GetRequiredUserAsync(state);
-
-                model ??= new EditProfileModel()
-                {
-                    Username = user?.UserName ?? string.Empty,
-                    FirstName = user?.FirstName,
-                    LastName = user?.LastName,
-                    Culture = user?.CultureName ?? DefaultCulture,
-                    TimeZone = user?.TimezoneId ?? DefaultTimeZone
-                };
-
-                StateHasChanged();
-            }
+                Username = User.UserName,
+                FirstName = User.FirstName,
+                LastName = User.LastName,
+                Culture = User.CultureName ?? DefaultCulture,
+                TimeZone = User.TimezoneId ?? DefaultTimeZone
+            };
         }
 
-        await base.OnAfterRenderAsync(firstRender);
+        await base.OnInitializedAsync();
     }
 }

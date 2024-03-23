@@ -6,76 +6,76 @@
 @inject SignInManager<User> SignInManager
 @inject IdentityUserAccessor UserAccessor
 
-@if (user is not null)
-{
-    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex align-center">
-        <div class="d-flex flex-column mud-width-full">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex align-center">
+    <div class="d-flex flex-column mud-width-full">
 
-            <MudText Typo="Typo.h1">Account Settings</MudText>
-            <MudText Typo="Typo.body1" GutterBottom="true">Edit your account details and public profile</MudText>
+        <MudText Typo="Typo.h1">Account Settings</MudText>
+        <MudText Typo="Typo.body1" GutterBottom="true">Edit your account details and public profile</MudText>
 
-            <MudGrid Class="mt-6">
-                <MudItem xs="12" sm="12" md="5" lg="4" xl="3">
-                    <MudCard Elevation="3">
-                        <MudCardHeader>
-                            <CardHeaderContent>
+        <MudGrid Class="mt-6">
+            <MudItem xs="12" sm="12" md="5" lg="4" xl="3">
+                <MudCard Elevation="3">
+                    <MudCardHeader>
+                        <CardHeaderContent>
 
+                            @if (user is not null)
+                            {
                                 <MudStack Row="true" Justify="Justify.Center" Class="mb-4" Style="position: relative;">
 
                                     <EditProfileAvatar User="user" />
                                 </MudStack>
 
-                                <MudText Align="Align.Center" Typo="Typo.h3" GutterBottom="true">@user.FirstName @user.LastName</MudText>
+                                <MudText Align="Align.Center" Typo="Typo.h3" GutterBottom="true">@user.Name</MudText>
 
                                 @* TODO: Need to add role here when available *@
                                 <MudText Align="Align.Center" Typo="Typo.subtitle1" GutterBottom="true" Class="mud-text-secondary">@user.UserName</MudText>
 
-                            </CardHeaderContent>
-                        </MudCardHeader>
-                        <MudCardContent>
-                            <MudDivider DividerType="DividerType.Middle" Class="mb-6" />
+                                <MudDivider DividerType="DividerType.Middle" Class="mt-6" />
+                            }
 
-                            <MudNavMenu Rounded="true" Margin="Margin.Normal" Color="Color.Primary" Class="pa-2">
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudNavMenu Rounded="true" Margin="Margin.Normal" Color="Color.Primary" Class="pa-2">
 
-                                <MudNavLink Match="NavLinkMatch.All" Href="/account/profile" Icon="@Icons.Material.Outlined.Person">
-                                    Profile
+                            <MudNavLink Match="NavLinkMatch.All" Href="/account/profile" Icon="@Icons.Material.Outlined.Person">
+                                Profile
+                            </MudNavLink>
+
+                            <MudNavLink Match="NavLinkMatch.All" Href="/account/emails" Icon="@Icons.Material.Outlined.Email">
+                                Emails
+                            </MudNavLink>
+
+                            <MudNavLink Match="NavLinkMatch.All" Href="/account/change-password" Icon="@Icons.Material.Outlined.Password">
+                                Password
+                            </MudNavLink>
+
+                            @if (hasExternalLogins)
+                            {
+                                <MudNavLink Match="NavLinkMatch.All" Href="/account/logins" Icon="@Icons.Material.Outlined.Login">
+                                    Logins
                                 </MudNavLink>
+                            }
 
-                                <MudNavLink Match="NavLinkMatch.All" Href="/account/emails" Icon="@Icons.Material.Outlined.Email">
-                                    Emails
-                                </MudNavLink>
+                            <MudNavLink Match="NavLinkMatch.All" Href="/account/mfa" Icon="@Icons.Material.Outlined.LockReset">
+                                Authenticator
+                            </MudNavLink>
 
-                                <MudNavLink Match="NavLinkMatch.All" Href="/account/change-password" Icon="@Icons.Material.Outlined.Password">
-                                    Password
-                                </MudNavLink>
+                            <MudNavLink Match="NavLinkMatch.All" Href="/account/personal-data" Icon="@Icons.Material.Outlined.LockPerson">
+                                Personal Data
+                            </MudNavLink>
+                        </MudNavMenu>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="7" lg="8" xl="9">
 
-                                @if (hasExternalLogins)
-                                {
-                                    <MudNavLink Match="NavLinkMatch.All" Href="/account/logins" Icon="@Icons.Material.Outlined.Login">
-                                        Logins
-                                    </MudNavLink>
-                                }
+                @Body
 
-                                <MudNavLink Match="NavLinkMatch.All" Href="/account/mfa" Icon="@Icons.Material.Outlined.LockReset">
-                                    Authenticator
-                                </MudNavLink>
-
-                                <MudNavLink Match="NavLinkMatch.All" Href="/account/personal-data" Icon="@Icons.Material.Outlined.LockPerson">
-                                    Personal Data
-                                </MudNavLink>
-                            </MudNavMenu>
-                        </MudCardContent>
-                    </MudCard>
-                </MudItem>
-                <MudItem xs="12" sm="12" md="7" lg="8" xl="9">
-
-                    @Body
-
-                </MudItem>
-            </MudGrid>
-        </div>
-    </MudContainer>
-}
+            </MudItem>
+        </MudGrid>
+    </div>
+</MudContainer>
 
 @code {
 
@@ -83,12 +83,15 @@
     private bool hasExternalLogins;
 
     [CascadingParameter]
-    public required HttpContext HttpContext { get; set; }
+    public HttpContext? HttpContext { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        if (HttpContext is not null)
+        {
+            user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        }
     }
 }
